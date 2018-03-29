@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ituADM>
+  <audioFormatExtended>
+<!-- ############ -->
+<!-- PROGRAMMES -->
+<!-- ############ -->
+<audioProgramme audioProgrammeID="APR_1001" audioProgrammeName="Documentary">
+  <audioContentIDRef>ACO_1001</audioContentIDRef>
+  <audioContentIDRef>ACO_1002</audioContentIDRef>
+</audioProgramme>
+<!-- ############ -->
+<!-- CONTENTS -->
+<!-- ############ -->
+<audioContent audioContentID="ACO_1001" audioContentName="Music">
+  <audioObjectIDRef>AO_1001</audioObjectIDRef>
+  <loudnessMetadata>
+    <integratedLoudness>-28.0</integratedLoudness>
+  </loudnessMetadata>
+</audioContent>
+<audioContent audioContentID="ACO_1002" audioContentName="Speech">
+  <audioObjectIDRef>AO_1002</audioObjectIDRef>
+  <loudnessMetadata>
+    <integratedLoudness>-23.0</integratedLoudness>
+  </loudnessMetadata>
+</audioContent>
+<!-- ############ -->
+<!-- OBJECTS -->
+<!-- ############ -->
+<audioObject audioObjectID="AO_1001" audioObjectName="Music" start="00:00:00.00">
+  <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>
+  <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>
+</audioObject>
+<audioObject audioObjectID="AO_1002" audioObjectName="Speech" start="00:00:00.00">
+  <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>
+  <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>
+</audioObject>
+
+<!-- ############ -->
+<!-- ############ -->
+<audioTrackUID UID="ATU_00000001">
+  <audioTrackFormatIDRef>AT_00010001_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>
+</audioTrackUID>
+<audioTrackUID UID="ATU_00000002">
+  <audioTrackFormatIDRef>AT_00010002_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>
+</audioTrackUID>
+<audioTrackUID UID="ATU_00000003">
+  <audioTrackFormatIDRef>AT_00010001_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>
+</audioTrackUID>
+<audioTrackUID UID="ATU_00000004">
+  <audioTrackFormatIDRef>AT_00010002_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>
+</audioTrackUID>
+
+  </audioFormatExtended>
+</ituADM>

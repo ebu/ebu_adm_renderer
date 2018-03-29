@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ituADM>
+  <audioFormatExtended>
+<!-- ############ -->
+<!-- PACKS -->
+<!-- ############ -->
+<audioPackFormat audioPackFormatID="AP_00011002" audioPackFormatName="Stereo" typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioChannelFormatIDRef>AC_00011001</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011002</audioChannelFormatIDRef>
+</audioPackFormat>
+<!-- ############ -->
+<!-- CHANNELS -->
+<!-- ############ -->
+<audioChannelFormat audioChannelFormatID="AC_00011001" audioChannelFormatName="FrontLeft" typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011001_00000001">
+    <speakerLabel>M+30</speakerLabel>
+    <position coordinate="azimuth">30.0</position>
+    <position coordinate="elevation">0.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+<audioChannelFormat audioChannelFormatID="AC_00011002" audioChannelFormatName="FrontRight"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011002_00000001">
+    <speakerLabel>M-30</speakerLabel>
+    <position coordinate="azimuth">-30.0</position>
+    <position coordinate="elevation">0.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+<!-- ############ -->
+<!-- STREAMS -->
+<!-- ############ -->
+<audioStreamFormat audioStreamFormatID="AS_00011001" audioStreamFormatName="PCM_FrontLeft"  formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011001</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011001_01</audioTrackFormatIDRef> </audioStreamFormat>
+<audioStreamFormat audioStreamFormatID="AS_00011002" audioStreamFormatName="PCM_FrontRight" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011002</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011002_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+<!-- ############ -->
+<!-- AUDIO TRACKS -->
+<!-- ############ -->
+<audioTrackFormat audioTrackFormatID="AT_00011001_01" audioTrackFormatName="PCM_FrontLeft" formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011001</audioStreamFormatIDRef>
+</audioTrackFormat>
+<audioTrackFormat audioTrackFormatID="AT_00011002_01" audioTrackFormatName="PCM_FrontRight" formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011002</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<!-- ############ -->
+<!-- PROGRAMMES -->
+<!-- ############ -->
+<audioProgramme audioProgrammeID="APR_1001" audioProgrammeName="Documentary">
+  <audioContentIDRef>ACO_1001</audioContentIDRef>
+  <audioContentIDRef>ACO_1002</audioContentIDRef>
+</audioProgramme>
+<!-- ############ -->
+<!-- CONTENTS -->
+<!-- ############ -->
+<audioContent audioContentID="ACO_1001" audioContentName="Music">
+  <audioObjectIDRef>AO_1001</audioObjectIDRef>
+  <loudnessMetadata>
+    <integratedLoudness>-28.0</integratedLoudness>
+  </loudnessMetadata>
+</audioContent>
+<audioContent audioContentID="ACO_1002" audioContentName="Speech">
+  <audioObjectIDRef>AO_1002</audioObjectIDRef>
+  <loudnessMetadata>
+    <integratedLoudness>-23.0</integratedLoudness>
+  </loudnessMetadata>
+</audioContent>
+<!-- ############ -->
+<!-- OBJECTS -->
+<!-- ############ -->
+<audioObject audioObjectID="AO_1001" audioObjectName="Music" start="00:00:00.00">
+  <audioPackFormatIDRef>AP_00011002</audioPackFormatIDRef>
+  <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>
+</audioObject>
+<audioObject audioObjectID="AO_1002" audioObjectName="Speech" start="00:00:00.00">
+  <audioPackFormatIDRef>AP_00011002</audioPackFormatIDRef>
+  <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>
+</audioObject>
+
+<!-- ############ -->
+<!-- ############ -->
+<audioTrackUID UID="ATU_00000001">
+  <audioTrackFormatIDRef>AT_00011001_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011002</audioPackFormatIDRef>
+</audioTrackUID>
+<audioTrackUID UID="ATU_00000002">
+  <audioTrackFormatIDRef>AT_00011002_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011002</audioPackFormatIDRef>
+</audioTrackUID>
+<audioTrackUID UID="ATU_00000003">
+  <audioTrackFormatIDRef>AT_00011001_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011002</audioPackFormatIDRef>
+</audioTrackUID>
+<audioTrackUID UID="ATU_00000004">
+  <audioTrackFormatIDRef>AT_00011002_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011002</audioPackFormatIDRef>
+</audioTrackUID>
+
+  </audioFormatExtended>
+</ituADM>

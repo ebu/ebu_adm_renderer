@@ -1,0 +1,57 @@
+<ADM>
+  <element name="audioProgramme">
+    <attributes>
+      <attribute type="std::string" name="audioProgrammeName"/>
+      <attribute type="std::string">audioProgrammeLanguage</attribute>
+      <attribute type="Timecode">start</attribute>
+      <attribute type="Timecode">end</attribute>
+      <attribute type="float">maxDuckingDepth</attribute>
+    </attributes>
+    <subelements>
+    </subelements>
+  </element>
+  <element name="audioTrackFormat">
+    <attributes>
+      <attribute type="ID">audioTrackFormatID</attribute>
+      <attribute>audioTrackFormatName</attribute>
+      <attribute>formatLabel</attribute>
+      <attribute>formatDefinition</attribute>
+    </attributes>
+    <subelements>
+      <subelement type="IDRef" class="audioStreamFormat">audioStreamFormatIDRef</subelement>
+    </subelements>
+  </element>
+  <element name="audioStreamFormat">
+    <attributes>
+      <attribute type="ID">audioStreamFormatID</attribute>
+      <attribute>audioStreamFormatName</attribute>
+      <attribute>formatLabel</attribute>
+      <attribute>formatDefinition</attribute>
+    </attributes>
+    <subelements>
+      <subelement type="IDRef" class="audioChannelFormat">audioChannelFormatIDRef</subelement>
+      <subelement type="IDRef" class="audioPackFormat">audioPackFormatIDRef</subelement>
+      <subelement type="IDRef" class="audioTrackFormat">audioTrackFormatIDRef</subelement>
+    </subelements>
+  </element>
+  <element name="audioChannelFormat">
+    <attributes>
+      <attribute type="ID">audioChannelFormatID</attribute>
+      <attribute>audioChannelFormatName</attribute>
+      <attribute>typeLabel</attribute>
+      <attribute>typeDefinition</attribute>
+    </attributes>
+    <subelements>
+      <subelement class="audioBlockFormat">audioBlockFormat</subelement>
+      <subelement class="frequency">frequency</subelement>
+    </subelements>
+  </element>
+  <element name="audioBlockFormat">
+    <attributes>
+      <attribute type="ID">audioBlockFormatID</attribute>
+      <attribute type="Timecode">rtime</attribute>
+      <attribute type="Timecode">duration</attribute>
+    </attributes>
+  </element>
+</ADM>
+

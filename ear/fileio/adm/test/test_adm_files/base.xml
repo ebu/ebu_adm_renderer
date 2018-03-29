@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ebuCoreMain xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="urn:ebu:metadata-schema:ebuCore_2015" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:ebu:metadata-schema:ebuCore_2015 https://www.ebu.ch/metadata/schemas/EBUCore/20150522/ebucore_20150522.xsd" xml:lang="en">
+    <coreMetadata>
+        <format>
+            <audioFormatExtended>
+                <audioProgramme audioProgrammeID="APR_1001" audioProgrammeName="PanningNoise">
+                    <audioContentIDRef>ACO_1001</audioContentIDRef>
+                </audioProgramme>
+                <audioContent audioContentID="ACO_1001" audioContentName="PanningNoise">
+                    <audioObjectIDRef>AO_1001</audioObjectIDRef>
+                </audioContent>
+                <audioObject audioObjectID="AO_1001" audioObjectName="Noise" duration="00:00:12.00000" start="00:00:00.00000">
+                    <audioPackFormatIDRef>AP_00031001</audioPackFormatIDRef>
+                    <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+                </audioObject>
+                <audioPackFormat audioPackFormatID="AP_00031001" audioPackFormatName="Noise" typeDefinition="Objects" typeLabel="0003">
+                    <audioChannelFormatIDRef>AC_00031001</audioChannelFormatIDRef>
+                </audioPackFormat>
+                <audioChannelFormat audioChannelFormatID="AC_00031001" audioChannelFormatName="Noise" typeDefinition="Objects" typeLabel="0003">
+                    <audioBlockFormat audioBlockFormatID="AB_00031001_00000001" rtime="00:00:00.00000" duration="00:00:01.00000">
+                        <position coordinate="azimuth">0.000000</position>
+                        <position coordinate="elevation">0.000000</position>
+                        <position coordinate="distance">1.000000</position>
+                    </audioBlockFormat>
+                </audioChannelFormat>
+                <audioStreamFormat audioStreamFormatID="AS_00011001" audioStreamFormatName="PCM_Noise" formatDefinition="PCM" formatLabel="0001">
+                    <audioChannelFormatIDRef>AC_00031001</audioChannelFormatIDRef>
+                    <audioTrackFormatIDRef>AT_00011001_01</audioTrackFormatIDRef>
+                </audioStreamFormat>
+                <audioTrackFormat audioTrackFormatID="AT_00011001_01" audioTrackFormatName="PCM_Noise" formatDefinition="PCM" formatLabel="0001">
+                    <audioStreamFormatIDRef>AS_00011001</audioStreamFormatIDRef>
+                </audioTrackFormat>
+                <audioTrackUID UID="ATU_00000001" bitDepth="24" sampleRate="48000">
+                    <audioTrackFormatIDRef>AT_00011001_01</audioTrackFormatIDRef>
+                    <audioPackFormatIDRef>AP_00031001</audioPackFormatIDRef>
+                </audioTrackUID>
+            </audioFormatExtended>
+        </format>
+    </coreMetadata>
+</ebuCoreMain>

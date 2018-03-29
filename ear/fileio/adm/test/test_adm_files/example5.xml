@@ -1,0 +1,704 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ituADM>
+  <audioFormatExtended>
+<!-- ############ -->
+<!-- PROGRAMMES -->
+<!-- ############ -->
+
+<audioProgramme audioProgrammeID="APG_1001" audioProgrammeName="Main_Language">
+  <audioContentIDRef>ACN_1001</audioContentIDRef>
+</audioProgramme>
+
+<audioProgramme audioProgrammeID="APG_1002" audioProgrammeName="Alternative_Language">
+  <audioContentIDRef>ACN_1002</audioContentIDRef>
+</audioProgramme>
+
+
+
+<!-- ############ -->
+<!-- CONTENTS -->
+<!-- ############ -->
+
+<audioContent audioContentID="ACN_1001" audioContentName="Main_Language">
+  <audioObjectIDRef>AO_1001</audioObjectIDRef>
+  <loudnessMetadata>
+    <integratedLoudness>-24.0</integratedLoudness>
+  </loudnessMetadata>
+</audioContent>
+
+<audioContent audioContentID="ACN_1002" audioContentName="Alternative_Language">
+  <audioObjectIDRef>AO_1002</audioObjectIDRef>
+  <loudnessMetadata>
+    <integratedLoudness>-24.0</integratedLoudness>
+  </loudnessMetadata>
+</audioContent>
+
+<!-- ############ -->
+<!-- OBJECTS -->
+<!-- ############ -->
+
+<audioObject audioObjectID="AO_1001" audioObjectName="Main_Language">
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+  <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000005</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000006</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000007</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000008</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000009</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_0000000a</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_0000000b</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_0000000c</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_0000000d</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_0000000e</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_0000000f</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000010</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000011</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000012</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000013</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000014</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000015</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000016</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000017</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000018</audioTrackUIDRef>
+</audioObject>
+
+<audioObject audioObjectID="AO_1002" audioObjectName="Alternative_Language">
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+  <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000019</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000005</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000006</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000007</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000008</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000009</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_0000000a</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_0000000b</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_0000000c</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_0000000d</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_0000000e</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_0000000f</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000010</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000011</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000012</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000013</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000014</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000015</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000016</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000017</audioTrackUIDRef>
+  <audioTrackUIDRef>ATU_00000018</audioTrackUIDRef>
+</audioObject>
+
+<!-- ############ -->
+<!-- PACKS -->
+<!-- ############ -->
+
+<audioPackFormat audioPackFormatID="AP_00011009" audioPackFormatName="22.2" typeLabel="0001"  typeDefinition="DirectSpeakers">
+  <audioChannelFormatIDRef>AC_00011001</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011002</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011003</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011004</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011007</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011008</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011009</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_0001100a</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_0001100b</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_0001100c</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_0001100d</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_0001100e</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_0001100f</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011010</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011011</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011012</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011013</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011014</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011015</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011016</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011017</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011018</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_00011019</audioChannelFormatIDRef>
+  <audioChannelFormatIDRef>AC_0001101a</audioChannelFormatIDRef>
+</audioPackFormat>
+
+
+<!-- ############ -->
+<!-- CHANNELS -->
+<!-- ############ -->
+
+<audioChannelFormat audioChannelFormatID="AC_00011001" audioChannelFormatName="FrontLeft"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011001_00000001">
+    <speakerLabel>M+060</speakerLabel>
+    <position coordinate="azimuth">60.0</position>
+    <position coordinate="elevation">0.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_00011002" audioChannelFormatName="FrontRight"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011002_00000001">
+    <speakerLabel>M-060</speakerLabel>
+    <position coordinate="azimuth">-60.0</position>
+    <position coordinate="elevation">0.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_00011003" audioChannelFormatName="FrontCentre" typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011003_00000001">
+    <speakerLabel>M+000</speakerLabel>
+    <position coordinate="azimuth">0.0</position>
+    <position coordinate="elevation">0.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_00011004" audioChannelFormatName="LFE1" typeLabel="0001" typeDefinition="DirectSpeakers">
+  <frequency typeDefinition="lowPass">200</frequency>
+  <audioBlockFormat audioBlockFormatID="AB_00011004_00000001">
+    <speakerLabel>LFE+045</speakerLabel>
+    <position coordinate="azimuth">45.0</position>
+    <position coordinate="elevation">-30.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_00011007" audioChannelFormatName="BackLeft"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011007_00000001">
+    <speakerLabel>M+135</speakerLabel>
+    <position coordinate="azimuth">135.0</position>
+    <position coordinate="elevation">0.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_00011008" audioChannelFormatName="BackRight"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011008_00000001">
+    <speakerLabel>M-135</speakerLabel>
+    <position coordinate="azimuth">-135.0</position>
+    <position coordinate="elevation">0.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_00011009" audioChannelFormatName="FrontLeftCentre"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011009_00000001">
+    <speakerLabel>M+030</speakerLabel>
+    <position coordinate="azimuth">30.0</position>
+    <position coordinate="elevation">0.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_0001100a" audioChannelFormatName="FrontRightCentre"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_0001100a_00000001">
+    <speakerLabel>M-030</speakerLabel>
+    <position coordinate="azimuth">-30.0</position>
+    <position coordinate="elevation">0.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_0001100b" audioChannelFormatName="BackCentre" typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_0001100b_00000001">
+    <speakerLabel>M+180</speakerLabel>
+    <position coordinate="azimuth">180.0</position>
+    <position coordinate="elevation">0.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_0001100c" audioChannelFormatName="LFE1" typeLabel="0001" typeDefinition="DirectSpeakers">
+  <frequency typeDefinition="lowPass">200</frequency>
+  <audioBlockFormat audioBlockFormatID="AB_0001100c_00000001">
+    <speakerLabel>LFE-045</speakerLabel>
+    <position coordinate="azimuth">-45.0</position>
+    <position coordinate="elevation">-30.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_0001100d" audioChannelFormatName="SideLeft"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011009_00000001">
+    <speakerLabel>M+090</speakerLabel>
+    <position coordinate="azimuth">90.0</position>
+    <position coordinate="elevation">0.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_0001100e" audioChannelFormatName="SideRight"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_0001100a_00000001">
+    <speakerLabel>M-090</speakerLabel>
+    <position coordinate="azimuth">-90.0</position>
+    <position coordinate="elevation">0.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_0001100f" audioChannelFormatName="TopFrontLeft"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_0001100f_00000001">
+    <speakerLabel>U+045</speakerLabel>
+    <position coordinate="azimuth">45.0</position>
+    <position coordinate="elevation">45.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_00011010" audioChannelFormatName="TopFrontRight"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011010_00000001">
+    <speakerLabel>U-045</speakerLabel>
+    <position coordinate="azimuth">-45.0</position>
+    <position coordinate="elevation">45.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_00011011" audioChannelFormatName="TopFrontCentre"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011011_00000001">
+    <speakerLabel>U+000</speakerLabel>
+    <position coordinate="azimuth">0.0</position>
+    <position coordinate="elevation">45.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_00011012" audioChannelFormatName="TopCentre"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011012_00000001">
+    <speakerLabel>T+000</speakerLabel>
+    <position coordinate="azimuth">0.0</position>
+    <position coordinate="elevation">90.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_00011013" audioChannelFormatName="TopBackLeft"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011013_00000001">
+    <speakerLabel>U+135</speakerLabel>
+    <position coordinate="azimuth">135.0</position>
+    <position coordinate="elevation">45.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_00011014" audioChannelFormatName="TopBackRight"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011014_00000001">
+    <speakerLabel>U-135</speakerLabel>
+    <position coordinate="azimuth">-135.0</position>
+    <position coordinate="elevation">45.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_00011015" audioChannelFormatName="TopSideLeft"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011015_00000001">
+    <speakerLabel>U+090</speakerLabel>
+    <position coordinate="azimuth">90.0</position>
+    <position coordinate="elevation">45.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_00011016" audioChannelFormatName="TopSideRight"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011016_00000001">
+    <speakerLabel>U-090</speakerLabel>
+    <position coordinate="azimuth">-90.0</position>
+    <position coordinate="elevation">45.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_00011017" audioChannelFormatName="TopBackCentre"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011017_00000001">
+    <speakerLabel>U+180</speakerLabel>
+    <position coordinate="azimuth">180.0</position>
+    <position coordinate="elevation">45.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_00011018" audioChannelFormatName="BottomFrontCentre"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011018_00000001">
+    <speakerLabel>B+000</speakerLabel>
+    <position coordinate="azimuth">0.0</position>
+    <position coordinate="elevation">-30.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_00011019" audioChannelFormatName="BottomFrontLeft"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_00011019_00000001">
+    <speakerLabel>B+045</speakerLabel>
+    <position coordinate="azimuth">45.0</position>
+    <position coordinate="elevation">-30.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<audioChannelFormat audioChannelFormatID="AC_0001101a" audioChannelFormatName="BottomFrontRight"  typeLabel="0001" typeDefinition="DirectSpeakers">
+  <audioBlockFormat audioBlockFormatID="AB_0001101a_00000001">
+    <speakerLabel>B-045</speakerLabel>
+    <position coordinate="azimuth">-45.0</position>
+    <position coordinate="elevation">-30.0</position>
+    <position coordinate="distance">1.0</position>
+  </audioBlockFormat>
+</audioChannelFormat>
+
+<!-- ############ -->
+<!-- STREAMS -->
+<!-- ############ -->
+
+<audioStreamFormat audioStreamFormatID="AS_00011001" audioStreamFormatName="PCM_FrontLeft" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011001</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011001_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_00011002" audioStreamFormatName="PCM_FrontRight" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011002</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011002_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_00011003" audioStreamFormatName="PCM_FrontCentre" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011003</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011003_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_00011004" audioStreamFormatName="PCM_LFE1" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011004</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011004_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_00011007" audioStreamFormatName="PCM_BackLeft" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011007</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011007_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_00011008" audioStreamFormatName="PCM_BackRight" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011008</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011008_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_00011009" audioStreamFormatName="PCM_FrontLeftCentre" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011009</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011009_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_0001100a" audioStreamFormatName="PCM_FrontRightCentre" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_0001100a</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_0001100a_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_0001100b" audioStreamFormatName="PCM_BackCentre" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_0001100b</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_0001100b_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_0001100c" audioStreamFormatName="PCM_LFE2" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_0001100c</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_0001100c_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_0001100d" audioStreamFormatName="PCM_SideLeft" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_0001100d</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_0001100d_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_0001100e" audioStreamFormatName="PCM_SideRight" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_0001100e</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_0001100e_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_0001100f" audioStreamFormatName="PCM_TopFrontLeft" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_0001100f</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_0001100f_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_00011010" audioStreamFormatName="PCM_TopFrontRight" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011010</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011010_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_00011011" audioStreamFormatName="PCM_TopFrontCentre" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011011</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011011_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_00011012" audioStreamFormatName="PCM_TopCentre" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011012</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011012_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_00011013" audioStreamFormatName="PCM_TopBackLeft" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011013</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011013_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_00011014" audioStreamFormatName="PCM_TopBackRight" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011014</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011014_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_00011015" audioStreamFormatName="PCM_TopSideLeft" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011015</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011015_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_00011016" audioStreamFormatName="PCM_TopSideRight" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011016</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011016_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_00011017" audioStreamFormatName="PCM_TopBackCentre" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011017</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011017_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_00011018" audioStreamFormatName="PCM_BottomFrontCentre" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011018</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011018_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_00011019" audioStreamFormatName="PCM_BottomFrontLeft" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_00011019</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_00011019_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<audioStreamFormat audioStreamFormatID="AS_0001101a" audioStreamFormatName="PCM_BottomFrontRight" formatLabel="0001" formatDefinition="PCM">
+  <audioChannelFormatIDRef>AC_0001101a</audioChannelFormatIDRef>
+  <audioTrackFormatIDRef>AT_0001101a_01</audioTrackFormatIDRef>
+</audioStreamFormat>
+
+<!-- ############ -->
+<!-- AUDIO TRACKS -->
+<!-- ############ -->
+
+<audioTrackFormat audioTrackFormatID="AT_00011001_01" audioTrackFormatName="PCM_FrontLeft"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011001</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_00011002_01" audioTrackFormatName="PCM_FrontRight"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011002</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_00011003_01" audioTrackFormatName="PCM_FrontCentre"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011003</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_00011004_01" audioTrackFormatName="PCM_LFE1"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011004</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_00011007_01" audioTrackFormatName="PCM_BackLeft"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011007</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_00011008_01" audioTrackFormatName="PCM_BackRight"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011008</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_00011009_01" audioTrackFormatName="PCM_FrontLeftCentre"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011009</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_0001100a_01" audioTrackFormatName="PCM_FrontRightCentre"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_0001100a</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_0001100b_01" audioTrackFormatName="PCM_BackCentre"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_0001100b</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_0001100c_01" audioTrackFormatName="PCM_LFE2"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_0001100c</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_0001100d_01" audioTrackFormatName="PCM_SideLeft"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_0001100d</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_0001100e_01" audioTrackFormatName="PCM_SideRight"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_0001100e</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_0001100f_01" audioTrackFormatName="PCM_TopFrontLeft"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_0001100f</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_00011010_01" audioTrackFormatName="PCM_TopFrontRight"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011010</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_00011011_01" audioTrackFormatName="PCM_TopFrontCentre"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011011</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_00011012_01" audioTrackFormatName="PCM_TopCentre"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011012</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_00011013_01" audioTrackFormatName="PCM_TopBackLeft"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011013</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_00011014_01" audioTrackFormatName="PCM_TopBackRight"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011014</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_00011015_01" audioTrackFormatName="PCM_TopSideLeft"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011015</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_00011016_01" audioTrackFormatName="PCM_TopSideRight"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011016</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_00011017_01" audioTrackFormatName="PCM_TopBackCentre"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011017</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_00011018_01" audioTrackFormatName="PCM_BottomFrontCentre"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011018</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_00011019_01" audioTrackFormatName="PCM_BottomFrontLeft"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_00011019</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+<audioTrackFormat audioTrackFormatID="AT_0001101a_01" audioTrackFormatName="PCM_BottomFrontRight"  formatLabel="0001" formatDefinition="PCM">
+  <audioStreamFormatIDRef>AS_0001101a</audioStreamFormatIDRef>
+</audioTrackFormat>
+
+
+<!-- ############ -->
+<!-- AUDIO TRACK UIDs -->
+<!-- ############ -->
+
+<audioTrackUID UID="ATU_00000001">
+  <audioTrackFormatIDRef>AT_00011001_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000002">
+  <audioTrackFormatIDRef>AT_00011002_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000003">
+  <audioTrackFormatIDRef>AT_00011003_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000004">
+  <audioTrackFormatIDRef>AT_00011004_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000005">
+  <audioTrackFormatIDRef>AT_00011007_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000006">
+  <audioTrackFormatIDRef>AT_00011008_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000007">
+  <audioTrackFormatIDRef>AT_00011009_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000008">
+  <audioTrackFormatIDRef>AT_0001100a_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000009">
+  <audioTrackFormatIDRef>AT_0001100b_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_0000000a">
+  <audioTrackFormatIDRef>AT_0001100c_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_0000000b">
+  <audioTrackFormatIDRef>AT_0001100d_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_0000000c">
+  <audioTrackFormatIDRef>AT_0001100e_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_0000000d">
+  <audioTrackFormatIDRef>AT_0001100f_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_0000000e">
+  <audioTrackFormatIDRef>AT_00011010_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_0000000f">
+  <audioTrackFormatIDRef>AT_00011011_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000010">
+  <audioTrackFormatIDRef>AT_00011012_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000011">
+  <audioTrackFormatIDRef>AT_00011013_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000012">
+  <audioTrackFormatIDRef>AT_00011014_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000013">
+  <audioTrackFormatIDRef>AT_00011015_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000014">
+  <audioTrackFormatIDRef>AT_00011016_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000015">
+  <audioTrackFormatIDRef>AT_00011017_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000016">
+  <audioTrackFormatIDRef>AT_00011018_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000017">
+  <audioTrackFormatIDRef>AT_00011019_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000018">
+  <audioTrackFormatIDRef>AT_0001101a_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+
+<audioTrackUID UID="ATU_00000019">
+  <audioTrackFormatIDRef>AT_00011003_01</audioTrackFormatIDRef>
+  <audioPackFormatIDRef>AP_00011009</audioPackFormatIDRef>
+</audioTrackUID>
+  </audioFormatExtended>
+</ituADM>

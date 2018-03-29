@@ -1,0 +1,10 @@
+image: python:3
+
+test:
+  before_script:
+  - apt-get update -qy
+  - apt-get install -y libsndfile1
+  - pip install tox
+  script:
+  - tox
+  coverage: '/TOTAL.+ ([0-9]{1,3}%)/'

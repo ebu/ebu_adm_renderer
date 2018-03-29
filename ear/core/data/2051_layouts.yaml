@@ -1,0 +1,378 @@
+- name: 0+2+0
+  channels:
+  - name: M+030
+    position: {az: 30.0, el: 0.0}
+  - name: M-030
+    position: {az: -30.0, el: 0.0}
+- name: 0+5+0
+  channels:
+  - name: M+030
+    position: {az: 30.0, el: 0.0}
+  - name: M-030
+    position: {az: -30.0, el: 0.0}
+  - name: M+000
+    position: {az: 0.0, el: 0.0}
+  - name: LFE1
+    is_lfe: true
+    position: {az: 45.0, el: -30.0}  # XXX: LFE does not have a position
+    az_range: [-180.0, 180.0]
+    el_range: [-90.0, 90.0]
+  - name: M+110
+    position: {az: 110.0, el: 0.0}
+    az_range: [100.0, 120.0]
+    el_range: [0.0, 15.0]
+  - name: M-110
+    position: {az: -110.0, el: 0.0}
+    az_range: [-120.0, -100.0]
+    el_range: [0.0, 15.0]
+- name: 2+5+0
+  channels:
+  - name: M+030
+    position: {az: 30.0, el: 0.0}
+  - name: M-030
+    position: {az: -30.0, el: 0.0}
+  - name: M+000
+    position: {az: 0.0, el: 0.0}
+  - name: LFE1
+    is_lfe: true
+    position: {az: 45.0, el: -30.0}  # XXX: LFE does not have a position
+    az_range: [-180.0, 180.0]
+    el_range: [-90.0, 90.0]
+  - name: M+110
+    position: {az: 110.0, el: 0.0}
+    az_range: [100.0, 120.0]
+    el_range: [0.0, 15.0]
+  - name: M-110
+    position: {az: -110.0, el: 0.0}
+    az_range: [-120.0, -100.0]
+    el_range: [0.0, 15.0]
+  - name: U+030
+    position: {az: 30.0, el: 30.0}
+    az_range: [30.0, 45.0]
+    el_range: [30.0, 55.0]
+  - name: U-030
+    position: {az: -30.0, el: 30.0}
+    az_range: [-45.0, -30.0]
+    el_range: [30.0, 55.0]
+- name: 4+5+0
+  channels:
+  - name: M+030
+    position: {az: 30.0, el: 0.0}
+  - name: M-030
+    position: {az: -30.0, el: 0.0}
+  - name: M+000
+    position: {az: 0.0, el: 0.0}
+  - name: LFE1
+    is_lfe: true
+    position: {az: 45.0, el: -30.0}  # XXX: LFE does not have a position
+    az_range: [-180.0, 180.0]
+    el_range: [-90.0, 90.0]
+  - name: M+110
+    position: {az: 110.0, el: 0.0}
+    az_range: [100.0, 120.0]
+  - name: M-110
+    position: {az: -110.0, el: 0.0}
+    az_range: [-120.0, -100.0]
+  - name: U+030
+    position: {az: 30.0, el: 30.0}
+    az_range: [30.0, 45.0]
+    el_range: [30.0, 55.0]
+  - name: U-030
+    position: {az: -30.0, el: 30.0}
+    az_range: [-45.0, -30.0]
+    el_range: [30.0, 55.0]
+  - name: U+110
+    position: {az: 110.0, el: 30.0}
+    az_range: [100.0, 135.0]
+    el_range: [30.0, 55.0]
+  - name: U-110
+    position: {az: -110.0, el: 30.0}
+    az_range: [-135.0, -100.0]
+    el_range: [30.0, 55.0]
+- name: 4+5+1
+  channels:
+  - name: M+030
+    position: {az: 30.0, el: 0.0}
+  - name: M-030
+    position: {az: -30.0, el: 0.0}
+  - name: M+000
+    position: {az: 0.0, el: 0.0}
+  - name: LFE1
+    is_lfe: true
+    position: {az: 45.0, el: -30.0}  # XXX: LFE does not have a position
+    az_range: [-180.0, 180.0]
+    el_range: [-90.0, 90.0]
+  - name: M+110
+    position: {az: 110.0, el: 0.0}
+    az_range: [100.0, 120.0]
+  - name: M-110
+    position: {az: -110.0, el: 0.0}
+    az_range: [-120.0, -100.0]
+  - name: U+030
+    position: {az: 30.0, el: 30.0}
+    az_range: [30.0, 45.0]
+    el_range: [30.0, 55.0]
+  - name: U-030
+    position: {az: -30.0, el: 30.0}
+    az_range: [-45.0, -30.0]
+    el_range: [30.0, 55.0]
+  - name: U+110
+    position: {az: 110.0, el: 30.0}
+    az_range: [100.0, 135.0]
+    el_range: [30.0, 55.0]
+  - name: U-110
+    position: {az: -110.0, el: 30.0}
+    az_range: [-135.0, -100.0]
+    el_range: [30.0, 55.0]
+  - name: B+000
+    position: {az: 0.0, el: -30.0}
+    el_range: [-30.0, -15.0]
+- name: 3+7+0
+  channels:
+  - name: M+000
+    position: {az: 0.0, el: 0.0}
+  - name: M+030
+    position: {az: 30.0, el: 0.0}
+  - name: M-030
+    position: {az: -30.0, el: 0.0}
+  - name: U+045
+    position: {az: 45.0, el: 30.0}
+    az_range: [30.0, 45.0]
+    el_range: [30.0, 45.0]
+  - name: U-045
+    position: {az: -45.0, el: 30.0}
+    az_range: [-45.0, -30.0]
+    el_range: [30.0, 45.0]
+  - name: M+090
+    position: {az: 90.0, el: 0.0}
+    az_range: [60.0, 150.0]
+  - name: M-090
+    position: {az: -90.0, el: 0.0}
+    az_range: [-150.0, -60.0]
+  - name: M+135
+    position: {az: 135.0, el: 0.0}
+    az_range: [60.0, 150.0]
+  - name: M-135
+    position: {az: -135.0, el: 0.0}
+    az_range: [-150.0, -60.0]
+  - name: UH+180
+    position: {az: 180.0, el: 45.0}
+    el_range: [45.0, 90.0]
+  - name: LFE1
+    is_lfe: true
+    position: {az: 45.0, el: -30.0}
+    az_range: [30.0, 90.0]
+    el_range: [-30.0, -15.0]
+  - name: LFE2
+    is_lfe: true
+    position: {az: -45.0, el: -30.0}
+    az_range: [-90.0, -30.0]
+    el_range: [-30.0, -15.0]
+- name: 4+9+0
+  channels:
+  - name: M+030
+    position: {az: 30.0, el: 0.0}
+    az_range: [30.0, 45.0]
+  - name: M-030
+    position: {az: -30.0, el: 0.0}
+    az_range: [-45.0, -30.0]
+  - name: M+000
+    position: {az: 0.0, el: 0.0}
+  - name: LFE1
+    is_lfe: true
+    position: {az: 45.0, el: -30.0}  # XXX: LFE does not have a position
+    az_range: [-180.0, 180.0]
+    el_range: [-90.0, 90.0]
+  - name: M+090
+    position: {az: 90.0, el: 0.0}
+    az_range: [85.0, 110.0]
+  - name: M-090
+    position: {az: -90.0, el: 0.0}
+    az_range: [-110.0, -85.0]
+  - name: M+135
+    position: {az: 135.0, el: 0.0}
+    az_range: [120.0, 150.0]
+  - name: M-135
+    position: {az: -135.0, el: 0.0}
+    az_range: [-150.0, -120.0]
+  - name: U+045
+    position: {az: 45.0, el: 30.0}
+    az_range: [30.0, 45.0]
+    el_range: [30.0, 55.0]
+  - name: U-045
+    position: {az: -45.0, el: 30.0}
+    az_range: [-45.0, -30.0]
+    el_range: [30.0, 55.0]
+  - name: U+135
+    position: {az: 135.0, el: 30.0}
+    az_range: [100.0, 150.0]
+    el_range: [30.0, 55.0]
+  - name: U-135
+    position: {az: -135.0, el: 30.0}
+    az_range: [-150.0, -100.0]
+    el_range: [30.0, 55.0]
+  - name: M+SC
+    position: {az: 20.0, el: 0.0}  # XXX: M+SC does not have a specified position
+    az_range: [-180, 180]
+  - name: M-SC
+    position: {az: -20.0, el: 0.0}  # XXX: M-SC does not have a specified position
+    az_range: [-180, 180]
+- name: 9+10+3
+  channels:
+  - name: M+060
+    position: {az: 60.0, el: 0.0}
+    az_range: [45.0, 60.0]
+    el_range: [0.0, 5.0]
+  - name: M-060
+    position: {az: -60.0, el: 0.0}
+    az_range: [-60.0, -45.0]
+    el_range: [0.0, 5.0]
+  - name: M+000
+    position: {az: 0.0, el: 0.0}
+    el_range: [0.0, 5.0]
+  - name: LFE1
+    is_lfe: true
+    position: {az: 45.0, el: -30.0}
+    az_range: [30.0, 90.0]
+    el_range: [-30.0, -15.0]
+  - name: M+135
+    position: {az: 135.0, el: 0.0}
+    az_range: [110.0, 135.0]
+    el_range: [0.0, 15.0]
+  - name: M-135
+    position: {az: -135.0, el: 0.0}
+    az_range: [-135.0, -110.0]
+    el_range: [0.0, 15.0]
+  - name: M+030
+    position: {az: 30.0, el: 0.0}
+    az_range: [22.5, 30.0]
+    el_range: [0.0, 5.0]
+  - name: M-030
+    position: {az: -30.0, el: 0.0}
+    az_range: [-30.0, -22.5]
+    el_range: [0.0, 5.0]
+  - name: M+180
+    position: {az: 180.0, el: 0.0}
+    el_range: [0.0, 15.0]
+  - name: LFE2
+    is_lfe: true
+    position: {az: -45.0, el: -30.0}
+    az_range: [-90.0, -30.0]
+    el_range: [-30.0, -15.0]
+  - name: M+090
+    position: {az: 90.0, el: 0.0}
+    el_range: [0.0, 15.0]
+  - name: M-090
+    position: {az: -90.0, el: 0.0}
+    el_range: [0.0, 15.0]
+  - name: U+045
+    position: {az: 45.0, el: 30.0}
+    az_range: [45.0, 60.0]
+    el_range: [30.0, 45.0]
+  - name: U-045
+    position: {az: -45.0, el: 30.0}
+    az_range: [-60.0, -45.0]
+    el_range: [30.0, 45.0]
+  - name: U+000
+    position: {az: 0.0, el: 30.0}
+    el_range: [30.0, 45.0]
+  - name: T+000
+    position: {az: 0.0, el: 90.0}
+  - name: U+135
+    position: {az: 135.0, el: 30.0}
+    az_range: [110.0, 135.0]
+    el_range: [30.0, 45.0]
+  - name: U-135
+    position: {az: -135.0, el: 30.0}
+    az_range: [-135.0, -110.0]
+    el_range: [30.0, 45.0]
+  - name: U+090
+    position: {az: 90.0, el: 30.0}
+    el_range: [30.0, 45.0]
+  - name: U-090
+    position: {az: -90.0, el: 30.0}
+    el_range: [30.0, 45.0]
+  - name: U+180
+    position: {az: 180.0, el: 30.0}
+    el_range: [30.0, 45.0]
+  - name: B+000
+    position: {az: 0.0, el: -30.0}
+    el_range: [-30.0, -15.0]
+  - name: B+045
+    position: {az: 45.0, el: -30.0}
+    az_range: [45.0, 60.0]
+    el_range: [-30.0, -15.0]
+  - name: B-045
+    position: {az: -45.0, el: -30.0}
+    az_range: [-60.0, -45.0]
+    el_range: [-30.0, -15.0]
+- name: 0+7+0
+  channels:
+  - name: M+030
+    position: {az: 30.0, el: 0.0}
+    az_range: [30.0, 45.0]
+  - name: M-030
+    position: {az: -30.0, el: 0.0}
+    az_range: [-45.0, -30.0]
+  - name: M+000
+    position: {az: 0.0, el: 0.0}
+  - name: LFE1
+    is_lfe: true
+    position: {az: 45.0, el: -30.0}  # XXX: LFE does not have a position
+    az_range: [-180.0, 180.0]
+    el_range: [-90.0, 90.0]
+  - name: M+090
+    position: {az: 90.0, el: 0.0}
+    az_range: [85.0, 110.0]
+  - name: M-090
+    position: {az: -90.0, el: 0.0}
+    az_range: [-110.0, -85.0]
+  - name: M+135
+    position: {az: 135.0, el: 0.0}
+    az_range: [120.0, 150.0]
+  - name: M-135
+    position: {az: -135.0, el: 0.0}
+    az_range: [-150.0, -120.0]
+- name: 4+7+0
+  channels:
+  - name: M+030
+    position: {az: 30.0, el: 0.0}
+    az_range: [30.0, 45.0]
+  - name: M-030
+    position: {az: -30.0, el: 0.0}
+    az_range: [-45.0, -30.0]
+  - name: M+000
+    position: {az: 0.0, el: 0.0}
+  - name: LFE1
+    is_lfe: true
+    position: {az: 45.0, el: -30.0}  # XXX: LFE does not have a position
+    az_range: [-180.0, 180.0]
+    el_range: [-90.0, 90.0]
+  - name: M+090
+    position: {az: 90.0, el: 0.0}
+    az_range: [85.0, 110.0]
+  - name: M-090
+    position: {az: -90.0, el: 0.0}
+    az_range: [-110.0, -85.0]
+  - name: M+135
+    position: {az: 135.0, el: 0.0}
+    az_range: [120.0, 150.0]
+  - name: M-135
+    position: {az: -135.0, el: 0.0}
+    az_range: [-150.0, -120.0]
+  - name: U+045
+    position: {az: 45.0, el: 30.0}
+    az_range: [30.0, 45.0]
+    el_range: [30.0, 55.0]
+  - name: U-045
+    position: {az: -45.0, el: 30.0}
+    az_range: [-45.0, -30.0]
+    el_range: [30.0, 55.0]
+  - name: U+135
+    position: {az: 135.0, el: 30.0}
+    az_range: [100.0, 150.0]
+    el_range: [30.0, 55.0]
+  - name: U-135
+    position: {az: -135.0, el: 30.0}
+    az_range: [-150.0, -100.0]
+    el_range: [30.0, 55.0]

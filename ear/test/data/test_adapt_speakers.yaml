@@ -1,0 +1,19 @@
+speakers:
+- channel: 0
+  names: M+030
+  position: {az: 30.0, el: 0.0, r: 1.0}
+- channel: 1
+  names: M-030
+  position: {az: -30.0, el: 0.0, r: 1.0}
+- channel: 2
+  names: M+000
+  position: {az: 0.0, el: 0.0, r: 1.0}
+- channel: 3
+  names: LFE1
+  position: {az: 45.0, el: -30.0, r: 1.0}
+- channel: 4
+  names: M-110
+  position: {az: -90.0, el: 0.0, r: 1.0}
+- channel: 6
+  names: M+110
+  position: {az: 90.0, el: 0.0, r: 1.0}

@@ -1,0 +1,35 @@
+speakers:
+    - {channel: 0,  names: B+045, position: {az: 45.0,   el: -22.0, r: 2.58975}}
+    - {channel: 1,  names: B+000, position: {az: 0.0,    el: -26.0, r: 2.2    }}
+    - {channel: 2,  names: B-045, position: {az: -45.0,  el: -22.0, r: 2.58975}}
+    - {channel: 3,  names: B-135, position: {az: -135.0, el: -22.0, r: 2.58975}}
+    - {channel: 4,  names: B+135, position: {az: 135.0,  el: -22.0, r: 2.58975}}
+    - {channel: 5,  names: M+045, position: {az: 45.0,   el: 0.0,   r: 3.00613}}
+    - {channel: 6,  names: M+030, position: {az: 30.0,   el: 0.0,   r: 2.37201}}
+    - {channel: 7,  names: M+000, position: {az: 0.0,    el: 0.0,   r: 1.994  }}
+    - {channel: 8,  names: M-030, position: {az: -30.0,  el: 0.0,   r: 2.37201}}
+    - {channel: 9,  names: M-045, position: {az: -45.0,  el: 0.0,   r: 3.00613}}
+    - {channel: 10, names: M-060, position: {az: -60.0,  el: 0.0,   r: 2.70687}}
+    - {channel: 11, names: M-090, position: {az: -90.0,  el: 0.0,   r: 2.284  }}
+    - {channel: 12, names: M-110, position: {az: -110.0, el: 0.0,   r: 2.45943}}
+    - {channel: 13, names: M-135, position: {az: -135.0, el: 0.0,   r: 3.00613}}
+    - {channel: 14, names: M+180, position: {az: 180.0,  el: 0.0,   r: 1.994  }}
+    - {channel: 15, names: M+135, position: {az: 135.0,  el: 0.0,   r: 3.00613}}
+    - {channel: 16, names: M+110, position: {az: 110.0,  el: 0.0,   r: 2.45943}}
+    - {channel: 17, names: M+090, position: {az: 90.0,   el: 0.0,   r: 2.284  }}
+    - {channel: 18, names: M+060, position: {az: 60.0,   el: 0.0,   r: 2.70687}}
+    - {channel: 19, names: U+045, position: {az: 45.0,   el: 40.0,  r: 1.91029}}
+    - {channel: 20, names: U+030, position: {az: 30.0,   el: 40.0,  r: 1.91029}}
+    - {channel: 21, names: U+000, position: {az: 0.0,    el: 40.0,  r: 1.91029}}
+    - {channel: 22, names: U-030, position: {az: -30.0,  el: 40.0,  r: 1.91029}}
+    - {channel: 23, names: U-045, position: {az: -45.0,  el: 40.0,  r: 1.91029}}
+    - {channel: 24, names: U-090, position: {az: -90.0,  el: 40.0,  r: 1.86906}}
+    - {channel: 25, names: U-110, position: {az: -110.0, el: 40.0,  r: 1.91029}}
+    - {channel: 26, names: U-135, position: {az: -135.0, el: 40.0,  r: 1.91029}}
+    - {channel: 27, names: [U+180, UH+180], position: {az: 180.0,  el: 40.0,  r: 1.91029}}
+    - {channel: 28, names: U+135, position: {az: 135.0,  el: 40.0,  r: 1.91029}}
+    - {channel: 29, names: U+110, position: {az: 110.0,  el: 40.0,  r: 1.91029}}
+    - {channel: 30, names: U+090, position: {az: 90.0,   el: 40.0,  r: 1.86906}}
+    - {channel: 31, names: T+000, position: {az: 0.0,    el: 90.0,  r: 1.297  }}
+    - {channel: 32, names: LFE1,  position: {az: 17.0,   el: -25.0, r: 2.29   }, gain_linear: 0.316228}
+    - {channel: 33, names: LFE2,  position: {az: -163.0, el: -25.0, r: 2.29   }, gain_linear: 0.316228}

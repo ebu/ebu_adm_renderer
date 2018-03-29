@@ -1,0 +1,56 @@
+name: front centre + top left
+items:
+    - type: "Objects"
+      channels: [1]
+      blocks:
+          - rtime: 0.0
+            duration: 1/8
+            position:
+                azimuth: 0.0
+                elevation: 0.0
+                distance: 1.0
+            gain: 1.0
+          - rtime: 1/8
+            duration: 1/8
+            position:
+                azimuth: -30.0
+                elevation: 0.0
+                distance: 1.0
+            gain: 1.0
+            jumpPosition: {flag: true, interpolationLength: 0.0}
+    - type: "Objects"
+      channels: [2]
+      blocks:
+          - rtime: 0.0
+            duration: 1/4
+            position:
+                azimuth: 30.0
+                elevation: 30.0
+                distance: 1.0
+            gain: 1.0
+    - type: "DirectSpeakers"
+      channels: [3]
+      blocks:
+          - speakerLabel: ["U-030"]
+            position:
+                azimuth: -30.0
+                elevation: 30.0
+    - type: "DirectSpeakers"
+      channels: [3]
+      blocks:
+          - speakerLabel: ["M+045"]
+            position:
+                azimuth:
+                    value: 45.0
+                    min: 30.0
+                    max: 50.0
+                elevation: 0.0
+    - type: "DirectSpeakers"
+      channels: [4]
+      frequency:
+          lowPass: 120.0
+      blocks:
+          - speakerLabel: ["LFE1"]
+            position:
+                azimuth: 0.0
+                elevation: -30.0

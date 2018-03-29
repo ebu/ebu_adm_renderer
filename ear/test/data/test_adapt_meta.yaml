@@ -1,0 +1,12 @@
+name: front centre + top left
+items:
+    - type: "Objects"
+      channels: [1]
+      blocks:
+          - rtime: 0.0
+            duration: 1/4
+            position:
+                azimuth: 90.0
+                elevation: 0.0
+                distance: 1.0
+            gain: 1.0
