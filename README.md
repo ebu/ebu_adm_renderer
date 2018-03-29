@@ -4,7 +4,7 @@ The **EBU ADM Renderer** **(*EAR*)** is a complete interpretation of the **Audio
 
 This Renderer implementation is capable of rendering audio signals to all reproduction systems mentioned in ["Advanced sound system for programme production (ITU-R BS.2051-1)"](https://www.itu.int/rec/R-REC-BS.2051/en).
 
-Further descriptions of the *EAR* algorithms and functionalities can be found in EBU Tech 3388.
+Further descriptions of the *EAR* algorithms and functionalities can be found in [EBU Tech 3388](https://tech.ebu.ch/publications/adm-renderer-for-use-in-nga-broadcasting).
 
 ## Test files
 A initial set of ADM files to test the *EAR* can be found under
