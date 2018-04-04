@@ -35,7 +35,6 @@ setup(
         'dev': [
             'flake8~=3.5',
             'flake8-print~=3.1',
-            'flake8-putty~=0.4',
             'flake8-string-format~=0.2',
         ],
     },
