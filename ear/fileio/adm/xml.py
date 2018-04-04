@@ -112,9 +112,9 @@ def load_bool(data):
 
 StringType = TypeConvert(None, None)
 IntType = TypeConvert(int, str)
-FloatType = TypeConvert(float, "{:.5f}".format)
+FloatType = TypeConvert(float, "{:.5f}".format)  # noqa: P103
 SecondsType = TypeConvert(Fraction, lambda t: "{:07.5f}".format(float(t)))
-BoolType = TypeConvert(load_bool, "{:d}".format)
+BoolType = TypeConvert(load_bool, "{:d}".format)  # noqa: P103
 TimeType = TypeConvert(parse_time, unparse_time)
 RefType = TypeConvert(loads=None,
                       dumps=lambda data: data.id)

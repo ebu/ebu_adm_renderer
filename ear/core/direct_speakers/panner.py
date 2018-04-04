@@ -105,7 +105,7 @@ class DirectSpeakersPanner(object):
         else:
             return None
 
-    @dispatch(DirectSpeakerPolarPosition, float)
+    @dispatch(DirectSpeakerPolarPosition, float)  # noqa: F811
     def channels_within_bounds(self, position, tol):
         """Get a bit mask of channels within the bounds in position."""
 
@@ -126,7 +126,7 @@ class DirectSpeakersPanner(object):
             (self.distances > dist_min - tol) & (self.distances < dist_max + tol)
         )
 
-    @dispatch(DirectSpeakerCartesianPosition, float)
+    @dispatch(DirectSpeakerCartesianPosition, float)  # noqa: F811
     def channels_within_bounds(self, position, tol):
         """Get a bit mask of channels within the bounds in position."""
 
@@ -159,7 +159,7 @@ class DirectSpeakersPanner(object):
 
         return has_lfe_freq or has_lfe_name
 
-    @dispatch(DirectSpeakerPolarPosition)
+    @dispatch(DirectSpeakerPolarPosition)  # noqa: F811
     def apply_screen_edge_lock(self, position):
         az, el = self._screen_edge_lock_handler.handle_az_el(position.azimuth,
                                                              position.elevation,
@@ -169,7 +169,7 @@ class DirectSpeakersPanner(object):
                       bounded_azimuth=evolve(position.bounded_azimuth, value=az),
                       bounded_elevation=evolve(position.bounded_elevation, value=el))
 
-    @dispatch(DirectSpeakerCartesianPosition)
+    @dispatch(DirectSpeakerCartesianPosition)  # noqa: F811
     def apply_screen_edge_lock(self, position):
         X, Y, Z = self._screen_edge_lock_handler.handle_vector(position.as_cartesian_array(),
                                                                position.screenEdgeLock)
