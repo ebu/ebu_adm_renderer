@@ -8,3 +8,4 @@ def load_common_definitions(adm):
     with pkg_resources.resource_stream(__name__, fname) as stream:
         element = lxml.etree.parse(stream)
         parse_adm_elements(adm, element, common_definitions=True)
+        adm.lazy_lookup_references()
