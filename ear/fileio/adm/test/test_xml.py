@@ -487,7 +487,6 @@ def as_dict(inst):
     from attr import fields
     for field in fields(type(inst)):
         if field.name.endswith("Ref"): continue
-        if field.name == "adm_parent": continue
 
         value = getattr(inst, field.name)
 

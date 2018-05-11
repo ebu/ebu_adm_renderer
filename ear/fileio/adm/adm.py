@@ -66,38 +66,30 @@ class ADM(object):
             obj_list[:] = self._without_duplicates(obj_list)
 
         for element in self.elements:
-            element.lazy_lookup_references()
+            element.lazy_lookup_references(self)
 
     def addAudioProgramme(self, programme):
-        programme.adm_parent = self
         self._ap.append(programme)
 
     def addAudioContent(self, content):
-        content.adm_parent = self
         self._ac.append(content)
 
     def addAudioObject(self, audioobject):
-        audioobject.adm_parent = self
         self._ao.append(audioobject)
 
     def addAudioPackFormat(self, packformat):
-        packformat.adm_parent = self
         self._apf.append(packformat)
 
     def addAudioChannelFormat(self, channelformat):
-        channelformat.adm_parent = self
         self._acf.append(channelformat)
 
     def addAudioStreamFormat(self, streamformat):
-        streamformat.adm_parent = self
         self._asf.append(streamformat)
 
     def addAudioTrackFormat(self, trackformat):
-        trackformat.adm_parent = self
         self._atf.append(trackformat)
 
     def addAudioTrackUID(self, trackUID):
-        trackUID.adm_parent = self
         self._atu.append(trackUID)
 
     @property

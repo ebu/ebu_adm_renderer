@@ -7,6 +7,17 @@ from six import string_types
 from ....common import CartesianScreen, PolarScreen, default_screen
 
 
+def _lookup_elements(adm, idRefs):
+    """Lookup multiple ID references"""
+    return [adm.lookup_element(key) for key in idRefs]
+
+
+def _lookup_element(adm, idRef):
+    """Lookup a single ID reference, passing through None"""
+    if idRef is None: return None
+    return adm.lookup_element(idRef)
+
+
 class TypeDefinition(Enum):
     DirectSpeakers = 1
     Matrix = 2
@@ -22,19 +33,11 @@ class FormatDefinition(Enum):
 @attrs(slots=True)
 class ADMElement(object):
     id = attrib(default=None)
-    adm_parent = attrib(default=None)
     is_common_definition = attrib(default=False, validator=instance_of(bool))
 
     @property
     def element_type(self):
         return type(self).__name__
-
-    def _lookup_elements(self, idRefs):
-        return [self.adm_parent.lookup_element(key) for key in idRefs]
-
-    def _lookup_element(self, idRef):
-        if idRef is None: return None
-        return self.adm_parent.lookup_element(idRef)
 
 
 @attrs(slots=True)
@@ -51,9 +54,9 @@ class AudioProgramme(ADMElement):
     referenceScreen = attrib(validator=optional(instance_of((CartesianScreen, PolarScreen))),
                              default=default_screen)
 
-    def lazy_lookup_references(self):
+    def lazy_lookup_references(self, adm):
         if self.audioContentIDRef is not None:
-            self.audioContents = self._lookup_elements(self.audioContentIDRef)
+            self.audioContents = _lookup_elements(adm, self.audioContentIDRef)
             self.audioContentIDRef = None
 
 
@@ -67,9 +70,9 @@ class AudioContent(ADMElement):
 
     audioObjectIDRef = attrib(default=None)
 
-    def lazy_lookup_references(self):
+    def lazy_lookup_references(self, adm):
         if self.audioObjectIDRef is not None:
-            self.audioObjects = self._lookup_elements(self.audioObjectIDRef)
+            self.audioObjects = _lookup_elements(adm, self.audioObjectIDRef)
             self.audioObjectIDRef = None
 
 
@@ -92,18 +95,18 @@ class AudioObject(ADMElement):
     audioObjectIDRef = attrib(default=None)
     audioComplementaryObjectIDRef = attrib(default=None)
 
-    def lazy_lookup_references(self):
+    def lazy_lookup_references(self, adm):
         if self.audioPackFormatIDRef is not None:
-            self.audioPackFormats = self._lookup_elements(self.audioPackFormatIDRef)
+            self.audioPackFormats = _lookup_elements(adm, self.audioPackFormatIDRef)
             self.audioPackFormatIDRef = None
         if self.audioTrackUIDRef is not None:
-            self.audioTrackUIDs = self._lookup_elements(self.audioTrackUIDRef)
+            self.audioTrackUIDs = _lookup_elements(adm, self.audioTrackUIDRef)
             self.audioTrackUIDRef = None
         if self.audioObjectIDRef is not None:
-            self.audioObjects = self._lookup_elements(self.audioObjectIDRef)
+            self.audioObjects = _lookup_elements(adm, self.audioObjectIDRef)
             self.audioObjectIDRef = None
         if self.audioComplementaryObjectIDRef is not None:
-            self.audioComplementaryObjects = self._lookup_elements(self.audioComplementaryObjectIDRef)
+            self.audioComplementaryObjects = _lookup_elements(adm, self.audioComplementaryObjectIDRef)
             self.audioComplementaryObjectIDRef = None
 
 
@@ -119,12 +122,12 @@ class AudioPackFormat(ADMElement):
     audioChannelFormatIDRef = attrib(default=None)
     audioPackFormatIDRef = attrib(default=None)
 
-    def lazy_lookup_references(self):
+    def lazy_lookup_references(self, adm):
         if self.audioChannelFormatIDRef is not None:
-            self.audioChannelFormats = self._lookup_elements(self.audioChannelFormatIDRef)
+            self.audioChannelFormats = _lookup_elements(adm, self.audioChannelFormatIDRef)
             self.audioChannelFormatIDRef = None
         if self.audioPackFormatIDRef is not None:
-            self.audioPackFormats = self._lookup_elements(self.audioPackFormatIDRef)
+            self.audioPackFormats = _lookup_elements(adm, self.audioPackFormatIDRef)
             self.audioPackFormatIDRef = None
 
 
@@ -141,7 +144,7 @@ class AudioChannelFormat(ADMElement):
     audioBlockFormats = attrib(default=Factory(list))
     frequency = attrib(default=Factory(Frequency), validator=instance_of(Frequency))
 
-    def lazy_lookup_references(self):
+    def lazy_lookup_references(self, adm):
         pass
 
 
@@ -159,15 +162,15 @@ class AudioStreamFormat(ADMElement):
     audioChannelFormatIDRef = attrib(default=None)
     audioPackFormatIDRef = attrib(default=None)
 
-    def lazy_lookup_references(self):
+    def lazy_lookup_references(self, adm):
         if self.audioChannelFormatIDRef is not None:
-            self.audioChannelFormat = self._lookup_element(self.audioChannelFormatIDRef)
+            self.audioChannelFormat = _lookup_element(adm, self.audioChannelFormatIDRef)
             self.audioChannelFormatIDRef = None
         if self.audioPackFormatIDRef is not None:
-            self.audioPackFormat = self._lookup_element(self.audioPackFormatIDRef)
+            self.audioPackFormat = _lookup_element(adm, self.audioPackFormatIDRef)
             self.audioPackFormatIDRef = None
         if self.audioTrackFormatIDRef is not None:
-            self.audioTrackFormats = self._lookup_elements(self.audioTrackFormatIDRef)
+            self.audioTrackFormats = _lookup_elements(adm, self.audioTrackFormatIDRef)
             self.audioTrackFormatIDRef = None
 
 
@@ -178,11 +181,11 @@ class AudioTrackFormat(ADMElement):
 
     audioStreamFormatIDRef = attrib(default=None)
 
-    def lazy_lookup_references(self):
+    def lazy_lookup_references(self, adm):
         # check that there is a reference from the referenced stream format
         # back to ourselves
         if self.audioStreamFormatIDRef is not None:
-            stream = self._lookup_element(self.audioStreamFormatIDRef)
+            stream = _lookup_element(adm, self.audioStreamFormatIDRef)
 
             # cannot use 'in', as we want to check identity, not equality
             if not any(track_format is self for track_format in stream.audioTrackFormats):
@@ -202,10 +205,10 @@ class AudioTrackUID(ADMElement):
     audioTrackFormatIDRef = attrib(default=None)
     audioPackFormatIDRef = attrib(default=None)
 
-    def lazy_lookup_references(self):
+    def lazy_lookup_references(self, adm):
         if self.audioTrackFormatIDRef is not None:
-            self.audioTrackFormat = self._lookup_element(self.audioTrackFormatIDRef)
+            self.audioTrackFormat = _lookup_element(adm, self.audioTrackFormatIDRef)
             self.audioTrackFormatIDRef = None
         if self.audioPackFormatIDRef is not None:
-            self.audioPackFormat = self._lookup_element(self.audioPackFormatIDRef)
+            self.audioPackFormat = _lookup_element(adm, self.audioPackFormatIDRef)
             self.audioPackFormatIDRef = None
