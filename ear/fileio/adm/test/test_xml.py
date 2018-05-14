@@ -13,16 +13,48 @@ nsmap = dict(adm=ns)
 E = ElementMaker(namespace=ns, nsmap=nsmap)
 
 
-# load base.xml as a starting point
-def load_base():
-    import pkg_resources
-    fname = "test_adm_files/base.xml"
-    with pkg_resources.resource_stream(__name__, fname) as xml_file:
-        return lxml.etree.parse(xml_file)
+class BaseADM(object):
+    """Base ADM to start tests from, with utilities for interacting with it."""
+
+    def __init__(self, fname):
+        import pkg_resources
+        with pkg_resources.resource_stream(__name__, fname) as xml_file:
+            self.xml = lxml.etree.parse(xml_file)
+
+        self.adm = parse_string(lxml.etree.tostring(self.xml))
+
+    def with_mods(self, *mods):
+        """A copy of the base xml, with some modifications applied"""
+        xml = deepcopy(self.xml)
+
+        for mod in mods:
+            mod(xml)
+
+        return xml
+
+    def adm_after_mods(self, *mods):
+        """Apply modifications to base, stringify it, and run it though the parser."""
+        if mods:
+            xml = self.with_mods(*mods)
+            xml_str = lxml.etree.tostring(xml)
+            adm = parse_string(xml_str)
+            check_round_trip(adm)
+            return adm
+        else:
+            return self.adm
+
+    def bf_after_mods(self, *mods):
+        """Get the first block format after applying some modifications."""
+        adm = self.adm_after_mods(*mods)
+        return get_acf(adm).audioBlockFormats[0]
+
+    def prog_after_mods(self, *mods):
+        """Get the first programme after applying some modifications."""
+        adm = self.adm_after_mods(*mods)
+        return adm.audioProgrammes[0]
 
 
-base_xml = load_base()
-base_adm = parse_string(lxml.etree.tostring(base_xml))
+base = BaseADM("test_adm_files/base.xml")
 
 
 # xml modifications: these return a function that modifies an xml tree in some way
@@ -56,16 +88,6 @@ def del_attrs(xpath_to_el, *attrs):
     return f
 
 
-def base_with_mods(*mods):
-    """A copy of the base xml, with some modifications applied"""
-    xml = deepcopy(base_xml)
-
-    for mod in mods:
-        mod(xml)
-
-    return xml
-
-
 def get_acf(adm):
     """Get the first non-common-definition channel format."""
     for cf in adm.audioChannelFormats:
@@ -73,97 +95,75 @@ def get_acf(adm):
             return cf
 
 
-def parsed_adm_after_mods(*mods):
-    """Apply modifications to base, stringify it, and run it though the parser."""
-    if mods:
-        xml = base_with_mods(*mods)
-        xml_str = lxml.etree.tostring(xml)
-        adm = parse_string(xml_str)
-        check_round_trip(adm)
-        return adm
-    else:
-        return base_adm
-
-
-def parsed_bf_after_mods(*mods):
-    adm = parsed_adm_after_mods(*mods)
-    return get_acf(adm).audioBlockFormats[0]
-
-
-def parsed_prog_after_mods(*mods):
-    adm = parsed_adm_after_mods(*mods)
-    return adm.audioProgrammes[0]
-
-
 bf_path = "//adm:audioBlockFormat"
 
 
 def test_gain():
-    assert parsed_bf_after_mods(add_children(bf_path, E.gain("0"))).gain == 0.0
-    assert parsed_bf_after_mods(add_children(bf_path, E.gain("0.5"))).gain == 0.5
-    assert parsed_bf_after_mods().gain == 1.0
+    assert base.bf_after_mods(add_children(bf_path, E.gain("0"))).gain == 0.0
+    assert base.bf_after_mods(add_children(bf_path, E.gain("0.5"))).gain == 0.5
+    assert base.bf_after_mods().gain == 1.0
 
 
 def test_extent():
-    assert parsed_bf_after_mods().width == 0.0
-    assert parsed_bf_after_mods().height == 0.0
-    assert parsed_bf_after_mods().depth == 0.0
+    assert base.bf_after_mods().width == 0.0
+    assert base.bf_after_mods().height == 0.0
+    assert base.bf_after_mods().depth == 0.0
 
-    assert parsed_bf_after_mods(add_children(bf_path, E.width("0.5"))).width == 0.5
-    assert parsed_bf_after_mods(add_children(bf_path, E.height("0.5"))).height == 0.5
-    assert parsed_bf_after_mods(add_children(bf_path, E.depth("0.5"))).depth == 0.5
+    assert base.bf_after_mods(add_children(bf_path, E.width("0.5"))).width == 0.5
+    assert base.bf_after_mods(add_children(bf_path, E.height("0.5"))).height == 0.5
+    assert base.bf_after_mods(add_children(bf_path, E.depth("0.5"))).depth == 0.5
 
 
 def test_channel_lock():
-    assert parsed_bf_after_mods().channelLock is None
+    assert base.bf_after_mods().channelLock is None
 
-    block_format = parsed_bf_after_mods(add_children(bf_path, E.channelLock("1")))
+    block_format = base.bf_after_mods(add_children(bf_path, E.channelLock("1")))
     assert block_format.channelLock is not None
     assert block_format.channelLock.maxDistance is None
 
-    block_format = parsed_bf_after_mods(add_children(bf_path, E.channelLock("1", maxDistance="0.5")))
+    block_format = base.bf_after_mods(add_children(bf_path, E.channelLock("1", maxDistance="0.5")))
     assert block_format.channelLock is not None
     assert block_format.channelLock.maxDistance == 0.5
 
 
 def test_jump_position():
-    assert parsed_bf_after_mods().jumpPosition.flag is False
-    assert parsed_bf_after_mods().jumpPosition.interpolationLength is None
+    assert base.bf_after_mods().jumpPosition.flag is False
+    assert base.bf_after_mods().jumpPosition.interpolationLength is None
 
-    block_format = parsed_bf_after_mods(add_children(bf_path, E.jumpPosition("1")))
+    block_format = base.bf_after_mods(add_children(bf_path, E.jumpPosition("1")))
     assert block_format.jumpPosition.flag is True
     assert block_format.jumpPosition.interpolationLength is None
 
-    block_format = parsed_bf_after_mods(add_children(bf_path, E.jumpPosition("1", interpolationLength="0.5")))
+    block_format = base.bf_after_mods(add_children(bf_path, E.jumpPosition("1", interpolationLength="0.5")))
     assert block_format.jumpPosition.flag is True
     assert block_format.jumpPosition.interpolationLength == Fraction(1, 2)
 
 
 def test_divergence():
-    assert parsed_bf_after_mods().objectDivergence is None
+    assert base.bf_after_mods().objectDivergence is None
 
-    block_format = parsed_bf_after_mods(add_children(bf_path, E.objectDivergence("0.5")))
+    block_format = base.bf_after_mods(add_children(bf_path, E.objectDivergence("0.5")))
     assert block_format.objectDivergence.value == 0.5
     assert block_format.objectDivergence.azimuthRange is None
     assert block_format.objectDivergence.positionRange is None
 
-    block_format = parsed_bf_after_mods(add_children(bf_path, E.objectDivergence("0.5", azimuthRange="30")))
+    block_format = base.bf_after_mods(add_children(bf_path, E.objectDivergence("0.5", azimuthRange="30")))
     assert block_format.objectDivergence.value == 0.5
     assert block_format.objectDivergence.azimuthRange == 30.0
     assert block_format.objectDivergence.positionRange is None
 
-    block_format = parsed_bf_after_mods(add_children(bf_path, E.objectDivergence("0.5", positionRange="0.5")))
+    block_format = base.bf_after_mods(add_children(bf_path, E.objectDivergence("0.5", positionRange="0.5")))
     assert block_format.objectDivergence.value == 0.5
     assert block_format.objectDivergence.positionRange == 0.5
     assert block_format.objectDivergence.azimuthRange is None
 
 
 def test_polar_position():
-    block_format = parsed_bf_after_mods(remove_children("//adm:position"),
-                                        add_children(bf_path,
-                                                     E.position("10", coordinate="azimuth", screenEdgeLock="right"),
-                                                     E.position("20", coordinate="elevation", screenEdgeLock="top"),
-                                                     E.position("0.5", coordinate="distance")))
+    block_format = base.bf_after_mods(remove_children("//adm:position"),
+                                      add_children(bf_path,
+                                                   E.position("10", coordinate="azimuth", screenEdgeLock="right"),
+                                                   E.position("20", coordinate="elevation", screenEdgeLock="top"),
+                                                   E.position("0.5", coordinate="distance")))
 
     assert block_format.position.azimuth == 10.0
     assert block_format.position.elevation == 20.0
@@ -173,11 +173,11 @@ def test_polar_position():
 
 
 def test_cart_position():
-    block_format = parsed_bf_after_mods(remove_children("//adm:position"),
-                                        add_children(bf_path,
-                                                     E.position("0.2", coordinate="X"),
-                                                     E.position("0.3", coordinate="Y"),
-                                                     E.position("0.5", coordinate="Z")))
+    block_format = base.bf_after_mods(remove_children("//adm:position"),
+                                      add_children(bf_path,
+                                                   E.position("0.2", coordinate="X"),
+                                                   E.position("0.3", coordinate="Y"),
+                                                   E.position("0.5", coordinate="Z")))
 
     assert block_format.position.X == 0.2
     assert block_format.position.Y == 0.3
@@ -187,76 +187,76 @@ def test_cart_position():
 def test_exceptions():
     # error in element value converter
     with pytest.raises(ParseError) as excinfo:
-        parsed_bf_after_mods(add_children(bf_path, E.gain("g")))
+        base.bf_after_mods(add_children(bf_path, E.gain("g")))
     expected = "error while parsing element gain on line [0-9]+: ValueError: could not convert string to float: '?g'?$"
     assert re.match(expected, str(excinfo.value)) is not None
 
     # error in attribute converter
     with pytest.raises(ParseError) as excinfo:
-        parsed_bf_after_mods(set_attrs(bf_path, rtime="t"))
+        base.bf_after_mods(set_attrs(bf_path, rtime="t"))
     expected = "error while parsing attr rtime of element audioBlockFormat on line [0-9]+: ValueError: Cannot parse time: 't'$"
     assert re.match(expected, str(excinfo.value)) is not None
 
     # missing items
     with pytest.raises(ParseError) as excinfo:
-        parsed_bf_after_mods(del_attrs(bf_path, "audioBlockFormatID"))
+        base.bf_after_mods(del_attrs(bf_path, "audioBlockFormatID"))
     expected = "error while parsing element audioBlockFormat on line [0-9]+: ValueError: missing items: audioBlockFormatID$"
     assert re.match(expected, str(excinfo.value)) is not None
 
     # multiple elements
     with pytest.raises(ParseError) as excinfo:
-        parsed_bf_after_mods(add_children(bf_path, E.gain("1.0"), E.gain("1.0")))
+        base.bf_after_mods(add_children(bf_path, E.gain("1.0"), E.gain("1.0")))
     expected = "error while parsing element gain on line [0-9]+: ValueError: multiple gain elements found$"
     assert re.match(expected, str(excinfo.value)) is not None
 
 
 def test_cartesian():
-    assert parsed_bf_after_mods().cartesian is False
-    assert parsed_bf_after_mods(add_children(bf_path, E.cartesian("0"))).cartesian is False
-    assert parsed_bf_after_mods(add_children(bf_path, E.cartesian("1"))).cartesian is True
+    assert base.bf_after_mods().cartesian is False
+    assert base.bf_after_mods(add_children(bf_path, E.cartesian("0"))).cartesian is False
+    assert base.bf_after_mods(add_children(bf_path, E.cartesian("1"))).cartesian is True
 
 
 def test_diffuse():
-    assert parsed_bf_after_mods().diffuse == 0.0
-    assert parsed_bf_after_mods(add_children(bf_path, E.diffuse("0.5"))).diffuse == 0.5
+    assert base.bf_after_mods().diffuse == 0.0
+    assert base.bf_after_mods(add_children(bf_path, E.diffuse("0.5"))).diffuse == 0.5
 
 
 def test_screenRef():
-    assert parsed_bf_after_mods().screenRef is False
-    assert parsed_bf_after_mods(add_children(bf_path, E.screenRef("0"))).screenRef is False
-    assert parsed_bf_after_mods(add_children(bf_path, E.screenRef("1"))).screenRef is True
+    assert base.bf_after_mods().screenRef is False
+    assert base.bf_after_mods(add_children(bf_path, E.screenRef("0"))).screenRef is False
+    assert base.bf_after_mods(add_children(bf_path, E.screenRef("1"))).screenRef is True
 
 
 def test_importance():
-    assert parsed_bf_after_mods().importance is 10
-    assert parsed_bf_after_mods(add_children(bf_path, E.importance("5"))).importance == 5
+    assert base.bf_after_mods().importance is 10
+    assert base.bf_after_mods(add_children(bf_path, E.importance("5"))).importance == 5
 
 
 def test_zone():
-    assert parsed_bf_after_mods().zoneExclusion == []
-    assert parsed_bf_after_mods(add_children(bf_path, E.zoneExclusion())).zoneExclusion == []
-    assert (parsed_bf_after_mods(add_children(bf_path,
-                                              E.zoneExclusion(E.zone(minX="-1.0",
-                                                                     minY="-0.9",
-                                                                     minZ="-0.8",
-                                                                     maxX="0.8",
-                                                                     maxY="0.9",
-                                                                     maxZ="1.0"),
-                                                              E.zone(minElevation="-20", maxElevation="20",
-                                                                     minAzimuth="-30", maxAzimuth="30")))
-                                 ).zoneExclusion == [CartesianZone(minX=-1.0,
-                                                                   minY=-0.9,
-                                                                   minZ=-0.8,
-                                                                   maxX=0.8,
-                                                                   maxY=0.9,
-                                                                   maxZ=1.0),
-                                                     PolarZone(minElevation=-20.0, maxElevation=20.0,
-                                                               minAzimuth=-30.0, maxAzimuth=30.0)])
+    assert base.bf_after_mods().zoneExclusion == []
+    assert base.bf_after_mods(add_children(bf_path, E.zoneExclusion())).zoneExclusion == []
+    assert (base.bf_after_mods(add_children(bf_path,
+                                            E.zoneExclusion(E.zone(minX="-1.0",
+                                                                   minY="-0.9",
+                                                                   minZ="-0.8",
+                                                                   maxX="0.8",
+                                                                   maxY="0.9",
+                                                                   maxZ="1.0"),
+                                                            E.zone(minElevation="-20", maxElevation="20",
+                                                                   minAzimuth="-30", maxAzimuth="30")))
+                               ).zoneExclusion == [CartesianZone(minX=-1.0,
+                                                                 minY=-0.9,
+                                                                 minZ=-0.8,
+                                                                 maxX=0.8,
+                                                                 maxY=0.9,
+                                                                 maxZ=1.0),
+                                                   PolarZone(minElevation=-20.0, maxElevation=20.0,
+                                                             minAzimuth=-30.0, maxAzimuth=30.0)])
 
 
 def test_directspeakers():
     def with_children(*children):
-        return parsed_bf_after_mods(
+        return base.bf_after_mods(
             set_attrs("//adm:audioChannelFormat", typeDefinition="DirectSpeakers", typeLabel="001"),
             remove_children("//adm:position"),
             add_children(bf_path,
@@ -329,7 +329,7 @@ def test_directspeakers():
 
 def test_frequency():
     def cf_with_children(*children):
-        adm = parsed_adm_after_mods(
+        adm = base.adm_after_mods(
             add_children("//adm:audioChannelFormat", *children))
         return get_acf(adm)
 
@@ -358,7 +358,7 @@ def test_frequency():
 
 
 def test_binaural():
-    block_format = parsed_bf_after_mods(
+    block_format = base.bf_after_mods(
         set_attrs("//adm:audioChannelFormat", typeDefinition="Binaural", typeLabel="005"),
         remove_children("//adm:position"))
 
@@ -367,7 +367,7 @@ def test_binaural():
 
 def test_hoa():
     def with_children(*children):
-        return parsed_bf_after_mods(
+        return base.bf_after_mods(
             set_attrs("//adm:audioChannelFormat", typeDefinition="HOA", typeLabel="004"),
             remove_children("//adm:position"),
             add_children(bf_path, *children))
@@ -396,7 +396,7 @@ def test_hoa():
 
 
 def test_referenceScreen():
-    assert parsed_prog_after_mods().referenceScreen == PolarScreen(
+    assert base.prog_after_mods().referenceScreen == PolarScreen(
         aspectRatio=1.78,
         centrePosition=PolarPosition(
             azimuth=0.0,
@@ -406,14 +406,14 @@ def test_referenceScreen():
     )
 
     # Cartesian representation
-    assert (parsed_prog_after_mods(add_children("//adm:audioProgramme",
-                                                E.audioProgrammeReferenceScreen(E.aspectRatio("2.5"),
-                                                                                E.screenWidth(X="1.5"),
-                                                                                E.screenCentrePosition(
-                                                                                    X="0.0",
-                                                                                    Y="1.0",
-                                                                                    Z="0.0")))
-                                   ).referenceScreen ==
+    assert (base.prog_after_mods(add_children("//adm:audioProgramme",
+                                              E.audioProgrammeReferenceScreen(E.aspectRatio("2.5"),
+                                                                              E.screenWidth(X="1.5"),
+                                                                              E.screenCentrePosition(
+                                                                                  X="0.0",
+                                                                                  Y="1.0",
+                                                                                  Z="0.0")))
+                                 ).referenceScreen ==
             CartesianScreen(aspectRatio=2.5,
                             centrePosition=CartesianPosition(
                                 X=0.0,
@@ -422,14 +422,14 @@ def test_referenceScreen():
                             widthX=1.5))
 
     # Polar representation
-    assert (parsed_prog_after_mods(add_children("//adm:audioProgramme",
-                                                E.audioProgrammeReferenceScreen(E.aspectRatio("2.5"),
-                                                                                E.screenWidth(azimuth="45.0"),
-                                                                                E.screenCentrePosition(
-                                                                                    azimuth="0.0",
-                                                                                    elevation="0.0",
-                                                                                    distance="1.0")))
-                                   ).referenceScreen ==
+    assert (base.prog_after_mods(add_children("//adm:audioProgramme",
+                                              E.audioProgrammeReferenceScreen(E.aspectRatio("2.5"),
+                                                                              E.screenWidth(azimuth="45.0"),
+                                                                              E.screenCentrePosition(
+                                                                                  azimuth="0.0",
+                                                                                  elevation="0.0",
+                                                                                  distance="1.0")))
+                                 ).referenceScreen ==
             PolarScreen(aspectRatio=2.5,
                         centrePosition=PolarPosition(
                             azimuth=0.0,
@@ -439,39 +439,39 @@ def test_referenceScreen():
 
     # mixed types
     with pytest.raises(ParseError) as excinfo:
-        parsed_prog_after_mods(add_children("//adm:audioProgramme",
-                                            E.audioProgrammeReferenceScreen(E.aspectRatio("2.5"),
-                                                                            E.screenWidth(azimuth="45.0"),
-                                                                            E.screenCentrePosition(
-                                                                                X="0.0",
-                                                                                Y="1.0",
-                                                                                Z="0.0"))))
+        base.prog_after_mods(add_children("//adm:audioProgramme",
+                                          E.audioProgrammeReferenceScreen(E.aspectRatio("2.5"),
+                                                                          E.screenWidth(azimuth="45.0"),
+                                                                          E.screenCentrePosition(
+                                                                              X="0.0",
+                                                                              Y="1.0",
+                                                                              Z="0.0"))))
     expected = ("error while parsing element screenCentrePosition on line [0-9]+: ValueError: "
                 "Expected polar screen data, got cartesian.$")
     assert re.match(expected, str(excinfo.value)) is not None
 
     # missing keys in position
     with pytest.raises(ParseError) as excinfo:
-        parsed_prog_after_mods(add_children("//adm:audioProgramme",
-                                            E.audioProgrammeReferenceScreen(E.aspectRatio("2.5"),
-                                                                            E.screenWidth(azimuth="45.0"),
-                                                                            E.screenCentrePosition(
-                                                                                X="0.0",
-                                                                                Y="1.0",
-                                                                                Q="0.0"))))
+        base.prog_after_mods(add_children("//adm:audioProgramme",
+                                          E.audioProgrammeReferenceScreen(E.aspectRatio("2.5"),
+                                                                          E.screenWidth(azimuth="45.0"),
+                                                                          E.screenCentrePosition(
+                                                                              X="0.0",
+                                                                              Y="1.0",
+                                                                              Q="0.0"))))
     expected = ("error while parsing element screenCentrePosition on line [0-9]+: "
                 "ValueError: Do not know how to parse a screenCentrePosition with keys Q, X, Y.$")
     assert re.match(expected, str(excinfo.value)) is not None
 
     # missing key in width
     with pytest.raises(ParseError) as excinfo:
-        parsed_prog_after_mods(add_children("//adm:audioProgramme",
-                                            E.audioProgrammeReferenceScreen(E.aspectRatio("2.5"),
-                                                                            E.screenWidth(az="45.0"),
-                                                                            E.screenCentrePosition(
-                                                                                X="0.0",
-                                                                                Y="1.0",
-                                                                                Z="0.0"))))
+        base.prog_after_mods(add_children("//adm:audioProgramme",
+                                          E.audioProgrammeReferenceScreen(E.aspectRatio("2.5"),
+                                                                          E.screenWidth(az="45.0"),
+                                                                          E.screenCentrePosition(
+                                                                              X="0.0",
+                                                                              Y="1.0",
+                                                                              Z="0.0"))))
     expected = ("error while parsing element screenWidth on line [0-9]+: "
                 "ValueError: Do not know how to parse a screenWidth with keys az.$")
     assert re.match(expected, str(excinfo.value)) is not None
@@ -517,4 +517,4 @@ def check_round_trip(adm):
 
 
 def test_round_trip_base():
-    check_round_trip(base_adm)
+    check_round_trip(base.adm)
