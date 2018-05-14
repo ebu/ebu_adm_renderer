@@ -54,7 +54,9 @@ class BaseADM(object):
         return adm.audioProgrammes[0]
 
 
-base = BaseADM("test_adm_files/base.xml")
+@pytest.fixture(scope="module")
+def base():
+    return BaseADM("test_adm_files/base.xml")
 
 
 # xml modifications: these return a function that modifies an xml tree in some way
@@ -98,13 +100,13 @@ def get_acf(adm):
 bf_path = "//adm:audioBlockFormat"
 
 
-def test_gain():
+def test_gain(base):
     assert base.bf_after_mods(add_children(bf_path, E.gain("0"))).gain == 0.0
     assert base.bf_after_mods(add_children(bf_path, E.gain("0.5"))).gain == 0.5
     assert base.bf_after_mods().gain == 1.0
 
 
-def test_extent():
+def test_extent(base):
     assert base.bf_after_mods().width == 0.0
     assert base.bf_after_mods().height == 0.0
     assert base.bf_after_mods().depth == 0.0
@@ -114,7 +116,7 @@ def test_extent():
     assert base.bf_after_mods(add_children(bf_path, E.depth("0.5"))).depth == 0.5
 
 
-def test_channel_lock():
+def test_channel_lock(base):
     assert base.bf_after_mods().channelLock is None
 
     block_format = base.bf_after_mods(add_children(bf_path, E.channelLock("1")))
@@ -126,7 +128,7 @@ def test_channel_lock():
     assert block_format.channelLock.maxDistance == 0.5
 
 
-def test_jump_position():
+def test_jump_position(base):
     assert base.bf_after_mods().jumpPosition.flag is False
     assert base.bf_after_mods().jumpPosition.interpolationLength is None
 
@@ -139,7 +141,7 @@ def test_jump_position():
     assert block_format.jumpPosition.interpolationLength == Fraction(1, 2)
 
 
-def test_divergence():
+def test_divergence(base):
     assert base.bf_after_mods().objectDivergence is None
 
     block_format = base.bf_after_mods(add_children(bf_path, E.objectDivergence("0.5")))
@@ -158,7 +160,7 @@ def test_divergence():
     assert block_format.objectDivergence.azimuthRange is None
 
 
-def test_polar_position():
+def test_polar_position(base):
     block_format = base.bf_after_mods(remove_children("//adm:position"),
                                       add_children(bf_path,
                                                    E.position("10", coordinate="azimuth", screenEdgeLock="right"),
@@ -172,7 +174,7 @@ def test_polar_position():
     assert block_format.position.screenEdgeLock.vertical == "top"
 
 
-def test_cart_position():
+def test_cart_position(base):
     block_format = base.bf_after_mods(remove_children("//adm:position"),
                                       add_children(bf_path,
                                                    E.position("0.2", coordinate="X"),
@@ -184,7 +186,7 @@ def test_cart_position():
     assert block_format.position.Z == 0.5
 
 
-def test_exceptions():
+def test_exceptions(base):
     # error in element value converter
     with pytest.raises(ParseError) as excinfo:
         base.bf_after_mods(add_children(bf_path, E.gain("g")))
@@ -210,29 +212,29 @@ def test_exceptions():
     assert re.match(expected, str(excinfo.value)) is not None
 
 
-def test_cartesian():
+def test_cartesian(base):
     assert base.bf_after_mods().cartesian is False
     assert base.bf_after_mods(add_children(bf_path, E.cartesian("0"))).cartesian is False
     assert base.bf_after_mods(add_children(bf_path, E.cartesian("1"))).cartesian is True
 
 
-def test_diffuse():
+def test_diffuse(base):
     assert base.bf_after_mods().diffuse == 0.0
     assert base.bf_after_mods(add_children(bf_path, E.diffuse("0.5"))).diffuse == 0.5
 
 
-def test_screenRef():
+def test_screenRef(base):
     assert base.bf_after_mods().screenRef is False
     assert base.bf_after_mods(add_children(bf_path, E.screenRef("0"))).screenRef is False
     assert base.bf_after_mods(add_children(bf_path, E.screenRef("1"))).screenRef is True
 
 
-def test_importance():
+def test_importance(base):
     assert base.bf_after_mods().importance is 10
     assert base.bf_after_mods(add_children(bf_path, E.importance("5"))).importance == 5
 
 
-def test_zone():
+def test_zone(base):
     assert base.bf_after_mods().zoneExclusion == []
     assert base.bf_after_mods(add_children(bf_path, E.zoneExclusion())).zoneExclusion == []
     assert (base.bf_after_mods(add_children(bf_path,
@@ -254,7 +256,7 @@ def test_zone():
                                                              minAzimuth=-30.0, maxAzimuth=30.0)])
 
 
-def test_directspeakers():
+def test_directspeakers(base):
     def with_children(*children):
         return base.bf_after_mods(
             set_attrs("//adm:audioChannelFormat", typeDefinition="DirectSpeakers", typeLabel="001"),
@@ -327,7 +329,7 @@ def test_directspeakers():
         assert block_format.speakerLabel == labels
 
 
-def test_frequency():
+def test_frequency(base):
     def cf_with_children(*children):
         adm = base.adm_after_mods(
             add_children("//adm:audioChannelFormat", *children))
@@ -357,7 +359,7 @@ def test_frequency():
         assert re.match(expected, str(excinfo.value)) is not None
 
 
-def test_binaural():
+def test_binaural(base):
     block_format = base.bf_after_mods(
         set_attrs("//adm:audioChannelFormat", typeDefinition="Binaural", typeLabel="005"),
         remove_children("//adm:position"))
@@ -365,7 +367,7 @@ def test_binaural():
     assert isinstance(block_format, AudioBlockFormatBinaural)
 
 
-def test_hoa():
+def test_hoa(base):
     def with_children(*children):
         return base.bf_after_mods(
             set_attrs("//adm:audioChannelFormat", typeDefinition="HOA", typeLabel="004"),
@@ -395,7 +397,7 @@ def test_hoa():
     assert block_format.screenRef is True
 
 
-def test_referenceScreen():
+def test_referenceScreen(base):
     assert base.prog_after_mods().referenceScreen == PolarScreen(
         aspectRatio=1.78,
         centrePosition=PolarPosition(
@@ -516,5 +518,5 @@ def check_round_trip(adm):
         assert as_dict(element_orig) == as_dict(element_parsed)
 
 
-def test_round_trip_base():
+def test_round_trip_base(base):
     check_round_trip(base.adm)
