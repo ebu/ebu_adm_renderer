@@ -12,12 +12,6 @@ def _lookup_elements(adm, idRefs):
     return [adm.lookup_element(key) for key in idRefs]
 
 
-def _lookup_element(adm, idRef):
-    """Lookup a single ID reference, passing through None"""
-    if idRef is None: return None
-    return adm.lookup_element(idRef)
-
-
 class TypeDefinition(Enum):
     DirectSpeakers = 1
     Matrix = 2
@@ -164,10 +158,10 @@ class AudioStreamFormat(ADMElement):
 
     def lazy_lookup_references(self, adm):
         if self.audioChannelFormatIDRef is not None:
-            self.audioChannelFormat = _lookup_element(adm, self.audioChannelFormatIDRef)
+            self.audioChannelFormat = adm.lookup_element(self.audioChannelFormatIDRef)
             self.audioChannelFormatIDRef = None
         if self.audioPackFormatIDRef is not None:
-            self.audioPackFormat = _lookup_element(adm, self.audioPackFormatIDRef)
+            self.audioPackFormat = adm.lookup_element(self.audioPackFormatIDRef)
             self.audioPackFormatIDRef = None
         if self.audioTrackFormatIDRef is not None:
             self.audioTrackFormats = _lookup_elements(adm, self.audioTrackFormatIDRef)
@@ -185,7 +179,7 @@ class AudioTrackFormat(ADMElement):
         # check that there is a reference from the referenced stream format
         # back to ourselves
         if self.audioStreamFormatIDRef is not None:
-            stream = _lookup_element(adm, self.audioStreamFormatIDRef)
+            stream = adm.lookup_element(self.audioStreamFormatIDRef)
 
             # cannot use 'in', as we want to check identity, not equality
             if not any(track_format is self for track_format in stream.audioTrackFormats):
@@ -207,8 +201,8 @@ class AudioTrackUID(ADMElement):
 
     def lazy_lookup_references(self, adm):
         if self.audioTrackFormatIDRef is not None:
-            self.audioTrackFormat = _lookup_element(adm, self.audioTrackFormatIDRef)
+            self.audioTrackFormat = adm.lookup_element(self.audioTrackFormatIDRef)
             self.audioTrackFormatIDRef = None
         if self.audioPackFormatIDRef is not None:
-            self.audioPackFormat = _lookup_element(adm, self.audioPackFormatIDRef)
+            self.audioPackFormat = adm.lookup_element(self.audioPackFormatIDRef)
             self.audioPackFormatIDRef = None
