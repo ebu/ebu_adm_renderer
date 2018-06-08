@@ -113,8 +113,19 @@ class AudioPackFormat(ADMElement):
     audioPackFormats = attrib(default=Factory(list), repr=False)
     importance = attrib(default=None, validator=optional(instance_of(int)))
 
+    # attributes for type==Matrix
+    # encode and decode pack references are a single binary many-many
+    # relationship; only store one side
+    encodePackFormats = attrib(default=Factory(list))
+    inputPackFormat = attrib(default=None)
+    outputPackFormat = attrib(default=None)
+
     audioChannelFormatIDRef = attrib(default=None)
     audioPackFormatIDRef = attrib(default=None)
+    encodePackFormatIDRef = attrib(default=None)
+    decodePackFormatIDRef = attrib(default=None)
+    inputPackFormatIDRef = attrib(default=None)
+    outputPackFormatIDRef = attrib(default=None)
 
     def lazy_lookup_references(self, adm):
         if self.audioChannelFormatIDRef is not None:
@@ -123,6 +134,29 @@ class AudioPackFormat(ADMElement):
         if self.audioPackFormatIDRef is not None:
             self.audioPackFormats = _lookup_elements(adm, self.audioPackFormatIDRef)
             self.audioPackFormatIDRef = None
+
+        def add_encodePackFormat(decode_pack, new_encode_pack):
+            if not any(encode_pack is new_encode_pack
+                       for encode_pack in decode_pack.encodePackFormats):
+                decode_pack.encodePackFormats.append(new_encode_pack)
+
+        if self.decodePackFormatIDRef is not None:
+            for decode_pack in _lookup_elements(adm, self.decodePackFormatIDRef):
+                add_encodePackFormat(decode_pack, self)
+            self.decodePackFormatIDRef = None
+
+        if self.encodePackFormatIDRef is not None:
+            for encode_pack in _lookup_elements(adm, self.encodePackFormatIDRef):
+                add_encodePackFormat(self, encode_pack)
+            self.encodePackFormatIDRef = None
+
+        if self.inputPackFormatIDRef is not None:
+            self.inputPackFormat = adm.lookup_element(self.inputPackFormatIDRef)
+            self.inputPackFormatIDRef = None
+
+        if self.outputPackFormatIDRef is not None:
+            self.outputPackFormat = adm.lookup_element(self.outputPackFormatIDRef)
+            self.outputPackFormatIDRef = None
 
 
 @attrs(slots=True)
@@ -139,7 +173,8 @@ class AudioChannelFormat(ADMElement):
     frequency = attrib(default=Factory(Frequency), validator=instance_of(Frequency))
 
     def lazy_lookup_references(self, adm):
-        pass
+        for block in self.audioBlockFormats:
+            block.lazy_lookup_references(adm)
 
 
 @attrs(slots=True)

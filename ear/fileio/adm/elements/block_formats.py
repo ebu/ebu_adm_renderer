@@ -3,6 +3,7 @@ from attr.validators import instance_of, optional
 from fractions import Fraction
 from ....common import list_of
 from .geom import convert_object_position, DirectSpeakerPosition, ObjectPosition
+from .main_elements import AudioChannelFormat
 
 
 @attrs(slots=True)
@@ -11,10 +12,43 @@ class BlockFormat(object):
     rtime = attrib(validator=optional(instance_of(Fraction)), default=None)
     duration = attrib(validator=optional(instance_of(Fraction)), default=None)
 
+    def lazy_lookup_references(self, adm):
+        pass
+
+
+@attrs(slots=True)
+class MatrixCoefficient(object):
+    inputChannelFormat = attrib(default=None, validator=optional(instance_of(AudioChannelFormat)))
+
+    gain = attrib(default=None, validator=optional(instance_of(float)))
+    gainVar = attrib(default=None, validator=optional(instance_of(str)))
+    phase = attrib(default=None, validator=optional(instance_of(float)))
+    phaseVar = attrib(default=None, validator=optional(instance_of(str)))
+    delay = attrib(default=None, validator=optional(instance_of(float)))
+    delayVar = attrib(default=None, validator=optional(instance_of(str)))
+
+    inputChannelFormatIDRef = attrib(default=None)
+
+    def lazy_lookup_references(self, adm):
+        if self.inputChannelFormatIDRef is not None:
+            self.inputChannelFormat = adm.lookup_element(self.inputChannelFormatIDRef)
+            self.inputChannelFormatIDRef = None
+
 
 @attrs(slots=True)
 class AudioBlockFormatMatrix(BlockFormat):
-    pass
+    outputChannelFormat = attrib(default=None, validator=optional(instance_of(AudioChannelFormat)))
+    matrix = attrib(default=Factory(list), validator=list_of(MatrixCoefficient))
+
+    outputChannelFormatIDRef = attrib(default=None)
+
+    def lazy_lookup_references(self, adm):
+        if self.outputChannelFormatIDRef is not None:
+            self.outputChannelFormat = adm.lookup_element(self.outputChannelFormatIDRef)
+            self.outputChannelFormatIDRef = None
+
+        for coefficient in self.matrix:
+            coefficient.lazy_lookup_references(adm)
 
 
 @attrs(slots=True)
