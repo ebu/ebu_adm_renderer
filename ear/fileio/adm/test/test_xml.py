@@ -59,6 +59,11 @@ def base():
     return BaseADM("test_adm_files/base.xml")
 
 
+@pytest.fixture(scope="module")
+def base_mat():
+    return BaseADM("test_adm_files/matrix.xml")
+
+
 # xml modifications: these return a function that modifies an xml tree in some way
 
 def remove_children(xpath_to_children):
@@ -397,6 +402,87 @@ def test_hoa(base):
     assert block_format.screenRef is True
 
 
+def test_matrix_structure(base_mat):
+    acf = base_mat.adm.lookup_element("AC_00021003")
+    [bf] = acf.audioBlockFormats
+    assert [c.gain for c in bf.matrix] == [1.0, 0.7071, 0.7071]
+    assert [c.inputChannelFormat.id for c in bf.matrix] == ["AC_00010001", "AC_00010003", "AC_00010005"]
+
+    acf = base_mat.adm.lookup_element("AC_00021004")
+    [bf] = acf.audioBlockFormats
+    assert [c.gain for c in bf.matrix] == [1.0, 0.7071, 0.7071]
+    assert [c.inputChannelFormat.id for c in bf.matrix] == ["AC_00010002", "AC_00010003", "AC_00010006"]
+
+    acf = base_mat.adm.lookup_element("AC_00021103")
+    [bf] = acf.audioBlockFormats
+    assert bf.outputChannelFormat.id == "AC_00010001"
+
+    apf_encode = base_mat.adm.lookup_element("AP_00021002")
+    assert len(apf_encode.audioChannelFormats) == 2
+    assert apf_encode.inputPackFormat.id == "AP_00010003"
+
+    apf_decode = base_mat.adm.lookup_element("AP_00021102")
+    assert len(apf_decode.audioChannelFormats) == 2
+    assert apf_decode.outputPackFormat.id == "AP_00010002"
+    [epf] = apf_decode.encodePackFormats
+    assert epf.id == "AP_00021002"
+
+
+def test_matrix_encode_decode_relationship(base_mat):
+    for to_remove in "//adm:encodePackFormatIDRef", "//adm:decodePackFormatIDRef":
+        adm = base_mat.adm_after_mods(remove_children(to_remove))
+
+        apf_decode = adm.lookup_element("AP_00021102")
+        [epf] = apf_decode.encodePackFormats
+        assert epf.id == "AP_00021002"
+
+
+def test_matrix_params(base_mat):
+    adm = base_mat.adm_after_mods(
+        del_attrs("//adm:coefficient", "gain"),
+        set_attrs("//*[@audioChannelFormatID='AC_00021003']//adm:coefficient[1]", gain="1.0"),
+        set_attrs("//*[@audioChannelFormatID='AC_00021003']//adm:coefficient[2]", phase="90.0"),
+        set_attrs("//*[@audioChannelFormatID='AC_00021003']//adm:coefficient[3]", delay="10.5"),
+        set_attrs("//*[@audioChannelFormatID='AC_00021004']//adm:coefficient[1]", gainVar="gain"),
+        set_attrs("//*[@audioChannelFormatID='AC_00021004']//adm:coefficient[2]", phaseVar="phase"),
+        set_attrs("//*[@audioChannelFormatID='AC_00021004']//adm:coefficient[3]", delayVar="delay"),
+    )
+
+    acf = adm.lookup_element("AC_00021003")
+    [bf] = acf.audioBlockFormats
+    assert [c.gain for c in bf.matrix] == [1.0, None, None]
+    assert [c.phase for c in bf.matrix] == [None, 90.0, None]
+    assert [c.delay for c in bf.matrix] == [None, None, 10.5]
+
+    acf = adm.lookup_element("AC_00021004")
+    [bf] = acf.audioBlockFormats
+    assert [c.gainVar for c in bf.matrix] == ["gain", None, None]
+    assert [c.phaseVar for c in bf.matrix] == [None, "phase", None]
+    assert [c.delayVar for c in bf.matrix] == [None, None, "delay"]
+
+
+def test_matrix_outputChannelIDRef(base_mat):
+    adm = base_mat.adm_after_mods(
+        remove_children("//adm:audioBlockFormat/adm:outputChannelFormatIDRef"),
+        add_children("//*[@audioChannelFormatID='AC_00021103']/adm:audioBlockFormat",
+                     E.outputChannelIDRef("AC_00010001")),
+    )
+
+    acf = adm.lookup_element("AC_00021103")
+    [bf] = acf.audioBlockFormats
+    assert bf.outputChannelFormat.id == "AC_00010001"
+
+
+def test_matrix_outputChannelIDRef_and_outputChannelFormatIDRef(base_mat):
+    with pytest.raises(ParseError) as excinfo:
+        base_mat.adm_after_mods(
+            add_children("//*[@audioChannelFormatID='AC_00021103']/adm:audioBlockFormat",
+                         E.outputChannelIDRef("AC_00010001")),
+        )
+
+    assert "multiple outputChannelFormat elements found" in str(excinfo.value)
+
+
 def test_referenceScreen(base):
     assert base.prog_after_mods().referenceScreen == PolarScreen(
         aspectRatio=1.78,
@@ -520,3 +606,7 @@ def check_round_trip(adm):
 
 def test_round_trip_base(base):
     check_round_trip(base.adm)
+
+
+def test_round_trip_matrix(base_mat):
+    check_round_trip(base_mat.adm)

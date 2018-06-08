@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ebuCoreMain xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="urn:ebu:metadata-schema:ebuCore_2015" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:ebu:metadata-schema:ebuCore_2015 https://www.ebu.ch/metadata/schemas/EBUCore/20150522/ebucore_20150522.xsd" xml:lang="en">
+    <coreMetadata>
+        <format>
+            <audioFormatExtended>
+                <audioProgramme audioProgrammeID="APR_1001" audioProgrammeName="PanningNoise">
+                    <audioContentIDRef>ACO_1001</audioContentIDRef>
+                </audioProgramme>
+                <audioContent audioContentID="ACO_1001" audioContentName="PanningNoise">
+                    <audioObjectIDRef>AO_1001</audioObjectIDRef>
+                </audioContent>
+                <audioObject audioObjectID="AO_1001" audioObjectName="Lo/Ro_Downmix">
+                    <audioPackFormatIDRef>AP_00021102</audioPackFormatIDRef>
+                    <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+                    <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>
+                </audioObject>
+
+                <!-- PACKS -->
+                <audioPackFormat audioPackFormatID="AP_00021002" audioPackFormatName="Lo/Ro" typeLabel="0002" typeDefinition="Matrix">
+                    <decodePackFormatIDRef>AP_00021102</decodePackFormatIDRef>
+                    <inputPackFormatIDRef>AP_00010003</inputPackFormatIDRef>
+                    <audioChannelFormatIDRef>AC_00021003</audioChannelFormatIDRef>
+                    <audioChannelFormatIDRef>AC_00021004</audioChannelFormatIDRef>
+                </audioPackFormat>
+                <audioPackFormat audioPackFormatID="AP_00021102" audioPackFormatName="Lo/Ro_Decode" typeLabel="0002" typeDefinition="Matrix">
+                    <encodePackFormatIDRef>AP_00021002</encodePackFormatIDRef>
+                    <outputPackFormatIDRef>AP_00010002</outputPackFormatIDRef>
+                    <audioChannelFormatIDRef>AC_00021103</audioChannelFormatIDRef>
+                    <audioChannelFormatIDRef>AC_00021104</audioChannelFormatIDRef>
+                </audioPackFormat>
+
+                <!-- CHANNELS -->
+                <audioChannelFormat audioChannelFormatID="AC_00021003" audioChannelFormatName="Lo/Ro_Left" typeLabel="0002" typeDefinition="Matrix">
+                    <audioBlockFormat audioBlockFormatID="AB_00021003_00000001">
+                        <matrix>
+                            <coefficient gain="1.0">AC_00010001</coefficient>
+                            <coefficient gain="0.7071">AC_00010003</coefficient>
+                            <coefficient gain="0.7071">AC_00010005</coefficient>
+                        </matrix>
+                    </audioBlockFormat>
+                </audioChannelFormat>
+                <audioChannelFormat audioChannelFormatID="AC_00021004" audioChannelFormatName="Lo/Ro_Right" typeLabel="0002" typeDefinition="Matrix">
+                    <audioBlockFormat audioBlockFormatID="AB_00021004_00000001">
+                        <matrix>
+                            <coefficient gain="1.0">AC_00010002</coefficient>
+                            <coefficient gain="0.7071">AC_00010003</coefficient>
+                            <coefficient gain="0.7071">AC_00010006</coefficient>
+                        </matrix>
+                    </audioBlockFormat>
+                </audioChannelFormat>
+                <audioChannelFormat audioChannelFormatID="AC_00021103" audioChannelFormatName="Lo/Ro_Decode_Left" typeLabel="0002" typeDefinition="Matrix">
+                    <audioBlockFormat audioBlockFormatID="AB_00021103_00000001">
+                        <outputChannelFormatIDRef>AC_00010001</outputChannelFormatIDRef>
+                        <matrix>
+                            <coefficient gain="1.0">AC_00021003</coefficient>
+                        </matrix>
+                    </audioBlockFormat>
+                </audioChannelFormat>
+                <audioChannelFormat audioChannelFormatID="AC_00021104" audioChannelFormatName="Lo/Ro_Decode_Right" typeLabel="0002" typeDefinition="Matrix">
+                    <audioBlockFormat audioBlockFormatID="AB_00021104_00000001">
+                        <outputChannelFormatIDRef>AC_00010002</outputChannelFormatIDRef>
+                        <matrix>
+                            <coefficient gain="1.0">AC_00021004</coefficient>
+                        </matrix>
+                    </audioBlockFormat>
+                </audioChannelFormat>
+
+                <!-- STREAMS -->
+                <audioStreamFormat audioStreamFormatID="AS_00021103" audioStreamFormatName="PCM_Lo/Ro_Deocde_Left" formatLabel="0001" formatDefinition="PCM">
+                    <audioChannelFormatIDRef>AC_00021103</audioChannelFormatIDRef>
+                    <audioTrackFormatIDRef>AT_00021103_01</audioTrackFormatIDRef>
+                </audioStreamFormat>
+                <audioStreamFormat audioStreamFormatID="AS_00021104" audioStreamFormatName="PCM_Lo/Ro_Decode_Right" formatLabel="0001" formatDefinition="PCM">
+                    <audioChannelFormatIDRef>AC_00021104</audioChannelFormatIDRef>
+                    <audioTrackFormatIDRef>AT_00021104_01</audioTrackFormatIDRef>
+                </audioStreamFormat>
+
+                <!-- AUDIO TRACKS -->
+                <audioTrackFormat audioTrackFormatID="AT_00021103_01" audioTrackFormatName="PCM_Lo/Ro_Decode_Left" formatLabel="0001" formatDefinition="PCM">
+                    <audioStreamFormatIDRef>AS_00021103</audioStreamFormatIDRef>
+                </audioTrackFormat>
+                <audioTrackFormat audioTrackFormatID="AT_00021104_01" audioTrackFormatName="PCM_Lo/Ro_Decode_Right" formatLabel="0001" formatDefinition="PCM">
+                    <audioStreamFormatIDRef>AS_00021104</audioStreamFormatIDRef>
+                </audioTrackFormat>
+
+                <!-- TRACK UIDs -->
+                <audioTrackUID UID="ATU_00000001" bitDepth="24" sampleRate="48000">
+                    <audioTrackFormatIDRef>AT_00021103_01</audioTrackFormatIDRef>
+                    <audioPackFormatIDRef>AP_00021102</audioPackFormatIDRef>
+                </audioTrackUID>
+                <audioTrackUID UID="ATU_00000002" bitDepth="24" sampleRate="48000">
+                    <audioTrackFormatIDRef>AT_00021104_01</audioTrackFormatIDRef>
+                    <audioPackFormatIDRef>AP_00021102</audioPackFormatIDRef>
+                </audioTrackUID>
+            </audioFormatExtended>
+        </format>
+    </coreMetadata>
+</ebuCoreMain>

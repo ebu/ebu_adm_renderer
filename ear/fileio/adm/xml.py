@@ -10,8 +10,8 @@ from six import viewkeys, iteritems, reraise
 
 from .adm import ADM
 from .elements import (
-    AudioBlockFormatObjects, AudioBlockFormatDirectSpeakers, AudioBlockFormatBinaural, AudioBlockFormatHoa,
-    ChannelLock, BoundCoordinate, JumpPosition, ObjectDivergence, CartesianZone, PolarZone, ScreenEdgeLock)
+    AudioBlockFormatObjects, AudioBlockFormatDirectSpeakers, AudioBlockFormatBinaural, AudioBlockFormatHoa, AudioBlockFormatMatrix,
+    ChannelLock, BoundCoordinate, JumpPosition, ObjectDivergence, CartesianZone, PolarZone, ScreenEdgeLock, MatrixCoefficient)
 from .elements import (
     AudioProgramme, AudioContent, AudioObject, AudioChannelFormat, AudioPackFormat, AudioStreamFormat, AudioTrackFormat, AudioTrackUID,
     FormatDefinition, TypeDefinition, Frequency)
@@ -163,6 +163,7 @@ class ListElement(Element):
     attr_name = attrib(default=Factory(lambda self: self.arg_name, takes_self=True))
     type = attrib(default=StringType)
     required = attrib(default=False)
+    parse_only = attrib(default=False)
 
     def get_handlers(self):
         arg_name = self.arg_name
@@ -178,6 +179,8 @@ class ListElement(Element):
         return [("element", qname, f) for qname in qnames(self.adm_name)]
 
     def to_xml(self, element, obj):
+        if self.parse_only: return
+
         for data in getattr(obj, self.attr_name):
             new_el = element.makeelement(QName(default_ns, self.adm_name))
             new_el.text = self.type.dumps_func(data)
@@ -223,6 +226,30 @@ class AttrElement(Element):
 
 
 @attrs
+class HandleText(object):
+    """Mapping between the text of an element and an attribute."""
+    arg_name = attrib()
+    attr_name = attrib(default=Factory(lambda self: self.arg_name, takes_self=True))
+    type = attrib(default=StringType)
+    required = False
+
+    def get_handlers(self):
+        arg_name = self.arg_name
+        convert = self.type.loads
+        if convert is None:
+            def f(kwargs, text):
+                kwargs[arg_name] = text
+        else:
+            def f(kwargs, text):
+                kwargs[arg_name] = convert(text)
+
+        return [("text", None, f)]
+
+    def to_xml(self, element, obj):
+        element.text = self.type.dumps_func(getattr(obj, self.attr_name))
+
+
+@attrs
 class CustomElement(Element):
     """An xml sub-element that is handled by some handler function."""
     handler = attrib()
@@ -244,6 +271,7 @@ class ElementParser(object):
         self.properties = properties
         self.attr_handlers = {}
         self.element_handlers = {}
+        self.text_handler = None
         self.required_args = set()
         self.arg_to_name = {}
 
@@ -253,6 +281,9 @@ class ElementParser(object):
                     self.attr_handlers[adm_name] = handler
                 elif handler_type == "element":
                     self.element_handlers[adm_name] = handler
+                elif handler_type == "text":
+                    assert self.text_handler is None, "more than one text handler"
+                    self.text_handler = handler
                 else:
                     assert False  # pragma: no cover
 
@@ -277,6 +308,9 @@ class ElementParser(object):
                 self.element_handlers.get(child.tag, null_handler)(kwargs, child)
             except ParseError: raise
             except Exception as e: reraise(ParseError, ParseError(e, child), sys.exc_info()[2])
+
+        if self.text_handler is not None:
+            self.text_handler(kwargs, text(element))
 
         if not (viewkeys(kwargs) >= self.required_args):
             missing_args = self.required_args - viewkeys(kwargs)
@@ -724,11 +758,51 @@ block_format_HOA_handler = ElementParser(AudioBlockFormatHoa, "audioBlockFormat"
 ])
 
 
+matrix_coefficient_handler = ElementParser(MatrixCoefficient, "coefficient", [
+    HandleText(arg_name="inputChannelFormatIDRef", attr_name="inputChannelFormat", type=RefType),
+    Attribute(adm_name="gain", arg_name="gain", type=FloatType),
+    Attribute(adm_name="phase", arg_name="phase", type=FloatType),
+    Attribute(adm_name="delay", arg_name="delay", type=FloatType),
+    Attribute(adm_name="gainVar", arg_name="gainVar", type=StringType),
+    Attribute(adm_name="phaseVar", arg_name="phaseVar", type=StringType),
+    Attribute(adm_name="delayVar", arg_name="delayVar", type=StringType),
+])
+
+
+def handle_matrix(kwargs, el):
+    if "matrix" in kwargs:
+        raise ValueError("multiple matrix elements found")
+
+    kwargs["matrix"] = [matrix_coefficient_handler.parse(child)
+                        for child in xpath(el, "{ns}coefficient")]
+
+
+def matrix_to_xml(parent, obj):
+    el = parent.makeelement(QName(default_ns, "matrix"))
+
+    for coefficient in obj.matrix:
+        matrix_coefficient_handler.to_xml(el, coefficient)
+
+    parent.append(el)
+
+
+block_format_matrix_handler = ElementParser(AudioBlockFormatMatrix, "audioBlockFormat", block_format_props + [
+    AttrElement(adm_name="outputChannelFormatIDRef",
+                arg_name="outputChannelFormatIDRef",
+                attr_name="outputChannelFormat", type=RefType),
+    AttrElement(adm_name="outputChannelIDRef",
+                arg_name="outputChannelFormatIDRef",
+                attr_name="outputChannelFormat", type=RefType, parse_only=True),
+    CustomElement("matrix", handle_matrix, to_xml=matrix_to_xml),
+])
+
+
 block_format_handlers = {
     TypeDefinition.Objects: parse_block_format_objects,
     TypeDefinition.DirectSpeakers: parse_block_format_direct_speakers,
     TypeDefinition.Binaural: block_format_binaural_handler.parse,
     TypeDefinition.HOA: block_format_HOA_handler.parse,
+    TypeDefinition.Matrix: block_format_matrix_handler.parse,
 }
 
 
@@ -747,6 +821,7 @@ block_format_to_xml_handlers = {
     TypeDefinition.DirectSpeakers: block_format_direct_speakers_to_xml,
     TypeDefinition.Binaural: block_format_binaural_handler.to_xml,
     TypeDefinition.HOA: block_format_HOA_handler.to_xml,
+    TypeDefinition.Matrix: block_format_matrix_handler.to_xml,
 }
 
 
@@ -804,6 +879,10 @@ pack_format_handler = ElementParser(AudioPackFormat, "audioPackFormat", [
     RefList("audioChannelFormat"),
     RefList("audioPackFormat"),
     AttrElement(adm_name="absoluteDistance", arg_name="absoluteDistance", type=FloatType),
+    RefList("encodePackFormat"),
+    RefList("decodePackFormat", parse_only=True),
+    RefElement("inputPackFormat"),
+    RefElement("outputPackFormat"),
 ])
 
 stream_format_handler = ElementParser(AudioStreamFormat, "audioStreamFormat", [
