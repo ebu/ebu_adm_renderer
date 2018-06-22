@@ -72,7 +72,7 @@ def parse_command_line():
     parser = argparse.ArgumentParser(description='EBU ADM renderer')
 
     parser.add_argument('-d', '--debug',
-                        help="print debug information when an error occurres",
+                        help="print debug information when an error occurs",
                         action="store_true")
 
     parser.add_argument('input_file')
