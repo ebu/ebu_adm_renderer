@@ -110,7 +110,7 @@ class ADM(object):
     def lookup_element(self, key):
         key_upper = key.upper()
         for element in self.elements:
-            if element.id.upper() == key_upper:
+            if element.id is not None and element.id.upper() == key_upper:
                 return element
         raise KeyError('Unkown element requested {0}'.format(key))
 
