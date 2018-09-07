@@ -167,18 +167,18 @@ class Position(object):
 @attrs(slots=True)
 class PolarPosition(Position, PolarPositionMixin):
     """A 3D position represented in ADM-format polar coordinates."""
-    azimuth = attrib(convert=float, validator=validate_range(-180, 180))
-    elevation = attrib(convert=float, validator=validate_range(-90, 90))
-    distance = attrib(convert=float, validator=validate_range(0, float('inf')),
+    azimuth = attrib(converter=float, validator=validate_range(-180, 180))
+    elevation = attrib(converter=float, validator=validate_range(-90, 90))
+    distance = attrib(converter=float, validator=validate_range(0, float('inf')),
                       default=1.0)
 
 
 @attrs(slots=True)
 class CartesianPosition(Position, CartesianPositionMixin):
     """A 3D position represented in ADM-format Cartesian coordinates."""
-    X = attrib(convert=float)
-    Y = attrib(convert=float)
-    Z = attrib(convert=float)
+    X = attrib(converter=float)
+    Y = attrib(converter=float)
+    Z = attrib(converter=float)
 
 
 @attrs(slots=True, frozen=True)

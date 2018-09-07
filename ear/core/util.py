@@ -43,7 +43,7 @@ def as_array(**kwargs):
     Example:
         >>> @attrs
         ... class Test(object):
-        ...     x = attrib(convert=as_array(dtype=float))
+        ...     x = attrib(converter=as_array(dtype=float))
         >>> Test([1])
         Test(x=array([1.]))
     """

@@ -69,8 +69,8 @@ class Triplet(RegionHandler):
         positions (array of (3,3) doubles): Cartesian positions of the three
             speakers; index order is speaker, axis.
     """
-    output_channels = attrib(convert=as_array(dtype=int), validator=has_shape(3))
-    positions = attrib(convert=as_array(dtype=float), validator=has_shape(3, 3))
+    output_channels = attrib(converter=as_array(dtype=int), validator=has_shape(3))
+    positions = attrib(converter=as_array(dtype=float), validator=has_shape(3, 3))
 
     _basis = attrib(init=False, cmp=False, repr=False)
 
@@ -108,10 +108,10 @@ class VirtualNgon(RegionHandler):
             distributing gains from the centre virtual loudspeaker to the
             loudspeakers defined by positions.
     """
-    output_channels = attrib(convert=as_array(dtype=int), validator=has_shape(None))
-    positions = attrib(convert=as_array(dtype=float), validator=has_shape(None, 3))
-    centre_position = attrib(convert=as_array(dtype=float), validator=has_shape(3))
-    centre_downmix = attrib(convert=as_array(dtype=float), validator=has_shape(None))
+    output_channels = attrib(converter=as_array(dtype=int), validator=has_shape(None))
+    positions = attrib(converter=as_array(dtype=float), validator=has_shape(None, 3))
+    centre_position = attrib(converter=as_array(dtype=float), validator=has_shape(3))
+    centre_downmix = attrib(converter=as_array(dtype=float), validator=has_shape(None))
 
     regions = attrib(init=False, cmp=False, repr=False)
 
@@ -151,8 +151,8 @@ class VirtualNgon(RegionHandler):
 @attrs(slots=True)
 class QuadRegion(RegionHandler):
 
-    output_channels = attrib(convert=as_array(dtype=int), validator=has_shape(4))
-    positions = attrib(convert=as_array(dtype=float), validator=has_shape(4, 3))
+    output_channels = attrib(converter=as_array(dtype=int), validator=has_shape(4))
+    positions = attrib(converter=as_array(dtype=float), validator=has_shape(4, 3))
 
     order = attrib(default=None)
     pan_x = attrib(default=None)
@@ -218,8 +218,8 @@ class StereoPanDownmix(RegionHandler):
         left_channel (int): Index of the left output channel.
         right_channel (int): Index of the right output channel.
     """
-    left_channel = attrib(convert=int)
-    right_channel = attrib(convert=int)
+    left_channel = attrib(converter=int)
+    right_channel = attrib(converter=int)
 
     psp = attrib(default=None)
 

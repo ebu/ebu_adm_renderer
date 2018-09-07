@@ -42,9 +42,9 @@ class Channel(object):
         is_lfe (bool): is this an LFE channel?
     """
 
-    name = attrib(convert=str)
-    polar_position = attrib(convert=to_polar_position)
-    polar_nominal_position = attrib(convert=to_polar_position,
+    name = attrib(converter=str)
+    polar_position = attrib(converter=to_polar_position)
+    polar_nominal_position = attrib(converter=to_polar_position,
                                     default=Factory(lambda self: self.polar_position,
                                                     takes_self=True))
     az_range = attrib(default=Factory(lambda self: (self.polar_nominal_position.azimuth,
@@ -53,7 +53,7 @@ class Channel(object):
     el_range = attrib(default=Factory(lambda self: (self.polar_nominal_position.elevation,
                                                     self.polar_nominal_position.elevation),
                                       takes_self=True))
-    is_lfe = attrib(default=False, convert=bool)
+    is_lfe = attrib(default=False, converter=bool)
 
     @property
     def position(self):
