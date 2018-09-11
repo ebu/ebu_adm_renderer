@@ -1,0 +1,25 @@
+language: python
+os: linux
+services: docker
+sudo: required
+
+matrix:
+  include:
+    - env: PYTHON_VERSION=2.7
+    - env: PYTHON_VERSION=3.6
+    - env: PYTHON_VERSION=3.7
+
+before_install:
+  - docker run -d --name linux -v $(pwd):/travis python:${PYTHON_VERSION}-stretch tail -f /dev/null;
+    docker ps
+
+install:
+  - docker exec -t linux bash -c "
+      apt-get update -qy &&
+      apt-get install -y libsndfile1 &&
+      pip install tox"
+
+script:
+  - docker exec -t linux bash -c "
+      cd /travis &&
+      tox -e py${PYTHON_VERSION//./}"
