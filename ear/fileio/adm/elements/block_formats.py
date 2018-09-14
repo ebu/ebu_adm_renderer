@@ -3,7 +3,7 @@ from attr.validators import instance_of, optional
 from fractions import Fraction
 from ....common import list_of
 from .geom import convert_object_position, DirectSpeakerPosition, ObjectPosition
-from .main_elements import AudioChannelFormat
+from .main_elements import AudioChannelFormat, TypeDefinition
 
 
 @attrs(slots=True)
@@ -123,3 +123,12 @@ class AudioBlockFormatHoa(BlockFormat):
 @attrs(slots=True)
 class AudioBlockFormatBinaural(BlockFormat):
     pass
+
+
+by_type_definition = {
+    TypeDefinition.DirectSpeakers: AudioBlockFormatDirectSpeakers,
+    TypeDefinition.Matrix: AudioBlockFormatMatrix,
+    TypeDefinition.Objects: AudioBlockFormatObjects,
+    TypeDefinition.HOA: AudioBlockFormatHoa,
+    TypeDefinition.Binaural: AudioBlockFormatBinaural,
+}
