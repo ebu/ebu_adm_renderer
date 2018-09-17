@@ -97,7 +97,8 @@ class AudioObject(ADMElement):
             self.audioPackFormats = _lookup_elements(adm, self.audioPackFormatIDRef)
             self.audioPackFormatIDRef = None
         if self.audioTrackUIDRef is not None:
-            self.audioTrackUIDs = _lookup_elements(adm, self.audioTrackUIDRef)
+            self.audioTrackUIDs = [adm[ref] if ref is not None else None
+                                   for ref in self.audioTrackUIDRef]
             self.audioTrackUIDRef = None
         if self.audioObjectIDRef is not None:
             self.audioObjects = _lookup_elements(adm, self.audioObjectIDRef)

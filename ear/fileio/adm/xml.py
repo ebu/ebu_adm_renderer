@@ -119,6 +119,10 @@ TimeType = TypeConvert(parse_time, unparse_time)
 RefType = TypeConvert(loads=None,
                       dumps=lambda data: data.id)
 
+TrackUIDRefType = TypeConvert(
+    loads=lambda s: None if s == "ATU_00000000" else s,
+    dumps=lambda data: "ATU_00000000" if data is None else data.id)
+
 
 @attrs
 class Attribute(object):
@@ -1035,7 +1039,7 @@ object_handler = ElementParser(AudioObject, "audioObject", [
     RefList("audioPackFormat"),
     RefList("audioObject"),
     RefList("audioComplementaryObject"),
-    ListElement(adm_name="audioTrackUIDRef", arg_name="audioTrackUIDRef", attr_name="audioTrackUIDs", type=RefType),
+    ListElement(adm_name="audioTrackUIDRef", arg_name="audioTrackUIDRef", attr_name="audioTrackUIDs", type=TrackUIDRefType),
 ])
 
 track_uid_handler = ElementParser(AudioTrackUID, "audioTrackUID", [

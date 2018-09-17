@@ -565,6 +565,18 @@ def test_referenceScreen(base):
     assert re.match(expected, str(excinfo.value)) is not None
 
 
+def test_silent_tracks(base):
+    adm = base.adm_after_mods(
+        add_children("//adm:audioObject", E.audioTrackUIDRef("ATU_00000000")),
+    )
+    [ao] = adm.audioObjects
+
+    real_atu, silent_atu = ao.audioTrackUIDs
+
+    assert real_atu is adm.audioTrackUIDs[0]
+    assert silent_atu is None
+
+
 def as_dict(inst):
     """Turn an adm element into a dict to be used for comparison.
 
@@ -582,8 +594,8 @@ def as_dict(inst):
             value = list(map(as_dict, value))
         if hasattr(value, "id"):
             value = value.id
-        elif isinstance(value, list) and len(value) and hasattr(value[0], "id"):
-            value = [item.id for item in value]
+        elif isinstance(value, list):
+            value = [item.id if hasattr(item, "id") else item for item in value]
 
         d[field.name] = value
 
