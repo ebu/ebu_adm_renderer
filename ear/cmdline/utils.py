@@ -10,8 +10,8 @@ from . import generate_test_file
 
 
 def replace_axml_command(args):
-    from .fileio.adm import xml as adm_xml
-    from .fileio.adm import chna as adm_chna
+    from ..fileio.adm import xml as adm_xml
+    from ..fileio.adm import chna as adm_chna
 
     with open(args.axml, 'rb') as axml_file:
         axml = axml_file.read()
