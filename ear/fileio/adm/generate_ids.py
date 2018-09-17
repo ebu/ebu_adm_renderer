@@ -37,6 +37,6 @@ def generate_ids(adm):
     for id, element in enumerate(adm.audioTrackUIDs, 0x1):
         element.id = "ATU_{id:08X}".format(id=id)
 
-    # check for ant track uids that have not been allocated
+    # check for any track uids that have not been allocated
     for element in non_common(adm.audioTrackFormats):
         assert element.id is not None, "cannot create id for audioTrackFormat not linked to any audioStreamFormat"
