@@ -34,7 +34,7 @@ def generate_ids(adm):
         for track_id, element in enumerate(non_common(element.audioTrackFormats), 0x1):
             element.id = "AT_{format.value:04X}{id:04X}_{track_id:02X}".format(id=id, format=element.format, track_id=track_id)
 
-    for id, element in enumerate(adm.audioTrackUIDs):
+    for id, element in enumerate(adm.audioTrackUIDs, 0x1):
         element.id = "ATU_{id:08X}".format(id=id)
 
     # check for ant track uids that have not been allocated
