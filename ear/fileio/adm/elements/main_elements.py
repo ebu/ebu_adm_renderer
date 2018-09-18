@@ -248,8 +248,10 @@ class AudioTrackUID(ADMElement):
     trackIndex = attrib(default=None)
     sampleRate = attrib(default=None)
     bitDepth = attrib(default=None)
-    audioTrackFormat = attrib(default=None, repr=False)
-    audioPackFormat = attrib(default=None, repr=False)
+    audioTrackFormat = attrib(default=None, repr=False,
+                              validator=optional(instance_of(AudioTrackFormat)))
+    audioPackFormat = attrib(default=None, repr=False,
+                             validator=optional(instance_of(AudioPackFormat)))
 
     audioTrackFormatIDRef = attrib(default=None)
     audioPackFormatIDRef = attrib(default=None)
