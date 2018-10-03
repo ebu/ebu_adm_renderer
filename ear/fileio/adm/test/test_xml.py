@@ -68,7 +68,9 @@ def base_mat():
 
 def remove_children(xpath_to_children):
     def f(xml):
-        for el in xml.xpath(xpath_to_children, namespaces=nsmap):
+        elements = list(xml.xpath(xpath_to_children, namespaces=nsmap))
+        assert elements
+        for el in elements:
             el.getparent().remove(el)
     return f
 
@@ -82,14 +84,18 @@ def add_children(xpath_to_parent, *new_children):
 
 def set_attrs(xpath_to_el, **attrs):
     def f(xml):
-        for element in xml.xpath(xpath_to_el, namespaces=nsmap):
+        elements = list(xml.xpath(xpath_to_el, namespaces=nsmap))
+        assert elements
+        for element in elements:
             element.attrib.update(attrs)
     return f
 
 
 def del_attrs(xpath_to_el, *attrs):
     def f(xml):
-        for element in xml.xpath(xpath_to_el, namespaces=nsmap):
+        elements = list(xml.xpath(xpath_to_el, namespaces=nsmap))
+        assert elements
+        for element in elements:
             for attr in attrs:
                 del element.attrib[attr]
     return f
