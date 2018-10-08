@@ -28,7 +28,7 @@ setup(
     extras_require={
         'test': [
             'pytest~=3.5',
-            'pytest-datafiles~=1.0',
+            'pytest-datafiles~=2.0',
             'pytest-cov~=2.5',
             'soundfile~=0.10',
         ],
