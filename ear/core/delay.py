@@ -10,6 +10,7 @@ class Delay(object):
     """
 
     def __init__(self, nchannels, delay):
+        assert delay >= 0
         self.delaymem = np.zeros((delay, nchannels))
         self.delay = delay
 
