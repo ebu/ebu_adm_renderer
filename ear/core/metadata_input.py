@@ -98,7 +98,7 @@ class ADMPath(object):
 
 @attrs(slots=True)
 class ImportanceData(object):
-    """Importance metadata for a RenderingItem
+    """Importance metadata for a single channel in a RenderingItem
 
     Attributes:
         audio_object (int or None): Importance that has been derived from the audioObject level
@@ -255,13 +255,19 @@ class HOARenderingItem(RenderingItem):
         track_specs (list of TrackSpec): Specification of n tracks of input samples.
         metadata_source (MetadataSource): Source of HOATypeMetadata objects;
             will usually contain only one object.
-        importance (ImportanceData): Importance values applicable for this item.
+        importances (list of ImportanceData or None): Importance data for each track.
         adm_paths (list of ADMPath or None): Pointers to the ADM objects which each track is derived from.
     """
     track_specs = attrib(validator=list_of(TrackSpec))
     metadata_source = attrib(validator=instance_of(MetadataSource))
-    importance = attrib(validator=instance_of(ImportanceData), default=Factory(ImportanceData))
+
+    importances = attrib(validator=optional(list_of(ImportanceData)), default=None)
     adm_paths = attrib(validator=optional(list_of(ADMPath)), repr=False, default=None)
+
+    @importances.validator
+    def importances_valid(self, attribute, value):
+        if value is not None and len(value) != len(self.track_specs):
+            raise ValueError("wrong number of ImportanceDatas provided")
 
     @adm_paths.validator
     def adm_paths_valid(self, attribute, value):
