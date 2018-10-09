@@ -286,9 +286,3 @@ class AudioTrackUID(ADMElement):
         if self.audioPackFormatIDRef is not None:
             self.audioPackFormat = adm.lookup_element(self.audioPackFormatIDRef)
             self.audioPackFormatIDRef = None
-
-    def validate(self):
-        super(AudioTrackUID, self).validate()
-        if self.audioTrackFormat is None:
-            raise AdmError("AudioTrackUID {self.id} is not linked "
-                           "to an audioTrackFormat".format(self=self))

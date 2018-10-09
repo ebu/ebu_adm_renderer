@@ -1,3 +1,6 @@
+from attr import attrib, attrs
+
+
 class AdmError(Exception):
     """Base class for ADM parsing exceptions."""
 
@@ -8,6 +11,22 @@ class AdmMissingRequiredElement(AdmError):
 
 class AdmIDError(AdmError):
     """Exception raised when errors relating to IDs are identified."""
+
+
+@attrs(str=False)
+class AdmFormatRefError(AdmError):
+    """Error in references between ADM content and format parts."""
+    message = attrib()
+    reasons = attrib()
+
+    def __str__(self):
+        fmt = "{message}. Possile reasons:\n{reasons}" if self.reasons else "{message}"
+
+        return fmt.format(
+            message=self.message,
+            reasons="\n".join("- {reason}".format(reason=reason)
+                              for reason in self.reasons),
+        )
 
 
 class AdmWarning(Warning):

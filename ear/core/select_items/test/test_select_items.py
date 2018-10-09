@@ -1,9 +1,10 @@
 import pytest
-from ..adm.builder import ADMBuilder
-from ..adm.generate_ids import generate_ids
-from ..utils import RenderingItemHandler
-from ..adm.exceptions import AdmError
-from ..adm.elements import TypeDefinition, FormatDefinition
+from ....fileio.adm.builder import ADMBuilder
+from ....fileio.adm.generate_ids import generate_ids
+from .. import select_rendering_items
+from ....fileio.adm.elements import TypeDefinition
+from ....fileio.adm.exceptions import AdmError
+from ...metadata_input import DirectTrackSpec, SilentTrackSpec
 
 
 def test_basic():
@@ -12,118 +13,13 @@ def test_basic():
     content = builder.create_content(audioContentName="MyContent", parent=programme)
     builder.create_item_objects(1, "MyObject 1", parent=content, block_formats=[])
     builder.create_item_objects(2, "MyObject 2", parent=content, block_formats=[])
-
-    handler = RenderingItemHandler(builder.adm)
-
-    assert len(handler.selected_items) == 2
-    assert handler.selected_items[0].track_index == 1
-    assert handler.selected_items[1].track_index == 2
-
-
-def test_object_loop_exception():
-    builder = ADMBuilder()
-    programme = builder.create_programme(audioProgrammeName="MyProgramme")
-    content = builder.create_content(audioContentName="MyContent", parent=programme)
-    object_1 = builder.create_item_objects(track_index=1, name="MyObject 1", parent=content)
-    object_2 = builder.create_item_objects(track_index=2, name="MyObject 2", parent=object_1.audio_object)
-    builder.create_item_objects(track_index=3, name="MyObject 3", parent=object_2.audio_object)
-    object_1.audio_object.audioObjects.append(object_1.audio_object)
     generate_ids(builder.adm)
 
-    expected = "loop detected in audioObjects: .*$"
-    with pytest.raises(AdmError, match=expected):
-        RenderingItemHandler(builder.adm)
+    selected_items = select_rendering_items(builder.adm)
 
-
-def test_multiple_track_formats_exception():
-    builder = ADMBuilder()
-    programme = builder.create_programme(audioProgrammeName="MyProgramme")
-    builder.create_content(audioContentName="MyContent", parent=programme)
-    object = builder.create_item_objects(track_index=1, name="MyObject")
-
-    # create another stream format referencing the audioTrackFormat
-    stream_format = builder.create_stream(audioStreamFormatName="MyStream 2", format=FormatDefinition.PCM)
-    stream_format.audioTrackFormats.append(object.track_format)
-    generate_ids(builder.adm)
-
-    expected = ("don't know how to handle audioTrackFormat linked to by "
-                "multiple audioStreamFormats")
-    with pytest.raises(AdmError, match=expected):
-        RenderingItemHandler(builder.adm)
-
-
-def test_consistency_exception_1():
-    builder = ADMBuilder()
-    programme = builder.create_programme(audioProgrammeName="MyProgramme")
-    builder.create_content(audioContentName="MyContent", parent=programme)
-    object = builder.create_item_objects(track_index=1, name="MyObject")
-    generate_ids(builder.adm)
-    del object.stream_format.audioTrackFormats[:]
-
-    expected = ("audioTrackUID 'ATU_[0-9A-Fa-f]{8}' references "
-                "audioTrackFormat 'AT_[0-9A-Fa-f]{8}_[0-9A-Fa-f]{2}', "
-                "which is not referenced by any audioStreamFormat")
-    with pytest.raises(AdmError, match=expected):
-        RenderingItemHandler(builder.adm)
-
-
-def test_consistency_exception_2():
-    builder = ADMBuilder()
-    programme = builder.create_programme(audioProgrammeName="MyProgramme")
-    builder.create_content(audioContentName="MyContent", parent=programme)
-    object = builder.create_item_objects(track_index=1, name="MyObject")
-    object.stream_format.audioChannelFormat = None
-    generate_ids(builder.adm)
-
-    expected = "no audioChannelFormat linked from audioStreamFormat AS_[0-9A-Fa-f]{8}"
-    with pytest.raises(AdmError, match=expected):
-        RenderingItemHandler(builder.adm)
-
-
-def test_consistency_exception_3():
-    builder = ADMBuilder()
-    programme = builder.create_programme(audioProgrammeName="MyProgramme")
-    builder.create_content(audioContentName="MyContent", parent=programme)
-    object = builder.create_item_objects(track_index=1, name="MyObject")
-    generate_ids(builder.adm)
-    object.track_uid.trackIndex = None
-
-    expected = ("audioTrackUID ATU_[0-9A-Fa-f]{8} does not have a track index, "
-                "which should be specified in the CHNA chunk")
-    with pytest.raises(AdmError, match=expected):
-        RenderingItemHandler(builder.adm)
-
-
-def test_consistency_exception_4():
-    builder = ADMBuilder()
-    programme = builder.create_programme(audioProgrammeName="MyProgramme")
-    builder.create_content(audioContentName="MyContent", parent=programme)
-    object = builder.create_item_objects(track_index=1, name="MyObject")
-    del object.audio_object.audioPackFormats[:]
-    builder.create_pack(audioPackFormatName="MyPack", type=TypeDefinition.Objects)
-    generate_ids(builder.adm)
-
-    expected = ("audioObject AO_[0-9A-Fa-f]{4} does not reference "
-                "audioPackFormat AP_[0-9A-Fa-f]{8} which is referenced by "
-                "audioTrackUID ATU_[0-9A-Fa-f]{8}")
-    with pytest.raises(AdmError, match=expected):
-        RenderingItemHandler(builder.adm)
-
-
-def test_consistency_exception_5():
-    builder = ADMBuilder()
-    programme = builder.create_programme(audioProgrammeName="MyProgramme")
-    builder.create_content(audioContentName="MyContent", parent=programme)
-    object = builder.create_item_objects(track_index=1, name="MyObject")
-    del object.pack_format.audioChannelFormats[:]
-    builder.create_channel(audioChannelFormatName="MyChannel", type=TypeDefinition.Objects)
-    generate_ids(builder.adm)
-
-    expected = ("audioPackFormat AP_[0-9A-Fa-f]{8} does not reference "
-                "audioChannelFormat AC_[0-9A-Fa-f]{8} which is referenced "
-                "by audioTrackUID ATU_[0-9A-Fa-f]{8}")
-    with pytest.raises(AdmError, match=expected):
-        RenderingItemHandler(builder.adm)
+    assert len(selected_items) == 2
+    assert selected_items[0].track_spec == DirectTrackSpec(1)
+    assert selected_items[1].track_spec == DirectTrackSpec(2)
 
 
 def test_multiple_programmes():
@@ -139,16 +35,16 @@ def test_multiple_programmes():
 
     expected = "more than one audioProgramme; selecting the one with the lowest id"
     with pytest.warns(UserWarning, match=expected):
-        handler = RenderingItemHandler(builder.adm)
+        selected_items = select_rendering_items(builder.adm)
 
-    assert len(handler.selected_items) == 2
-    assert handler.selected_items[0].track_index == 1
-    assert handler.selected_items[1].track_index == 3
+    assert len(selected_items) == 2
+    assert selected_items[0].track_spec == DirectTrackSpec(1)
+    assert selected_items[1].track_spec == DirectTrackSpec(3)
 
-    handler = RenderingItemHandler(builder.adm, "APR_1002")
-    assert len(handler.selected_items) == 2
-    assert handler.selected_items[0].track_index == 2
-    assert handler.selected_items[1].track_index == 4
+    selected_items = select_rendering_items(builder.adm, builder.adm["APR_1002"])
+    assert len(selected_items) == 2
+    assert selected_items[0].track_spec == DirectTrackSpec(2)
+    assert selected_items[1].track_spec == DirectTrackSpec(4)
 
 
 def test_complementary_objects():
@@ -165,15 +61,58 @@ def test_complementary_objects():
     object_1.audio_object.audioComplementaryObjects.append(object_3.audio_object)
     object_1.audio_object.audioComplementaryObjects.append(object_4.audio_object)
 
-    handler = RenderingItemHandler(builder.adm)
-    assert len(handler.selected_items) == 1
-    assert handler.selected_items[0].track_index == 1
+    [item] = select_rendering_items(builder.adm)
+    assert item.track_spec == DirectTrackSpec(1)
 
-    handler = RenderingItemHandler(
+    [item] = select_rendering_items(
         builder.adm,
-        selected_complementary_objects={object_1.audio_object.id: object_2.audio_object.id})
-    assert len(handler.selected_items) == 1
-    assert handler.selected_items[0].track_index == 2
+        selected_complementary_objects=[object_2.audio_object])
+    assert item.track_spec == DirectTrackSpec(2)
+
+
+def test_complementary_objects_multiple_selected():
+    builder = ADMBuilder()
+    programme = builder.create_programme(audioProgrammeName="MyProgramme", id="APR_1001")
+    content = builder.create_content(audioContentName="MyContent", parent=programme)
+    object_1 = builder.create_item_objects(1, "MyObject 1", parent=content, block_formats=[])
+    object_2 = builder.create_item_objects(2, "MyObject 2", parent=content, block_formats=[])
+    object_3 = builder.create_item_objects(3, "MyObject 3", parent=content, block_formats=[])
+
+    object_1.audio_object.audioComplementaryObjects.append(object_2.audio_object)
+    object_1.audio_object.audioComplementaryObjects.append(object_3.audio_object)
+
+    generate_ids(builder.adm)
+
+    expected = ("multiple audioObjects selected from complementary "
+                "object group '{object_1.id}': '{object_2.id}', '{object_3.id}'".format(
+                    object_1=object_1.audio_object,
+                    object_2=object_2.audio_object,
+                    object_3=object_3.audio_object,
+                ))
+
+    with pytest.raises(AdmError, match=expected):
+        select_rendering_items(
+            builder.adm,
+            selected_complementary_objects=[object_2.audio_object, object_3.audio_object])
+
+
+def test_select_non_complementary():
+    builder = ADMBuilder()
+    programme = builder.create_programme(audioProgrammeName="MyProgramme", id="APR_1001")
+    content = builder.create_content(audioContentName="MyContent", parent=programme)
+    object_1 = builder.create_item_objects(1, "MyObject 1", parent=content, block_formats=[])
+
+    generate_ids(builder.adm)
+
+    expected = ("selected audioObject {selected_obj.id} is not part "
+                "of any complementary audioObject group".format(
+                    selected_obj=object_1.audio_object,
+                ))
+
+    with pytest.raises(AdmError, match=expected):
+        select_rendering_items(
+            builder.adm,
+            selected_complementary_objects=[object_1.audio_object])
 
 
 def test_complementary_objects_with_referenced_objects_1():
@@ -188,21 +127,18 @@ def test_complementary_objects_with_referenced_objects_1():
 
     object_1.audioComplementaryObjects.append(object_3)
 
-    handler = RenderingItemHandler(builder.adm)
-    assert len(handler.selected_items) == 1
-    assert handler.selected_items[0].track_index == 1
+    [item] = select_rendering_items(builder.adm)
+    assert item.track_spec == DirectTrackSpec(1)
 
-    handler = RenderingItemHandler(
+    [item] = select_rendering_items(
         builder.adm,
-        selected_complementary_objects={object_1.id: object_3.id})
-    assert len(handler.selected_items) == 1
-    assert handler.selected_items[0].track_index == 2
+        selected_complementary_objects=[object_3])
+    assert item.track_spec == DirectTrackSpec(2)
 
-    handler = RenderingItemHandler(
+    [item] = select_rendering_items(
         builder.adm,
-        selected_complementary_objects={object_1.id: object_1.id})
-    assert len(handler.selected_items) == 1
-    assert handler.selected_items[0].track_index == 1
+        selected_complementary_objects=[object_1])
+    assert item.track_spec == DirectTrackSpec(1)
 
 
 def test_complementary_objects_with_referenced_objects_multiple_nesting():
@@ -221,21 +157,18 @@ def test_complementary_objects_with_referenced_objects_multiple_nesting():
 
     object_1.audioComplementaryObjects.append(object_5)
 
-    handler = RenderingItemHandler(builder.adm)
-    assert len(handler.selected_items) == 1
-    assert handler.selected_items[0].track_index == 1
+    [item] = select_rendering_items(builder.adm)
+    assert item.track_spec == DirectTrackSpec(1)
 
-    handler = RenderingItemHandler(
+    [item] = select_rendering_items(
         builder.adm,
-        selected_complementary_objects={object_1.id: object_5.id})
-    assert len(handler.selected_items) == 1
-    assert handler.selected_items[0].track_index == 2
+        selected_complementary_objects=[object_5])
+    assert item.track_spec == DirectTrackSpec(2)
 
-    handler = RenderingItemHandler(
+    [item] = select_rendering_items(
         builder.adm,
-        selected_complementary_objects={object_1.id: object_1.id})
-    assert len(handler.selected_items) == 1
-    assert handler.selected_items[0].track_index == 1
+        selected_complementary_objects=[object_1])
+    assert item.track_spec == DirectTrackSpec(1)
 
 
 def test_complementary_objects_without_audioprogramme():
@@ -252,21 +185,18 @@ def test_complementary_objects_without_audioprogramme():
 
     object_1.audioComplementaryObjects.append(object_5)
 
-    handler = RenderingItemHandler(builder.adm)
-    assert len(handler.selected_items) == 1
-    assert handler.selected_items[0].track_index == 1
+    [item] = select_rendering_items(builder.adm)
+    assert item.track_spec == DirectTrackSpec(1)
 
-    handler = RenderingItemHandler(
+    [item] = select_rendering_items(
         builder.adm,
-        selected_complementary_objects={object_1.id: object_5.id})
-    assert len(handler.selected_items) == 1
-    assert handler.selected_items[0].track_index == 2
+        selected_complementary_objects=[object_5])
+    assert item.track_spec == DirectTrackSpec(2)
 
-    handler = RenderingItemHandler(
+    [item] = select_rendering_items(
         builder.adm,
-        selected_complementary_objects={object_1.id: object_1.id})
-    assert len(handler.selected_items) == 1
-    assert handler.selected_items[0].track_index == 1
+        selected_complementary_objects=[object_1])
+    assert item.track_spec == DirectTrackSpec(1)
 
 
 @pytest.mark.parametrize("with_programme", [False, True])
@@ -328,8 +258,7 @@ def test_audio_object_importance_extraction(with_programme, child_before_parent)
 
     generate_ids(builder.adm)
 
-    handler = RenderingItemHandler(builder.adm)
-    selected_items = handler.selected_items
+    selected_items = select_rendering_items(builder.adm)
     assert len(selected_items) == 6
 
     # lower importance values cascade to referenced objects so
@@ -337,8 +266,8 @@ def test_audio_object_importance_extraction(with_programme, child_before_parent)
     # may have a higher importance (i.e. removing a "branch from a tree")
     expected_importances = {1: None, 5: 5, 6: 8, 7: 2, 8: 4, 9: 7}
     for item in selected_items:
-        expected = expected_importances[item.track_index]
-        assert expected == item.importance.audio_object, "track {}".format(item.track_index)
+        expected = expected_importances[item.track_spec.track_index]
+        assert expected == item.importance.audio_object, "track {}".format(item.track_spec.track_index)
 
 
 def test_audio_pack_importance_extraction():
@@ -406,11 +335,71 @@ def test_audio_pack_importance_extraction():
 
     generate_ids(builder.adm)
 
-    handler = RenderingItemHandler(builder.adm)
-    selected_items = handler.selected_items
+    selected_items = select_rendering_items(builder.adm)
     assert len(selected_items) == 6
 
     expected_importances = {1: None, 5: 5, 6: 8, 7: 2, 8: 4, 9: 7}
     for item in selected_items:
-        expected = expected_importances[item.track_index]
-        assert expected == item.importance.audio_pack_format, "track {}".format(item.track_index)
+        expected = expected_importances[item.track_spec.track_index]
+        assert expected == item.importance.audio_pack_format, "track {}".format(item.track_spec.track_index)
+
+
+def test_no_programme_content_object():
+    builder = ADMBuilder()
+    builder.load_common_definitions()
+
+    builder.create_track_uid(
+        trackIndex=1,
+        audioTrackFormat=builder.adm.lookup_element("AT_00010003_01"),
+        audioPackFormat=builder.adm.lookup_element("AP_00010001"),
+    )
+
+    generate_ids(builder.adm)
+
+    [item] = select_rendering_items(builder.adm)
+
+    assert item.track_spec == DirectTrackSpec(0)
+
+
+def test_silent_track_mono():
+    """Test an object referencing a mono pack format with a single silent track."""
+    builder = ADMBuilder()
+    builder.load_common_definitions()
+    builder.create_programme(audioProgrammeName="MyProgramme")
+    builder.create_content(audioContentName="MyContent")
+    builder.create_object(audioObjectName="MyObject", audioTrackUIDs=[None],
+                          audioPackFormats=[builder.adm["AP_00010001"]])
+    generate_ids(builder.adm)
+
+    [item] = select_rendering_items(builder.adm)
+
+    assert item.track_spec == SilentTrackSpec()
+    assert item.adm_path.audioChannelFormat is builder.adm["AC_00010003"]
+
+
+def test_silent_track_stereo():
+    """Test an object referencing a stereo pack format with one real track and
+    one silent one.
+    """
+    builder = ADMBuilder()
+    builder.load_common_definitions()
+    builder.create_programme(audioProgrammeName="MyProgramme")
+    builder.create_content(audioContentName="MyContent")
+
+    atu = builder.create_track_uid(
+        trackIndex=1,
+        audioTrackFormat=builder.adm.lookup_element("AT_00010001_01"),
+        audioPackFormat=builder.adm.lookup_element("AP_00010002"),
+    )
+
+    builder.create_object(audioObjectName="MyObject", audioTrackUIDs=[atu, None],
+                          audioPackFormats=[builder.adm["AP_00010002"]])
+    generate_ids(builder.adm)
+
+    selected_items = select_rendering_items(builder.adm)
+    [item_l, item_r] = sorted(selected_items, key=lambda item: item.adm_path.audioChannelFormat.id)
+
+    assert item_l.track_spec == DirectTrackSpec(0)
+    assert item_l.adm_path.audioChannelFormat is builder.adm["AC_00010001"]
+    assert item_r.track_spec == SilentTrackSpec()
+    assert item_r.adm_path.audioChannelFormat is builder.adm["AC_00010002"]
