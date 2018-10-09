@@ -1,4 +1,4 @@
-from attr import attrs, attrib, Factory
+from attr import attrs, attrib, Factory, validate
 from attr.validators import instance_of, optional
 from fractions import Fraction
 from ....common import list_of
@@ -14,6 +14,9 @@ class BlockFormat(object):
 
     def lazy_lookup_references(self, adm):
         pass
+
+    def validate(self):
+        validate(self)
 
 
 @attrs(slots=True)
@@ -34,6 +37,11 @@ class MatrixCoefficient(object):
             self.inputChannelFormat = adm.lookup_element(self.inputChannelFormatIDRef)
             self.inputChannelFormatIDRef = None
 
+    def validate(self):
+        validate(self)
+        if self.inputChannelFormat is None:
+            raise ValueError("MatrixCoefficient must have an inputChannelFormat attribute")
+
 
 @attrs(slots=True)
 class AudioBlockFormatMatrix(BlockFormat):
@@ -49,6 +57,11 @@ class AudioBlockFormatMatrix(BlockFormat):
 
         for coefficient in self.matrix:
             coefficient.lazy_lookup_references(adm)
+
+    def validate(self):
+        super(AudioBlockFormatMatrix, self).validate()
+        for coefficient in self.matrix:
+            coefficient.validate()
 
 
 @attrs(slots=True)

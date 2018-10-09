@@ -1,10 +1,10 @@
-from attr import attrs, attrib, Factory
+from attr import attrs, attrib, Factory, validate
 from attr.validators import instance_of, optional
 from enum import Enum
 from fractions import Fraction
 from six import string_types
 
-from ....common import CartesianScreen, PolarScreen, default_screen
+from ....common import CartesianScreen, PolarScreen, default_screen, list_of
 
 
 def _lookup_elements(adm, idRefs):
@@ -32,6 +32,9 @@ class ADMElement(object):
     @property
     def element_type(self):
         return type(self).__name__
+
+    def validate(self):
+        validate(self)
 
 
 @attrs(slots=True)
@@ -176,6 +179,17 @@ class AudioChannelFormat(ADMElement):
         for block in self.audioBlockFormats:
             block.lazy_lookup_references(adm)
 
+    @audioBlockFormats.validator
+    def _validate_audioBlockFormats(self, attr, value):
+        from . import block_formats  # can't import at top level without making a loop
+        block_type = block_formats.by_type_definition[self.type]
+        list_of(block_type)(self, attr, value)
+
+    def validate(self):
+        super(AudioChannelFormat, self).validate()
+        for block in self.audioBlockFormats:
+            block.validate()
+
 
 @attrs(slots=True)
 class AudioStreamFormat(ADMElement):
@@ -201,6 +215,11 @@ class AudioStreamFormat(ADMElement):
         if self.audioTrackFormatIDRef is not None:
             self.audioTrackFormats = _lookup_elements(adm, self.audioTrackFormatIDRef)
             self.audioTrackFormatIDRef = None
+
+    def validate(self):
+        super(AudioStreamFormat, self).validate()
+        if not self.audioTrackFormats:
+            raise ValueError("AudioStreamFormat must reference at least one AudioTrackFormat")
 
 
 @attrs(slots=True)
@@ -241,3 +260,8 @@ class AudioTrackUID(ADMElement):
         if self.audioPackFormatIDRef is not None:
             self.audioPackFormat = adm.lookup_element(self.audioPackFormatIDRef)
             self.audioPackFormatIDRef = None
+
+    def validate(self):
+        super(AudioTrackUID, self).validate()
+        if self.audioTrackFormat is None:
+            raise ValueError("AudioTrackUID must have an audioTrackFormat attribute")

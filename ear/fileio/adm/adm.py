@@ -68,6 +68,10 @@ class ADM(object):
         for element in self.elements:
             element.lazy_lookup_references(self)
 
+    def validate(self):
+        for element in self.elements:
+            element.validate()
+
     def addAudioProgramme(self, programme):
         self._ap.append(programme)
 
