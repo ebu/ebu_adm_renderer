@@ -2,7 +2,7 @@ from attr import attrib, attrs, Factory
 from attr.validators import instance_of, optional
 from fractions import Fraction
 from ..common import list_of, default_screen
-from ..fileio.adm.elements import AudioBlockFormatObjects, AudioBlockFormatDirectSpeakers, Frequency
+from ..fileio.adm.elements import AudioBlockFormatObjects, AudioBlockFormatDirectSpeakers, MatrixCoefficient, Frequency
 
 
 class MetadataSource(object):
@@ -76,6 +76,55 @@ class ImportanceData(object):
     audio_pack_format = attrib(validator=optional(instance_of(int)), default=None)
 
 
+@attrs(slots=True)
+class TrackSpec(object):
+    """Represents a method for obtaining audio samples to be processed given
+    multi-track input samples (from a WAV file for example).
+
+    This is used to abstract over regular track references, silent channels and
+    matrix channels, but could also be used for coded audio, fancy containers etc.
+    """
+
+
+@attrs(slots=True)
+class DirectTrackSpec(TrackSpec):
+    """Track obtained directly from the input audio stream.
+
+    Attributes:
+        track_index (int): Zero based input track index.
+    """
+    track_index = attrib(validator=instance_of(int))
+
+
+@attrs(slots=True)
+class SilentTrackSpec(TrackSpec):
+    """A track whose samples are always 0."""
+
+
+@attrs(slots=True)
+class MatrixCoefficientTrackSpec(TrackSpec):
+    """Track derived from a single channel and a matrix coefficient.
+
+    Attributes:
+        input_track (TrackSpec): track spec to obtain samples from before they
+            are processed by parameters in coefficient.
+        coefficient (MatrixCoefficient): matrix parameters to apply;
+            inputChannelFormat should be ignored.
+    """
+    input_track = attrib(validator=instance_of(TrackSpec))
+    coefficient = attrib(validator=instance_of(MatrixCoefficient))
+
+
+@attrs(slots=True)
+class MixTrackSpec(TrackSpec):
+    """Track that is a mix of some other tracks.
+
+    Attributes:
+        input_tracks (list of TrackSpec): list of input tracks to mix
+    """
+    input_tracks = attrib(validator=list_of(TrackSpec))
+
+
 #################################################
 # type metadata and rendering items for each type
 #################################################
@@ -99,11 +148,11 @@ class ObjectRenderingItem(RenderingItem):
     """RenderingItem for typeDefinition="Objects"
 
     Attributes:
-        track_index (int): Zero based input track index for this item.
+        track_spec (TrackSpec): Zero based input track index for this item.
         metadata_source (MetadataSource): Source of ObjectTypeMetadata objects.
         importance (ImportanceData): Importance values applicable for this item.
     """
-    track_index = attrib(validator=instance_of(int))
+    track_spec = attrib(validator=instance_of(TrackSpec))
     metadata_source = attrib(validator=instance_of(MetadataSource))
     importance = attrib(validator=instance_of(ImportanceData), default=Factory(ImportanceData))
 
@@ -127,11 +176,11 @@ class DirectSpeakersRenderingItem(RenderingItem):
     """RenderingItem for typeDefinition="DirectSpeakers"
 
     Attributes:
-        track_index (int): Zero based input track index for this item.
+        track_spec (TrackSpec): Specification of input samples.
         metadata_source (MetadataSource): Source of DirectSpeakersTypeMetadata objects.
         importance (ImportanceData): Importance values applicable for this item.
     """
-    track_index = attrib(validator=instance_of(int))
+    track_spec = attrib(validator=instance_of(TrackSpec))
     metadata_source = attrib(validator=instance_of(MetadataSource))
     importance = attrib(validator=instance_of(ImportanceData), default=Factory(ImportanceData))
 
@@ -167,11 +216,11 @@ class HOARenderingItem(RenderingItem):
     """RenderingItem for typeDefinition="HOA"
 
     Attributes:
-        track_indices (collection of int): Zero based index of each track in this item.
+        track_specs (list of TrackSpec): Specification of n tracks of input samples.
         metadata_source (MetadataSource): Source of HOATypeMetadata objects;
             will usually contain only one object.
         importance (ImportanceData): Importance values applicable for this item.
     """
-    track_indices = attrib()
+    track_specs = attrib(validator=list_of(TrackSpec))
     metadata_source = attrib(validator=instance_of(MetadataSource))
     importance = attrib(validator=instance_of(ImportanceData), default=Factory(ImportanceData))
