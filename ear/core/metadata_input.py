@@ -2,7 +2,9 @@ from attr import attrib, attrs, Factory
 from attr.validators import instance_of, optional
 from fractions import Fraction
 from ..common import list_of, default_screen
-from ..fileio.adm.elements import AudioBlockFormatObjects, AudioBlockFormatDirectSpeakers, MatrixCoefficient, Frequency
+from ..fileio.adm.elements import (AudioProgramme, AudioContent, AudioObject, AudioPackFormat,
+                                   AudioChannelFormat, AudioBlockFormatObjects, AudioBlockFormatDirectSpeakers,
+                                   MatrixCoefficient, Frequency)
 
 
 class MetadataSource(object):
@@ -62,6 +64,36 @@ class ExtraData(object):
     object_duration = attrib(validator=optional(instance_of(Fraction)), default=None)
     reference_screen = attrib(default=default_screen)
     channel_frequency = attrib(validator=instance_of(Frequency), default=Factory(Frequency))
+
+
+@attrs(slots=True)
+class ADMPath(object):
+    """Pointers to the ADM objects which a rendering item is derived from."""
+    audioProgramme = attrib(validator=optional(instance_of(AudioProgramme)), default=None)
+    audioContent = attrib(validator=optional(instance_of(AudioContent)), default=None)
+    audioObjects = attrib(validator=optional(list_of(AudioObject)), default=None)
+    audioPackFormats = attrib(validator=optional(list_of(AudioPackFormat)), default=None)
+    audioChannelFormat = attrib(validator=optional(instance_of(AudioChannelFormat)), default=None)
+
+    @property
+    def first_audioObject(self):
+        """The first audioObject of this track in the chain, or None"""
+        return self.audioObjects[0] if self.audioObjects is not None else None
+
+    @property
+    def last_audioObject(self):
+        """The last audioObject of this track in the chain, or None"""
+        return self.audioObjects[-1] if self.audioObjects is not None else None
+
+    @property
+    def first_audioPackFormat(self):
+        """The first audioPackFormat of this track in the chain, or None"""
+        return self.audioPackFormats[0] if self.audioPackFormats is not None else None
+
+    @property
+    def last_audioPackFormat(self):
+        """The last audioPackFormat of this track in the chain, or None"""
+        return self.audioPackFormats[-1] if self.audioPackFormats is not None else None
 
 
 @attrs(slots=True)
@@ -151,10 +183,12 @@ class ObjectRenderingItem(RenderingItem):
         track_spec (TrackSpec): Zero based input track index for this item.
         metadata_source (MetadataSource): Source of ObjectTypeMetadata objects.
         importance (ImportanceData): Importance values applicable for this item.
+        adm_path (ADMPath): Pointers to the ADM objects which this is derived from.
     """
     track_spec = attrib(validator=instance_of(TrackSpec))
     metadata_source = attrib(validator=instance_of(MetadataSource))
     importance = attrib(validator=instance_of(ImportanceData), default=Factory(ImportanceData))
+    adm_path = attrib(validator=optional(instance_of(ADMPath)), default=None, repr=False)
 
 
 # direct speakers
@@ -179,10 +213,12 @@ class DirectSpeakersRenderingItem(RenderingItem):
         track_spec (TrackSpec): Specification of input samples.
         metadata_source (MetadataSource): Source of DirectSpeakersTypeMetadata objects.
         importance (ImportanceData): Importance values applicable for this item.
+        adm_path (ADMPath): Pointers to the ADM objects which this is derived from.
     """
     track_spec = attrib(validator=instance_of(TrackSpec))
     metadata_source = attrib(validator=instance_of(MetadataSource))
     importance = attrib(validator=instance_of(ImportanceData), default=Factory(ImportanceData))
+    adm_path = attrib(validator=optional(instance_of(ADMPath)), default=None, repr=False)
 
 
 # HOA
@@ -220,7 +256,14 @@ class HOARenderingItem(RenderingItem):
         metadata_source (MetadataSource): Source of HOATypeMetadata objects;
             will usually contain only one object.
         importance (ImportanceData): Importance values applicable for this item.
+        adm_paths (list of ADMPath or None): Pointers to the ADM objects which each track is derived from.
     """
     track_specs = attrib(validator=list_of(TrackSpec))
     metadata_source = attrib(validator=instance_of(MetadataSource))
     importance = attrib(validator=instance_of(ImportanceData), default=Factory(ImportanceData))
+    adm_paths = attrib(validator=optional(list_of(ADMPath)), repr=False, default=None)
+
+    @adm_paths.validator
+    def adm_paths_valid(self, attribute, value):
+        if value is not None and len(value) != len(self.track_specs):
+            raise ValueError("wrong number of ADMPaths provided")
