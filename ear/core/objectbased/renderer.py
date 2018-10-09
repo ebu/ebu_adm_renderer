@@ -7,6 +7,7 @@ from ...options import Option, SubOptions, OptionsHandler
 from .gain_calc import GainCalc
 from . import decorrelate
 from ..renderer_common import BlockProcessingChannel, InterpretTimingMetadata, InterpGains, FixedGains
+from ..track_processor import TrackProcessor
 
 
 class InterpretObjectMetadata(InterpretTimingMetadata):
@@ -97,8 +98,8 @@ class ObjectRenderer(object):
         self._gain_calc = GainCalc(layout, **gain_calc_opts)
         self._nchannels = len(layout.channels)
 
-        # tuples of an input channel number and a BlockProcessingChannel to apply to that
-        # input channel.
+        # tuples of a track spec processor and a BlockProcessingChannel to
+        # apply to the samples it produces.
         self.block_processing_channels = []
 
         decorrlation_filters = decorrelate.design_decorrelators(layout, **decorrelator_opts)
@@ -128,7 +129,7 @@ class ObjectRenderer(object):
         Args:
             rendering_items (list of ObjectRenderingItem): Items to process.
         """
-        self.block_processing_channels = [(item.track_index,
+        self.block_processing_channels = [(TrackProcessor(item.track_spec),
                                            BlockProcessingChannel(item.metadata_source,
                                                                   InterpretObjectMetadata(self._calc_gains)))
                                           for item in rendering_items]
@@ -149,8 +150,9 @@ class ObjectRenderer(object):
         """
         interpolated = np.zeros((len(input_samples), self._nchannels * 2))
 
-        for channel_no, block_processing in self.block_processing_channels:
-            block_processing.process(sample_rate, start_sample, input_samples[:, channel_no], interpolated)
+        for track_spec_processor, block_processing in self.block_processing_channels:
+            track_samples = track_spec_processor.process(sample_rate, input_samples)
+            block_processing.process(sample_rate, start_sample, track_samples, interpolated)
 
         direct_out = self.delays.process(interpolated[:, :self._nchannels])
         diffuse_out = self.decorrelators_vbs.process(interpolated[:, self._nchannels:])

@@ -2,6 +2,7 @@ import numpy as np
 from attr import attrs, attrib
 from .design import HOADecoderDesign
 from ..renderer_common import BlockProcessingChannel, InterpretTimingMetadata, ProcessingBlock
+from ..track_processor import MultiTrackProcessor
 from ...options import OptionsHandler, SubOptions
 
 
@@ -81,7 +82,7 @@ class HOARenderer(object):
         Args:
             rendering_items (list of HOARenderingItem): Items to process.
         """
-        self.block_processing_channels = [(item.track_indices,
+        self.block_processing_channels = [(MultiTrackProcessor(item.track_specs),
                                            BlockProcessingChannel(
                                                item.metadata_source,
                                                InterpretHOAMetadata(self._decoder_design.design,
@@ -104,7 +105,8 @@ class HOARenderer(object):
         """
         output_samples = np.zeros((len(input_samples), len(self._output_channels)))
 
-        for channels, block_processing in self.block_processing_channels:
-            block_processing.process(sample_rate, start_sample, input_samples[:, channels], output_samples)
+        for track_spec_processor, block_processing in self.block_processing_channels:
+            track_samples = track_spec_processor.process(sample_rate, input_samples)
+            block_processing.process(sample_rate, start_sample, track_samples, output_samples)
 
         return output_samples

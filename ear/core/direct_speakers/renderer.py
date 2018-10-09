@@ -1,6 +1,7 @@
 import numpy as np
 from .panner import DirectSpeakersPanner
 from ..renderer_common import BlockProcessingChannel, InterpretTimingMetadata, FixedGains
+from ..track_processor import TrackProcessor
 
 
 class InterpretDirectSpeakersMetadata(InterpretTimingMetadata):
@@ -43,8 +44,8 @@ class DirectSpeakersRenderer(object):
         self._panner = DirectSpeakersPanner(layout, **options)
         self._nchannels = len(layout.channels)
 
-        # tuples of an input channel number and a BlockProcessingChannel to apply to that
-        # input channel.
+        # tuples of a track spec processor and a BlockProcessingChannel to
+        # apply to the samples it produces.
         self.block_processing_channels = []
 
     def set_rendering_items(self, rendering_items):
@@ -58,7 +59,7 @@ class DirectSpeakersRenderer(object):
         Args:
             rendering_items (list of DirectSpeakersRenderingItem): Items to process.
         """
-        self.block_processing_channels = [(item.track_index,
+        self.block_processing_channels = [(TrackProcessor(item.track_spec),
                                            BlockProcessingChannel(
                                                item.metadata_source,
                                                InterpretDirectSpeakersMetadata(self._panner.handle)))
@@ -80,7 +81,8 @@ class DirectSpeakersRenderer(object):
         """
         output_samples = np.zeros((len(input_samples), self._nchannels))
 
-        for channel_no, block_processing in self.block_processing_channels:
-            block_processing.process(sample_rate, start_sample, input_samples[:, channel_no], output_samples)
+        for track_spec_processor, block_processing in self.block_processing_channels:
+            track_samples = track_spec_processor.process(sample_rate, input_samples)
+            block_processing.process(sample_rate, start_sample, track_samples, output_samples)
 
         return output_samples
