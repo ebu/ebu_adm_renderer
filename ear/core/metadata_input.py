@@ -172,6 +172,7 @@ class ObjectTypeMetadata(TypeMetadata):
         extra_data (ExtraData): Extra parameters from outside block format.
     """
     block_format = attrib(validator=instance_of(AudioBlockFormatObjects))
+
     extra_data = attrib(validator=instance_of(ExtraData), default=Factory(ExtraData))
 
 
@@ -182,11 +183,12 @@ class ObjectRenderingItem(RenderingItem):
     Attributes:
         track_spec (TrackSpec): Zero based input track index for this item.
         metadata_source (MetadataSource): Source of ObjectTypeMetadata objects.
-        importance (ImportanceData): Importance values applicable for this item.
+        importance (ImportanceData): Importance data for this item.
         adm_path (ADMPath): Pointers to the ADM objects which this is derived from.
     """
     track_spec = attrib(validator=instance_of(TrackSpec))
     metadata_source = attrib(validator=instance_of(MetadataSource))
+
     importance = attrib(validator=instance_of(ImportanceData), default=Factory(ImportanceData))
     adm_path = attrib(validator=optional(instance_of(ADMPath)), default=None, repr=False)
 
@@ -202,6 +204,7 @@ class DirectSpeakersTypeMetadata(TypeMetadata):
         extra_data (ExtraData): Extra parameters from outside block format.
     """
     block_format = attrib(validator=instance_of(AudioBlockFormatDirectSpeakers))
+
     extra_data = attrib(validator=instance_of(ExtraData), default=Factory(ExtraData))
 
 
@@ -212,11 +215,12 @@ class DirectSpeakersRenderingItem(RenderingItem):
     Attributes:
         track_spec (TrackSpec): Specification of input samples.
         metadata_source (MetadataSource): Source of DirectSpeakersTypeMetadata objects.
-        importance (ImportanceData): Importance values applicable for this item.
+        importance (ImportanceData): Importance data for this item.
         adm_path (ADMPath): Pointers to the ADM objects which this is derived from.
     """
     track_spec = attrib(validator=instance_of(TrackSpec))
     metadata_source = attrib(validator=instance_of(MetadataSource))
+
     importance = attrib(validator=instance_of(ImportanceData), default=Factory(ImportanceData))
     adm_path = attrib(validator=optional(instance_of(ADMPath)), default=None, repr=False)
 
@@ -233,18 +237,19 @@ class HOATypeMetadata(TypeMetadata):
         normalization (str): Normalization for all channels.
         nfcRefDist (float or None): NFC Reference distance for all channels.
         screenRef (bool): Are these channels screen related?
-        extra_data (ExtraData): Info from object and channels for all channels.
         rtime (Fraction or None): Start time of block.
         duration (Fraction or None): Duration of block.
+        extra_data (ExtraData): Info from object and channels for all channels.
     """
     orders = attrib(validator=list_of(int))
     degrees = attrib(validator=list_of(int))
     normalization = attrib()
     nfcRefDist = attrib(validator=optional(instance_of(float)), default=None)
     screenRef = attrib(validator=instance_of(bool), default=False)
-    extra_data = attrib(validator=instance_of(ExtraData), default=Factory(ExtraData))
     rtime = attrib(default=None, validator=optional(instance_of(Fraction)))
     duration = attrib(default=None, validator=optional(instance_of(Fraction)))
+
+    extra_data = attrib(validator=instance_of(ExtraData), default=Factory(ExtraData))
 
 
 @attrs(slots=True)
