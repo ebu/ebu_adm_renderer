@@ -1,4 +1,4 @@
-from .metadata_input import MetadataSource, ObjectRenderingItem
+from .metadata_input import MetadataSource, HOARenderingItem, ObjectRenderingItem
 
 
 def filter_by_importance(rendering_items,
@@ -35,8 +35,13 @@ def filter_audioObject_by_importance(rendering_items, threshold):
     Yields: RenderingItem
     """
     for item in rendering_items:
-        if item.importance.audio_object is None or item.importance.audio_object >= threshold:
-            yield item
+        if isinstance(item, HOARenderingItem):
+            if any(importance.audio_object is None or importance.audio_object >= threshold
+                   for importance in item.importances):
+                yield item
+        else:
+            if item.importance.audio_object is None or item.importance.audio_object >= threshold:
+                yield item
 
 
 def filter_audioPackFormat_by_importance(rendering_items, threshold):
@@ -53,8 +58,13 @@ def filter_audioPackFormat_by_importance(rendering_items, threshold):
     Yields: RenderingItem
     """
     for item in rendering_items:
-        if item.importance.audio_pack_format is None or item.importance.audio_pack_format >= threshold:
-            yield item
+        if isinstance(item, HOARenderingItem):
+            if any(importance.audio_pack_format is None or importance.audio_pack_format >= threshold
+                   for importance in item.importances):
+                yield item
+        else:
+            if item.importance.audio_pack_format is None or item.importance.audio_pack_format >= threshold:
+                yield item
 
 
 class MetadataSourceImportanceFilter(MetadataSource):

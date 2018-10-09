@@ -1,5 +1,6 @@
-from ..metadata_input import ObjectRenderingItem, ImportanceData, MetadataSourceIter, MetadataSource
+from ..metadata_input import ObjectRenderingItem, HOARenderingItem, ImportanceData, MetadataSourceIter, MetadataSource
 from ..metadata_input import ObjectTypeMetadata
+from ..metadata_input import DirectTrackSpec
 from ...fileio.adm.elements import AudioBlockFormatObjects
 from ..importance import filter_by_importance, filter_audioObject_by_importance, filter_audioPackFormat_by_importance, MetadataSourceImportanceFilter
 from fractions import Fraction
@@ -9,23 +10,32 @@ import pytest
 @pytest.fixture
 def rendering_items():
     dummySource = MetadataSource()
-    return [ObjectRenderingItem(importance=ImportanceData(audio_object=1, audio_pack_format=2), track_index=1, metadata_source=dummySource),
-            ObjectRenderingItem(importance=ImportanceData(audio_object=2, audio_pack_format=3), track_index=1, metadata_source=dummySource),
-            ObjectRenderingItem(importance=ImportanceData(audio_object=2, audio_pack_format=None), track_index=1, metadata_source=dummySource),
-            ObjectRenderingItem(importance=ImportanceData(audio_object=3, audio_pack_format=10), track_index=1, metadata_source=dummySource),
-            ObjectRenderingItem(importance=ImportanceData(audio_object=None, audio_pack_format=2), track_index=1, metadata_source=dummySource),
-            ObjectRenderingItem(importance=ImportanceData(audio_object=4, audio_pack_format=7), track_index=1, metadata_source=dummySource),
-            ObjectRenderingItem(importance=ImportanceData(audio_object=10, audio_pack_format=3), track_index=1, metadata_source=dummySource)]
+    DTS = DirectTrackSpec
+    return [ObjectRenderingItem(importance=ImportanceData(audio_object=1, audio_pack_format=2), track_spec=DTS(1), metadata_source=dummySource),
+            ObjectRenderingItem(importance=ImportanceData(audio_object=2, audio_pack_format=3), track_spec=DTS(2), metadata_source=dummySource),
+            ObjectRenderingItem(importance=ImportanceData(audio_object=2, audio_pack_format=None), track_spec=DTS(3), metadata_source=dummySource),
+            ObjectRenderingItem(importance=ImportanceData(audio_object=3, audio_pack_format=10), track_spec=DTS(4), metadata_source=dummySource),
+            ObjectRenderingItem(importance=ImportanceData(audio_object=None, audio_pack_format=2), track_spec=DTS(5), metadata_source=dummySource),
+            ObjectRenderingItem(importance=ImportanceData(audio_object=4, audio_pack_format=7), track_spec=DTS(6), metadata_source=dummySource),
+            ObjectRenderingItem(importance=ImportanceData(audio_object=10, audio_pack_format=3), track_spec=DTS(7), metadata_source=dummySource),
+            HOARenderingItem(importances=[ImportanceData(audio_object=6, audio_pack_format=5),
+                                          ImportanceData(audio_object=6, audio_pack_format=4),
+                                          ImportanceData(audio_object=6, audio_pack_format=4),
+                                          ImportanceData(audio_object=6, audio_pack_format=4),
+                                          ],
+                             track_specs=[DTS(8), DTS(9), DTS(10), DTS(11)],
+                             metadata_source=dummySource),
+            ]
 
 
 @pytest.mark.parametrize('threshold,expected_indizes', [
-    (0, [0, 1, 2, 3, 4, 5, 6]),
-    (1, [0, 1, 2, 3, 4, 5, 6]),
-    (2, [1, 2, 3, 4, 5, 6]),
-    (3, [3, 4, 5, 6]),
-    (4, [4, 5, 6]),
-    (5, [4, 6]),
-    (6, [4, 6]),
+    (0, [0, 1, 2, 3, 4, 5, 6, 7]),
+    (1, [0, 1, 2, 3, 4, 5, 6, 7]),
+    (2, [1, 2, 3, 4, 5, 6, 7]),
+    (3, [3, 4, 5, 6, 7]),
+    (4, [4, 5, 6, 7]),
+    (5, [4, 6, 7]),
+    (6, [4, 6, 7]),
     (7, [4, 6]),
     (8, [4, 6]),
     (9, [4, 6]),
@@ -38,12 +48,12 @@ def test_importance_filter_objects(rendering_items, threshold, expected_indizes)
 
 
 @pytest.mark.parametrize('threshold,expected_indizes', [
-    (0, [0, 1, 2, 3, 4, 5, 6]),
-    (1, [0, 1, 2, 3, 4, 5, 6]),
-    (2, [0, 1, 2, 3, 4, 5, 6]),
-    (3, [1, 2, 3, 5, 6]),
-    (4, [2, 3, 5]),
-    (5, [2, 3, 5]),
+    (0, [0, 1, 2, 3, 4, 5, 6, 7]),
+    (1, [0, 1, 2, 3, 4, 5, 6, 7]),
+    (2, [0, 1, 2, 3, 4, 5, 6, 7]),
+    (3, [1, 2, 3, 5, 6, 7]),
+    (4, [2, 3, 5, 7]),
+    (5, [2, 3, 5, 7]),
     (6, [2, 3, 5]),
     (7, [2, 3, 5]),
     (8, [2, 3]),
@@ -57,12 +67,12 @@ def test_importance_filter_packs(rendering_items, threshold, expected_indizes):
 
 
 @pytest.mark.parametrize('threshold,expected_indizes', [
-    (0, [0, 1, 2, 3, 4, 5, 6]),
-    (1, [0, 1, 2, 3, 4, 5, 6]),
-    (2, [1, 2, 3, 4, 5, 6]),
-    (3, [3, 5, 6]),
-    (4, [5]),
-    (5, []),
+    (0, [0, 1, 2, 3, 4, 5, 6, 7]),
+    (1, [0, 1, 2, 3, 4, 5, 6, 7]),
+    (2, [1, 2, 3, 4, 5, 6, 7]),
+    (3, [3, 5, 6, 7]),
+    (4, [5, 7]),
+    (5, [7]),
     (6, []),
     (7, []),
     (8, []),
@@ -72,7 +82,12 @@ def test_importance_filter_packs(rendering_items, threshold, expected_indizes):
 def test_importance_filter(rendering_items, threshold, expected_indizes):
     expected_result = [rendering_items[x] for x in expected_indizes]
     items = list(filter_by_importance(rendering_items, threshold=threshold))
-    assert items == expected_result
+
+    def track_specs(item):
+        return item.track_specs if isinstance(item, HOARenderingItem) else item.track_spec
+
+    # the metadata sources will be different, so just check that we've got the right channel
+    assert [track_specs(item) for item in items] == [track_specs(item) for item in expected_result]
 
 
 type_metadatas = [
