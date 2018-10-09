@@ -57,19 +57,19 @@ def build_adm(acn, norm, nfcDist, screenRef):
         adm.addAudioChannelFormat(channel_format)
         pack_format.audioChannelFormats.append(channel_format)
 
-        track_format = AudioTrackFormat(
-            audioTrackFormatName=name,
-            format=FormatDefinition.PCM,
-        )
-        adm.addAudioTrackFormat(track_format)
-
         stream_format = AudioStreamFormat(
             audioStreamFormatName=name,
             format=FormatDefinition.PCM,
-            audioTrackFormats=[track_format],
             audioChannelFormat=channel_format,
         )
         adm.addAudioStreamFormat(stream_format)
+
+        track_format = AudioTrackFormat(
+            audioTrackFormatName=name,
+            format=FormatDefinition.PCM,
+            audioStreamFormat=stream_format,
+        )
+        adm.addAudioTrackFormat(track_format)
 
         track_uid = AudioTrackUID(
             trackIndex=channel_no,

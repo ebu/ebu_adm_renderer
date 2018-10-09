@@ -4,6 +4,12 @@ def non_common(elements):
             yield element
 
 
+def _stream_track_formats(adm, stream_format):
+    for track_format in non_common(adm.audioTrackFormats):
+        if track_format.audioStreamFormat is stream_format:
+            yield track_format
+
+
 def generate_ids(adm):
     """regenerate ids for all elements in adm"""
     # clear track format ids so that we can check these have all been allocated
@@ -31,7 +37,7 @@ def generate_ids(adm):
     for id, element in enumerate(non_common(adm.audioStreamFormats), 0x1001):
         element.id = "AS_{format.value:04X}{id:04X}".format(id=id, format=element.format)
 
-        for track_id, element in enumerate(non_common(element.audioTrackFormats), 0x1):
+        for track_id, element in enumerate(_stream_track_formats(adm, element), 0x1):
             element.id = "AT_{format.value:04X}{id:04X}_{track_id:02X}".format(id=id, format=element.format, track_id=track_id)
 
     for id, element in enumerate(adm.audioTrackUIDs, 0x1):

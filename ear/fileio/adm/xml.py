@@ -269,7 +269,7 @@ class ElementParser(object):
     """Parser for an xml element type, that defers to the given properties to
     handle the attributes and sub-elements."""
 
-    def __init__(self, cls, adm_name, properties):
+    def __init__(self, cls, adm_name, properties, validate=None):
         self.cls = cls
         self.adm_name = adm_name
         self.properties = properties
@@ -278,6 +278,7 @@ class ElementParser(object):
         self.text_handler = None
         self.required_args = set()
         self.arg_to_name = {}
+        self.validate = validate
 
         for prop in properties:
             for handler_type, adm_name, handler in prop.get_handlers():
@@ -321,6 +322,9 @@ class ElementParser(object):
             missing_items = (self.arg_to_name[arg_name] for arg_name in missing_args)
             err = ValueError("missing items: {missing}".format(missing=', '.join(missing_items)))
             raise ParseError(err, element)
+
+        if self.validate is not None:
+            self.validate(kwargs)
 
         try:
             return self.cls(**kwargs)
@@ -889,21 +893,35 @@ pack_format_handler = ElementParser(AudioPackFormat, "audioPackFormat", [
     RefElement("outputPackFormat"),
 ])
 
+
+def _check_stream_track_ref(kwargs):
+    if "audioTrackFormatIDRef" not in kwargs:
+        warnings.warn("audioStreamFormat {id} has no audioTrackFormatIDRef; "
+                      "this may be incompatible with some software".format(id=kwargs["id"]))
+
+
 stream_format_handler = ElementParser(AudioStreamFormat, "audioStreamFormat", [
     Attribute(adm_name="audioStreamFormatID", arg_name="id", required=True),
     Attribute(adm_name="audioStreamFormatName", arg_name="audioStreamFormatName", required=True),
     format_handler,
-    RefList("audioTrackFormat", required=True),
+    RefList("audioTrackFormat"),
     RefElement("audioChannelFormat"),
     RefElement("audioPackFormat"),
-])
+], _check_stream_track_ref)
+
+
+def _check_track_stream_ref(kwargs):
+    if "audioStreamFormatIDRef" not in kwargs:
+        warnings.warn("audioTrackFormat {id} has no audioStreamFormatIDRef; "
+                      "this may be incompatible with some software".format(id=kwargs["id"]))
+
 
 track_format_handler = ElementParser(AudioTrackFormat, "audioTrackFormat", [
     Attribute(adm_name="audioTrackFormatID", arg_name="id", required=True),
     Attribute(adm_name="audioTrackFormatName", arg_name="audioTrackFormatName", required=True),
     format_handler,
-    RefElement("audioStreamFormat", parse_only=True),
-])
+    RefElement("audioStreamFormat"),
+], _check_track_stream_ref)
 
 
 default_screen = PolarScreen(aspectRatio=1.78,
@@ -1165,14 +1183,40 @@ def parse_file(axmlfile, **kwargs):
     return adm
 
 
+@attrs
+class AudioStreamFormatWrapper(object):
+    """Wrapper around an audioStreamFormat which adds audioTrackFormat references."""
+
+    wrapped = attrib()
+    audioTrackFormats = attrib(default=Factory(list))
+
+    def __getattr__(self, name):
+        return getattr(self.wrapped, name)
+
+    @classmethod
+    def wrapped_audioStreamFormats(cls, adm):
+        from collections import OrderedDict
+        stream_formats = OrderedDict((id(stream_format), cls(stream_format))
+                                     for stream_format in adm.audioStreamFormats)
+
+        for track_format in adm.audioTrackFormats:
+            if track_format.audioStreamFormat is not None:
+                stream_format = track_format.audioStreamFormat
+                stream_formats[id(stream_format)].audioTrackFormats.append(track_format)
+
+        return list(stream_formats.values())
+
+
 def adm_to_xml(adm):
+    audioStreamFormats = AudioStreamFormatWrapper.wrapped_audioStreamFormats(adm)
+
     element_types = [
         (programme_handler.to_xml, adm.audioProgrammes),
         (content_handler.to_xml, adm.audioContents),
         (object_handler.to_xml, adm.audioObjects),
         (channel_format_handler.to_xml, adm.audioChannelFormats),
         (pack_format_handler.to_xml, adm.audioPackFormats),
-        (stream_format_handler.to_xml, adm.audioStreamFormats),
+        (stream_format_handler.to_xml, audioStreamFormats),
         (track_format_handler.to_xml, adm.audioTrackFormats),
         (track_uid_handler.to_xml, adm.audioTrackUIDs),
     ]

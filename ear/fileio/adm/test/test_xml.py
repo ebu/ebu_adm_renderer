@@ -5,6 +5,7 @@ import pytest
 import re
 from copy import deepcopy
 from ..xml import parse_string, adm_to_xml, ParseError
+from ..exceptions import AdmError
 from ..elements import AudioBlockFormatBinaural, CartesianZone, PolarZone
 from ....common import CartesianPosition, PolarPosition, CartesianScreen, PolarScreen
 
@@ -581,6 +582,33 @@ def test_silent_tracks(base):
 
     assert real_atu is adm.audioTrackUIDs[0]
     assert silent_atu is None
+
+
+def test_track_stream_ref(base):
+    """Check that the track->stream ref is established by a reference in either direction."""
+    with pytest.warns(UserWarning, match=("audioTrackFormat AT_00011001_01 has no audioStreamFormatIDRef; "
+                                          "this may be incompatible with some software")):
+        adm = base.adm_after_mods(
+            remove_children("//adm:audioTrackFormat/adm:audioStreamFormatIDRef"),
+        )
+    assert adm["AT_00011001_01"].audioStreamFormat is adm["AS_00011001"]
+
+    with pytest.warns(UserWarning, match=("audioStreamFormat AS_00011001 has no audioTrackFormatIDRef; "
+                                          "this may be incompatible with some software")):
+        adm = base.adm_after_mods(
+            remove_children("//adm:audioStreamFormat/adm:audioTrackFormatIDRef"),
+        )
+        assert adm["AT_00011001_01"].audioStreamFormat is adm["AS_00011001"]
+
+    expected = "audioTrackFormat AT_00011001_01 is linked to more than one audioStreamFormat"
+    with pytest.raises(AdmError, match=expected):
+        base.adm_after_mods(add_children("//adm:audioFormatExtended",
+                                         E.audioStreamFormat(
+                                             E.audioChannelFormatIDRef("AC_00031001"),
+                                             E.audioTrackFormatIDRef("AT_00011001_01"),
+                                             audioStreamFormatID="AS_00011002",
+                                             audioStreamFormatName="PCM_Noise2",
+                                             formatDefinition="PCM", formatLabel="0001")))
 
 
 def as_dict(inst):

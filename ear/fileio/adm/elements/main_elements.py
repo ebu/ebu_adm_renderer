@@ -4,12 +4,23 @@ from enum import Enum
 from fractions import Fraction
 from six import string_types
 
+from ..exceptions import AdmError
 from ....common import CartesianScreen, PolarScreen, default_screen, list_of
 
 
 def _lookup_elements(adm, idRefs):
     """Lookup multiple ID references"""
     return [adm.lookup_element(key) for key in idRefs]
+
+
+def _link_track_stream_format(audioTrackFormat, audioStreamFormat):
+    """Establish a link between an audioTrackFormat and an audioStreamFormat"""
+    if (audioTrackFormat.audioStreamFormat is not None and
+            audioTrackFormat.audioStreamFormat is not audioStreamFormat):
+        raise AdmError("audioTrackFormat {audioTrackFormat.id} is linked "
+                       "to more than one audioStreamFormat".format(audioTrackFormat=audioTrackFormat))
+
+    audioTrackFormat.audioStreamFormat = audioStreamFormat
 
 
 class TypeDefinition(Enum):
@@ -198,7 +209,6 @@ class AudioStreamFormat(ADMElement):
 
     format = attrib(default=None, validator=instance_of(FormatDefinition))
 
-    audioTrackFormats = attrib(default=Factory(list), repr=False)
     audioChannelFormat = attrib(default=None, repr=False)
     audioPackFormat = attrib(default=None, repr=False)
 
@@ -214,33 +224,41 @@ class AudioStreamFormat(ADMElement):
             self.audioPackFormat = adm.lookup_element(self.audioPackFormatIDRef)
             self.audioPackFormatIDRef = None
         if self.audioTrackFormatIDRef is not None:
-            self.audioTrackFormats = _lookup_elements(adm, self.audioTrackFormatIDRef)
+            for ref in self.audioTrackFormatIDRef:
+                track_format = adm.lookup_element(ref)
+                _link_track_stream_format(track_format, self)
             self.audioTrackFormatIDRef = None
 
     def validate(self):
         super(AudioStreamFormat, self).validate()
-        if not self.audioTrackFormats:
-            raise ValueError("AudioStreamFormat must reference at least one AudioTrackFormat")
+        if self.audioPackFormat is not None and self.audioChannelFormat is not None:
+            raise AdmError("audioStreamFormat {self.id} has a reference to both an "
+                           "audioPackFormat and an audioTrackFormat".format(self=self))
+
+        if self.audioPackFormat is None and self.audioChannelFormat is None:
+            raise AdmError("audioStreamFormat {self.id} has no reference to an "
+                           "audioPackFormat or audioTrackFormat".format(self=self))
 
 
 @attrs(slots=True)
 class AudioTrackFormat(ADMElement):
     audioTrackFormatName = attrib(default=None, validator=instance_of(string_types))
     format = attrib(default=None, validator=instance_of(FormatDefinition))
+    audioStreamFormat = attrib(default=None, validator=optional(instance_of(AudioStreamFormat)))
 
     audioStreamFormatIDRef = attrib(default=None)
 
     def lazy_lookup_references(self, adm):
-        # check that there is a reference from the referenced stream format
-        # back to ourselves
         if self.audioStreamFormatIDRef is not None:
-            stream = adm.lookup_element(self.audioStreamFormatIDRef)
-
-            # cannot use 'in', as we want to check identity, not equality
-            if not any(track_format is self for track_format in stream.audioTrackFormats):
-                raise Exception("track format {id} references stream format {ref} that does not reference it back.".format(
-                    id=self.id, ref=self.audioStreamFormatIDRef))
+            stream_format = adm.lookup_element(self.audioStreamFormatIDRef)
+            _link_track_stream_format(self, stream_format)
             self.audioStreamFormatIDRef = None
+
+    def validate(self):
+        super(AudioTrackFormat, self).validate()
+        if self.audioStreamFormat is None:
+            raise AdmError("audioTrackFormat {self.id} is not linked "
+                           "to an audioStreamFormat".format(self=self))
 
 
 @attrs(slots=True)
@@ -267,4 +285,5 @@ class AudioTrackUID(ADMElement):
     def validate(self):
         super(AudioTrackUID, self).validate()
         if self.audioTrackFormat is None:
-            raise ValueError("AudioTrackUID must have an audioTrackFormat attribute")
+            raise AdmError("AudioTrackUID {self.id} is not linked "
+                           "to an audioTrackFormat".format(self=self))

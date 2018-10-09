@@ -177,7 +177,7 @@ class ADMBuilder(object):
         if parent is DEFAULT:
             parent = self.last_stream_format
         if parent is not None:
-            parent.audioTrackFormats.append(track_format)
+            track_format.audioStreamFormat = parent
 
         return track_format
 
@@ -235,12 +235,6 @@ class ADMBuilder(object):
             audioBlockFormats=block_formats)
         self.adm.addAudioChannelFormat(channel_format)
 
-        track_format = AudioTrackFormat(
-            audioTrackFormatName=name,
-            format=FormatDefinition.PCM,
-        )
-        self.adm.addAudioTrackFormat(track_format)
-
         pack_format = AudioPackFormat(
             audioPackFormatName=name,
             type=type,
@@ -251,10 +245,16 @@ class ADMBuilder(object):
         stream_format = AudioStreamFormat(
             audioStreamFormatName=name,
             format=FormatDefinition.PCM,
-            audioTrackFormats=[track_format],
             audioChannelFormat=channel_format,
         )
         self.adm.addAudioStreamFormat(stream_format)
+
+        track_format = AudioTrackFormat(
+            audioTrackFormatName=name,
+            audioStreamFormat=stream_format,
+            format=FormatDefinition.PCM,
+        )
+        self.adm.addAudioTrackFormat(track_format)
 
         track_uid = AudioTrackUID(
             trackIndex=track_index + 1,
