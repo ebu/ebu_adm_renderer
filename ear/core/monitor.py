@@ -21,7 +21,7 @@ class PeakMonitor(object):
         Parameters:
             samples (ndarray of (m, nchannels)): block of m samples
         """
-        max_in_block = np.max(np.abs(samples), axis=0)
+        max_in_block = np.max(np.abs(samples), axis=0, initial=0.0)
         self.peak_abs_linear = np.maximum(self.peak_abs_linear, max_in_block)
 
     def has_overloaded(self):
