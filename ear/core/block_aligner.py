@@ -48,7 +48,7 @@ class BlockAligner(object):
         end_buf = end - self.buf_start
 
         if end_buf > len(self.buf):
-            self.buf.resize((end_buf, self.buf.shape[1]))
+            self.buf.resize((end_buf, self.buf.shape[1]), refcheck=False)
 
         if len(samples):
             assert 0 <= start_buf and 0 < end_buf
