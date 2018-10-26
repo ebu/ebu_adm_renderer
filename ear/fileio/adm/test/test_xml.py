@@ -391,14 +391,14 @@ def test_hoa(base):
     assert block_format.equation is None
     assert block_format.order == 1
     assert block_format.degree == -1
-    assert block_format.normalization == "SN3D"
+    assert block_format.normalization is None
     assert block_format.nfcRefDist is None
-    assert block_format.screenRef is False
+    assert block_format.screenRef is None
 
     # explicit defaults
     block_format = with_children(E.normalization("SN3D"), E.nfcRefDist("0.0"), E.screenRef("0"))
     assert block_format.normalization == "SN3D"
-    assert block_format.nfcRefDist is None  # adm says that 0 is same as unspecified
+    assert block_format.nfcRefDist == 0.0
     assert block_format.screenRef is False
 
     # specify everything
@@ -407,6 +407,23 @@ def test_hoa(base):
     assert block_format.normalization == "N3D"
     assert block_format.nfcRefDist == 0.5
     assert block_format.screenRef is True
+
+
+def test_hoa_pack(base):
+    def with_children(*children):
+        return base.adm_after_mods(
+            set_attrs("//adm:audioPackFormat", typeDefinition="HOA", typeLabel="004"),
+            add_children("//adm:audioPackFormat", *children))["AP_00031001"]
+
+    pack = with_children()
+    assert pack.normalization is None
+    assert pack.nfcRefDist is None
+    assert pack.screenRef is None
+
+    pack = with_children(E.normalization("N3D"), E.nfcRefDist("1.0"), E.screenRef("1"))
+    assert pack.normalization == "N3D"
+    assert pack.nfcRefDist == 1.0
+    assert pack.screenRef is True
 
 
 def test_matrix_structure(base_mat):

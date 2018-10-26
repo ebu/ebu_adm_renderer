@@ -135,6 +135,11 @@ class AudioPackFormat(ADMElement):
     inputPackFormat = attrib(default=None)
     outputPackFormat = attrib(default=None)
 
+    # attributes for type==HOA
+    normalization = attrib(default=None, validator=optional(instance_of(str)))
+    nfcRefDist = attrib(default=None, validator=optional(instance_of(float)))
+    screenRef = attrib(default=None, validator=optional(instance_of(bool)))
+
     audioChannelFormatIDRef = attrib(default=None)
     audioPackFormatIDRef = attrib(default=None)
     encodePackFormatIDRef = attrib(default=None)

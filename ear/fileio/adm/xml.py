@@ -2,7 +2,7 @@ import sys
 import warnings
 from fractions import Fraction
 
-from attr import attrs, attrib, Factory, evolve
+from attr import attrs, attrib, Factory
 import lxml.etree
 from lxml.etree import QName
 from lxml.builder import ElementMaker
@@ -750,19 +750,13 @@ def block_format_direct_speakers_to_xml(parent, obj):
     speaker_position_to_xml(element, obj)
 
 
-def ref_dist_loads(data):
-    """load a float, but convert zero to None"""
-    value = FloatType.loads(data)
-    return value if value != 0.0 else None
-
-
 block_format_HOA_handler = ElementParser(AudioBlockFormatHoa, "audioBlockFormat", block_format_props + [
     AttrElement(adm_name="equation", arg_name="equation", type=StringType),
     AttrElement(adm_name="order", arg_name="order", type=IntType),
     AttrElement(adm_name="degree", arg_name="degree", type=IntType),
-    AttrElement(adm_name="normalization", arg_name="normalization", type=StringType, default="SN3D"),
-    AttrElement(adm_name="nfcRefDist", arg_name="nfcRefDist", type=evolve(FloatType, loads=ref_dist_loads)),
-    AttrElement(adm_name="screenRef", arg_name="screenRef", type=BoolType, default=False),
+    AttrElement(adm_name="normalization", arg_name="normalization", type=StringType),
+    AttrElement(adm_name="nfcRefDist", arg_name="nfcRefDist", type=FloatType),
+    AttrElement(adm_name="screenRef", arg_name="screenRef", type=BoolType),
 ])
 
 
@@ -891,6 +885,9 @@ pack_format_handler = ElementParser(AudioPackFormat, "audioPackFormat", [
     RefList("decodePackFormat", parse_only=True),
     RefElement("inputPackFormat"),
     RefElement("outputPackFormat"),
+    AttrElement(adm_name="normalization", arg_name="normalization", type=StringType),
+    AttrElement(adm_name="nfcRefDist", arg_name="nfcRefDist", type=FloatType),
+    AttrElement(adm_name="screenRef", arg_name="screenRef", type=BoolType),
 ])
 
 

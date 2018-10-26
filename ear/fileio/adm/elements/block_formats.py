@@ -128,9 +128,9 @@ class AudioBlockFormatHoa(BlockFormat):
     equation = attrib(default=None, validator=optional(instance_of(str)))
     order = attrib(default=None, validator=optional(instance_of(int)))
     degree = attrib(default=None, validator=optional(instance_of(int)))
-    normalization = attrib(default="SN3D", validator=instance_of(str))
+    normalization = attrib(default=None, validator=optional(instance_of(str)))
     nfcRefDist = attrib(default=None, validator=optional(instance_of(float)))
-    screenRef = attrib(default=False, validator=instance_of(bool))
+    screenRef = attrib(default=None, validator=optional(instance_of(bool)))
 
 
 @attrs(slots=True)
