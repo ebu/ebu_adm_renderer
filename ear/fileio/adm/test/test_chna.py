@@ -38,6 +38,13 @@ def test_load():
     assert str(excinfo.value) == ("Error in track UID ATU_00000001: audioPackFormatIDRef in CHNA, "
                                   "'AP_00010003' does not match value in AXML, 'AP_00010002'.")
 
+    # zero track uid
+    chna.audioIDs = [AudioID(1, "ATU_00000000", "AT_00010001_01", "AP_00010002")]
+    expected = ("audioTrackUID element or CHNA row found with UID "
+                "ATU_00000000, which is reserved for silent tracks.")
+    with pytest.raises(Exception, match=expected):
+        load_chna_chunk(adm, chna)
+
 
 def test_populate():
     adm = ADM()

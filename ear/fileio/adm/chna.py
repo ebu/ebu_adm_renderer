@@ -46,6 +46,11 @@ def load_chna_chunk(adm, chna):
                                 "does not match value in AXML, '{track.audioPackFormat.id}'.".format(
                                     track=track, chna_entry=chna_entry))
 
+    for atu in adm.audioTrackUIDs:
+        if atu.id is not None and atu.id.upper() == "ATU_00000000":
+            raise Exception("audioTrackUID element or CHNA row found with UID "
+                            "ATU_00000000, which is reserved for silent tracks.")
+
     adm.lazy_lookup_references()
 
 
