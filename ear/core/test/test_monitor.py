@@ -5,6 +5,9 @@ from ..monitor import PeakMonitor
 def test_peak_monitor():
     mon = PeakMonitor(2)
 
+    samples = np.zeros((0, 2))
+    mon.process(samples)
+
     samples = np.zeros((1000, 2))
     mon.process(samples)
     assert not mon.has_overloaded()
