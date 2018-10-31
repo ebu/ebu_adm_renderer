@@ -24,6 +24,7 @@ def replace_axml_command(args):
                 adm = adm_xml.parse_string(axml)
                 adm_chna.guess_track_indices(adm)
                 chna = ChnaChunk()
+                adm_chna.populate_chna_chunk(chna, adm)
             else:
                 chna = infile.chna
 
@@ -33,7 +34,7 @@ def replace_axml_command(args):
                                   "file with a CHNA chunk.")
 
             with openBw64(args.output, 'w', formatInfo=formatInfo,
-                          axml=axml, chna=infile.chna) as outfile:
+                          axml=axml, chna=chna) as outfile:
                 while True:
                     samples = infile.read(2048)
                     if not len(samples):
