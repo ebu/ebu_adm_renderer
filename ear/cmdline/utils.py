@@ -47,13 +47,13 @@ def dump_axml_command(args):
         write_bytes_to_stdout(infile.axml)
 
         if sys.stdout.isatty() and not infile.axml.endswith(b"\n"):
-            sys.stdout.write("\n")
+            write_bytes_to_stdout(b"\n")
 
 
 def dump_chna_command(args):
     with openBw64(args.input) as infile:
         if args.binary:
-            sys.stdout.write(infile.get_chunk_data(b'chna'))
+            write_bytes_to_stdout(infile.get_chunk_data(b'chna'))
         else:
             for entry in infile.chna.audioIDs:
                 print(entry)  # noqa
