@@ -221,7 +221,7 @@ class Bw64Writer(object):
         # pad to an even number of bytes; this is not in BS.2088 but is
         # commonly implemented in wav readers
         if len(self._axml) & 1:
-            self._buffer.write(b'0')
+            self._buffer.write(b'\0')
 
         self._axmlChunkWritten = True
 
