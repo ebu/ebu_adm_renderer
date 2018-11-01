@@ -165,6 +165,122 @@ def test_hoa(tmpdir, order, chna_only):
     npt.assert_allclose(spk_azimuths, rendered_azimuths, atol=atol)
 
 
+def generate_multi_programme_comp_object(fname):
+    """Generate an ADM BWF with multiple programmes and complementary objects.
+
+    Parameters:
+        fname (str): file name to write to
+
+    Returns:
+        dict: IDs of the programmes and objects.
+
+        prog_1 is the first programme, containing track 1.
+
+        prog_2 is the second programme, containing obj_2 (track 2) and obj_3
+        (track 3), which are complementary with obj_2 being the default.
+    """
+    import lxml.etree
+    from ..fileio.adm.builder import ADMBuilder
+    from ..fileio.adm.chna import populate_chna_chunk
+    from ..fileio.adm.generate_ids import generate_ids
+    from ..fileio.adm.xml import adm_to_xml
+    from ..fileio import openBw64
+    from ..fileio.bw64.chunks import ChnaChunk, FormatInfoChunk
+
+    builder = ADMBuilder()
+    builder.load_common_definitions()
+
+    mono_pack = builder.adm["AP_00010001"]
+    mono_track = builder.adm["AT_00010003_01"]
+
+    prog_1 = builder.create_programme(audioProgrammeName="prog_1")
+    builder.create_content(audioContentName="content_1")
+    obj_1 = builder.create_object(audioObjectName="object_1", audioPackFormats=[mono_pack])
+    builder.create_track_uid(audioTrackFormat=mono_track, audioPackFormat=mono_pack,
+                             trackIndex=1)
+
+    prog_2 = builder.create_programme(audioProgrammeName="prog_2")
+    builder.create_content(audioContentName="content_2")
+    obj_2 = builder.create_object(audioObjectName="object_2", audioPackFormats=[mono_pack])
+    builder.create_track_uid(audioTrackFormat=mono_track, audioPackFormat=mono_pack,
+                             trackIndex=2)
+    obj_3 = builder.create_object(audioObjectName="object_3", audioPackFormats=[mono_pack])
+    builder.create_track_uid(audioTrackFormat=mono_track, audioPackFormat=mono_pack,
+                             trackIndex=3)
+
+    obj_2.audioComplementaryObjects.append(obj_3)
+
+    generate_ids(builder.adm)
+
+    xml = adm_to_xml(builder.adm)
+    axml = lxml.etree.tostring(xml, pretty_print=True)
+
+    chna = ChnaChunk()
+    populate_chna_chunk(chna, builder.adm)
+
+    samples = generate_samples()[:, :3]
+    fmtInfo = FormatInfoChunk(formatTag=1,
+                              channelCount=samples.shape[1],
+                              sampleRate=sr,
+                              bitsPerSample=24)
+
+    with openBw64(fname, 'w', chna=chna, formatInfo=fmtInfo, axml=axml) as outfile:
+        outfile.write(samples)
+
+    return dict(
+        prog_1=prog_1.id,
+        prog_2=prog_2.id,
+        obj_1=obj_1.id,
+        obj_2=obj_2.id,
+        obj_3=obj_3.id,
+    )
+
+
+def check_call_fails(args, match_stderr=None):
+    import re
+
+    proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = proc.communicate()
+    assert proc.returncode != 0
+    if match_stderr is not None:
+        match = re.search(match_stderr, stderr)
+        assert match is not None, "Pattern '{match}' not found in '{stderr}'".format(
+            match=match_stderr, stderr=stderr)
+
+
+def test_multi_programme_comp_object(tmpdir):
+    """Test the --programme and --comp-object flags."""
+    bwf_fname = str(tmpdir / "adm.wav")
+
+    ids = generate_multi_programme_comp_object(bwf_fname)
+
+    conditions = [  # CLI args, expected channels
+        ([], 0),
+        (["--programme", ids["prog_1"]], 0),
+        (["--programme", ids["prog_2"]], 1),
+        (["--programme", ids["prog_2"], "--comp-object", ids["obj_3"]], 2),
+    ]
+
+    samples = generate_samples()
+
+    for i, (args, expected_channel) in enumerate(conditions):
+        rendered_fname = str(tmpdir / "out_{i}.wav".format(i=i))
+        assert subprocess.call(["ear-render", "-d", "-s", "0+5+0", bwf_fname, rendered_fname] + args) == 0
+
+        rendered_samples, rendered_sr = soundfile.read(rendered_fname)
+        assert rendered_sr == sr
+
+        npt.assert_allclose(rendered_samples[:, 2], samples[:, expected_channel], atol=1e-5)
+
+    rendered_fname = str(tmpdir / "out_err.wav")
+
+    check_call_fails(["ear-render", "--programme", "APR_1005", "-d", "-s", "0+5+0", bwf_fname, rendered_fname],
+                     b"could not find audioProgramme with ID APR_1005")
+
+    check_call_fails(["ear-render", "--programme", ids["obj_1"], "-d", "-s", "0+5+0", bwf_fname, rendered_fname],
+                     "{element_id} is not an audioProgramme".format(element_id=ids["obj_1"]).encode())
+
+
 if __name__ == "__main__":
     regenerate = False
 
