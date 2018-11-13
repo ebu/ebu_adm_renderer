@@ -108,7 +108,7 @@ class ADM(object):
         for element in self.elements:
             if element.id is not None and element.id.upper() == key_upper:
                 return element
-        raise KeyError('Unkown element requested {0}'.format(key))
+        raise KeyError('Unknown element requested {0}'.format(key))
 
     @property
     def audioProgrammes(self):
