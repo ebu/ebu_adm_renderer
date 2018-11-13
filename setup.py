@@ -9,7 +9,7 @@ setup(
 
     author='EBU',
     author_email='ear-admin@list.ebu.ch',
-    license='BSD-3-Clause',
+    license='BSD-3-Clause-Clear',
 
     long_description=open('README.md').read() + '\n' + open('CHANGELOG.md').read(),
     long_description_content_type='text/markdown',
