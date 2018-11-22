@@ -6,8 +6,6 @@ from .. import point_source
 from ...options import SubOptions, OptionsHandler
 from ..geom import azimuth, elevation, cart, inside_angle_range, local_coordinate_system
 from .zone import ZoneExclusionDownmix
-from ..subwoofer import lfe_downmix_matrix
-from ..renderer_common import is_lfe
 from ...fileio.adm.elements import CartesianZone, PolarZone, ObjectCartesianPosition, ObjectPolarPosition
 from ..screen_scale import ScreenScaleHandler
 from ..screen_edge_lock import ScreenEdgeLockHandler
@@ -337,7 +335,6 @@ class GainCalc(object):
         self.zone_exclusion_handler = ZoneExclusionHandler(layout.without_lfe)
 
         self.is_lfe = layout.is_lfe
-        self.lfe_downmix_matrix = lfe_downmix_matrix(layout)
 
     def render(self, object_meta):
         block_format = object_meta.block_format
@@ -362,20 +359,10 @@ class GainCalc(object):
 
         gains = np.nan_to_num(gains)
 
-        if is_lfe(object_meta.extra_data.channel_frequency):
-            gains_full = np.dot(self.lfe_downmix_matrix, gains)
-            gains_full /= np.sum(gains_full)
+        gains *= block_format.gain
 
-            gains_full *= block_format.gain
+        # add in silent LFE channels
+        gains_full = np.zeros(len(self.is_lfe))
+        gains_full[~self.is_lfe] = gains
 
-            return DirectDiffuseGains(
-                direct=gains_full,
-                diffuse=np.zeros_like(gains_full)
-            )
-        else:
-            gains *= block_format.gain
-
-            gains_full = np.zeros(len(self.is_lfe))
-            gains_full[~self.is_lfe] = gains
-
-            return direct_diffuse_split(gains_full, block_format.diffuse)
+        return direct_diffuse_split(gains_full, block_format.diffuse)

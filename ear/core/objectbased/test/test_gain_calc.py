@@ -174,15 +174,6 @@ add_test("zone_mid_rear",
               zoneExclusion=[PolarZone(minAzimuth=-180.0, maxAzimuth=180.0, minElevation=0.0, maxElevation=0.0)]),
          direct_gains=[("U+110", np.sqrt(0.5)), ("U-110", np.sqrt(0.5))])
 
-add_test("lfe_direct",
-         dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0)),
-         extra_data=ExtraData(channel_frequency=Frequency(lowPass=120.0)),
-         direct_gains=[("LFE1", 1.0)])
-add_test("lfe_diffuse",
-         dict(position=dict(azimuth=15.0, elevation=0.0, distance=1.0), diffuse=1.0),
-         extra_data=ExtraData(channel_frequency=Frequency(lowPass=120.0)),
-         direct_gains=[("LFE1", 1.0)])
-
 add_test("screen_scale_null",
          dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0), screenRef=True),
          direct_gains=[("M+000", 1.0)])
