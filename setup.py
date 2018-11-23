@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name='ear',
     description='EBU ADM Renderer',
-    version='1.0.0',
+    version='1.0.1',
 
     url='https://github.com/ebu/ebu_adm_renderer',
 
@@ -11,7 +11,7 @@ setup(
     author_email='ear-admin@list.ebu.ch',
     license='BSD-3-Clause',
 
-    long_description=open('README.md').read(),
+    long_description=open('README.md').read() + '\n' + open('CHANGELOG.md').read(),
     long_description_content_type='text/markdown',
 
     install_requires=[
