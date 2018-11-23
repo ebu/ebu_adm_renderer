@@ -57,7 +57,7 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -d, --debug           print debug information when an error occurres
+  -d, --debug           print debug information when an error occurs
   -s target_system, --system target_system
                         Target output system, accoring to ITU-R BS.2051.
                         Available systems are: 0+2+0, 0+5+0, 2+5+0, 4+5+0,
