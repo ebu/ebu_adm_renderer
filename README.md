@@ -46,7 +46,8 @@ The *EAR* reference implementation comes with two command line tools:
 ```bash
 usage: ear-render [-h] [-d] -s target_system [-l layout_file]
                   [--output-gain-db gain_db] [--fail-on-overload]
-                  [--enable-block-duration-fix] [--strict]
+                  [--enable-block-duration-fix] [--programme id]
+                  [--comp-object id] [--strict]
                   input_file output_file
 
 EBU ADM renderer
@@ -71,6 +72,8 @@ optional arguments:
                         output
   --enable-block-duration-fix
                         automatically try to fix faulty block format durations
+  --programme id        select an audioProgramme to render by ID
+  --comp-object id      select an audioObject by ID from a complementary group
   --strict              treat unknown ADM attributes as errors
 ```
 
