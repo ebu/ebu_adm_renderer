@@ -519,12 +519,13 @@ def test_referenceScreen(base):
 
     # Cartesian representation
     assert (base.prog_after_mods(add_children("//adm:audioProgramme",
-                                              E.audioProgrammeReferenceScreen(E.aspectRatio("2.5"),
-                                                                              E.screenWidth(X="1.5"),
+                                              E.audioProgrammeReferenceScreen(E.screenWidth(X="1.5"),
                                                                               E.screenCentrePosition(
                                                                                   X="0.0",
                                                                                   Y="1.0",
-                                                                                  Z="0.0")))
+                                                                                  Z="0.0"),
+                                                                              aspectRatio="2.5",
+                                                                              ))
                                  ).referenceScreen ==
             CartesianScreen(aspectRatio=2.5,
                             centrePosition=CartesianPosition(
@@ -535,12 +536,13 @@ def test_referenceScreen(base):
 
     # Polar representation
     assert (base.prog_after_mods(add_children("//adm:audioProgramme",
-                                              E.audioProgrammeReferenceScreen(E.aspectRatio("2.5"),
-                                                                              E.screenWidth(azimuth="45.0"),
+                                              E.audioProgrammeReferenceScreen(E.screenWidth(azimuth="45.0"),
                                                                               E.screenCentrePosition(
                                                                                   azimuth="0.0",
                                                                                   elevation="0.0",
-                                                                                  distance="1.0")))
+                                                                                  distance="1.0"),
+                                                                              aspectRatio="2.5",
+                                                                              ))
                                  ).referenceScreen ==
             PolarScreen(aspectRatio=2.5,
                         centrePosition=PolarPosition(
@@ -552,12 +554,13 @@ def test_referenceScreen(base):
     # mixed types
     with pytest.raises(ParseError) as excinfo:
         base.prog_after_mods(add_children("//adm:audioProgramme",
-                                          E.audioProgrammeReferenceScreen(E.aspectRatio("2.5"),
-                                                                          E.screenWidth(azimuth="45.0"),
+                                          E.audioProgrammeReferenceScreen(E.screenWidth(azimuth="45.0"),
                                                                           E.screenCentrePosition(
                                                                               X="0.0",
                                                                               Y="1.0",
-                                                                              Z="0.0"))))
+                                                                              Z="0.0"),
+                                                                          aspectRatio="2.5",
+                                                                          )))
     expected = ("error while parsing element screenCentrePosition on line [0-9]+: ValueError: "
                 "Expected polar screen data, got cartesian.$")
     assert re.match(expected, str(excinfo.value)) is not None
@@ -565,12 +568,13 @@ def test_referenceScreen(base):
     # missing keys in position
     with pytest.raises(ParseError) as excinfo:
         base.prog_after_mods(add_children("//adm:audioProgramme",
-                                          E.audioProgrammeReferenceScreen(E.aspectRatio("2.5"),
-                                                                          E.screenWidth(azimuth="45.0"),
+                                          E.audioProgrammeReferenceScreen(E.screenWidth(azimuth="45.0"),
                                                                           E.screenCentrePosition(
                                                                               X="0.0",
                                                                               Y="1.0",
-                                                                              Q="0.0"))))
+                                                                              Q="0.0"),
+                                                                          aspectRatio="2.5",
+                                                                          )))
     expected = ("error while parsing element screenCentrePosition on line [0-9]+: "
                 "ValueError: Do not know how to parse a screenCentrePosition with keys Q, X, Y.$")
     assert re.match(expected, str(excinfo.value)) is not None
@@ -578,12 +582,13 @@ def test_referenceScreen(base):
     # missing key in width
     with pytest.raises(ParseError) as excinfo:
         base.prog_after_mods(add_children("//adm:audioProgramme",
-                                          E.audioProgrammeReferenceScreen(E.aspectRatio("2.5"),
-                                                                          E.screenWidth(az="45.0"),
+                                          E.audioProgrammeReferenceScreen(E.screenWidth(az="45.0"),
                                                                           E.screenCentrePosition(
                                                                               X="0.0",
                                                                               Y="1.0",
-                                                                              Z="0.0"))))
+                                                                              Z="0.0"),
+                                                                          aspectRatio="2.5",
+                                                                          )))
     expected = ("error while parsing element screenWidth on line [0-9]+: "
                 "ValueError: Do not know how to parse a screenWidth with keys az.$")
     assert re.match(expected, str(excinfo.value)) is not None

@@ -1011,7 +1011,7 @@ def make_screen(aspectRatio, centrePosition, width, screen_type):
 
 
 screen_handler = ElementParser(make_screen, "audioProgrammeReferenceScreen", [
-    AttrElement(adm_name="aspectRatio", arg_name="aspectRatio", type=FloatType, required=True),
+    Attribute(adm_name="aspectRatio", arg_name="aspectRatio", type=FloatType, required=True),
     CustomElement("screenCentrePosition", handle_centre_position, arg_name="centrePosition", to_xml=centre_position_to_xml, required=True),
     CustomElement("screenWidth", handle_screen_width, arg_name="width", to_xml=screen_width_to_xml, required=True),
 ])
