@@ -1,7 +1,9 @@
 from fractions import Fraction
 import pytest
 from ....fileio.adm.builder import ADMBuilder
-from ....fileio.adm.elements import TypeDefinition, Frequency, AudioBlockFormatHoa
+from ....fileio.adm.elements import (TypeDefinition, Frequency,
+                                     AudioBlockFormatHoa, AudioBlockFormatObjects,
+                                     ObjectPolarPosition, ObjectCartesianPosition)
 from ....fileio.adm.exceptions import AdmError
 from ....fileio.adm.generate_ids import generate_ids
 from ....fileio.adm.exceptions import AdmFormatRefError
@@ -240,6 +242,38 @@ def test_consistency_exception_5():
                  acf=item.channel_format,
                  atu=item.track_uid,
              )])
+
+
+def test_Objects_validation_no_frequency():
+    builder = ADMBuilder()
+    acf = builder.create_channel(type=TypeDefinition.Objects, audioChannelFormatName="foo",
+                                 frequency=Frequency(lowPass=120.0),
+                                 audioBlockFormats=[
+                                     AudioBlockFormatObjects(rtime=Fraction(0), duration=Fraction(1),
+                                                             position=ObjectPolarPosition(0.0, 0.0, 1.0)),
+                                 ])
+
+    check_select_items_raises(
+        builder,
+        "Objects audioChannelFormats must not have frequency information, but {acf.id} does",
+        acf=acf)
+
+
+def test_Objects_validation_cartesian_mismatch():
+    for cartesian, position in [(True, ObjectPolarPosition(0.0, 0.0, 1.0)),
+                                (False, ObjectCartesianPosition(0.0, 1.0, 0.0))]:
+        builder = ADMBuilder()
+        abf = AudioBlockFormatObjects(rtime=Fraction(0), duration=Fraction(1),
+                                      cartesian=cartesian,
+                                      position=position)
+        builder.create_channel(type=TypeDefinition.Objects, audioChannelFormatName="foo",
+                               audioBlockFormats=[abf],
+                               )
+
+        check_select_items_raises(
+            builder,
+            "mismatch between cartesian element and coordinate type used in {abf.id}",
+            abf=abf)
 
 
 def test_HOA_validation_one_block_format():

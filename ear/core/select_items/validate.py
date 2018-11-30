@@ -1,4 +1,4 @@
-from ...fileio.adm.elements import AudioPackFormat, AudioChannelFormat, TypeDefinition
+from ...fileio.adm.elements import AudioPackFormat, AudioChannelFormat, TypeDefinition, ObjectCartesianPosition
 from ...fileio.adm.exceptions import AdmError
 from . import matrix
 from .utils import in_by_id, pack_format_channels, pack_format_packs, pack_format_paths_from
@@ -154,6 +154,26 @@ def _validate_hoa_channels(adm):
                 raise AdmError("HOA audioChannelFormats must not have frequency information, but {acf.id} does".format(
                     acf=audioChannelFormat,
                 ))
+
+
+def _validate_objects_channels(adm):
+    """Check that Objects audioChannelFormats don't contain frequency
+    information and have matching 'cartesian' and position attributes.
+    """
+    for audioChannelFormat in adm.audioChannelFormats:
+        if audioChannelFormat.type == TypeDefinition.Objects:
+            frequency = audioChannelFormat.frequency
+            if frequency.lowPass is not None or frequency.highPass is not None:
+                raise AdmError("Objects audioChannelFormats must not have frequency information, but {acf.id} does".format(
+                    acf=audioChannelFormat,
+                ))
+
+            for audioBlockFormat in audioChannelFormat.audioBlockFormats:
+                if audioBlockFormat.cartesian != isinstance(audioBlockFormat.position,
+                                                            ObjectCartesianPosition):
+                    raise AdmError("mismatch between cartesian element and coordinate type used in {abf.id}".format(
+                        abf=audioBlockFormat,
+                    ))
 
 
 def _pack_format_paths_channels(audioPackFormat):
@@ -386,6 +406,7 @@ def validate_structure(adm):
     _validate_pack_channel_types(adm)
     _validate_pack_subpack_types(adm)
     _validate_pack_channel_multitree(adm)
+    _validate_objects_channels(adm)
     _validate_hoa_channels(adm)
     _validate_hoa_order_degree(adm)
     _validate_hoa_parameters_consistent(adm)
