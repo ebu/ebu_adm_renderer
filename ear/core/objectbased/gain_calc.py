@@ -347,8 +347,8 @@ class GainCalc(object):
     @options.with_defaults
     def __init__(self, layout, point_source_opts):
         self.point_source_panner = point_source.configure(layout.without_lfe, **point_source_opts)
-        self.screen_edge_lock_handler = ScreenEdgeLockHandler(layout.screen)
-        self.screen_scale_handler = ScreenScaleHandler(layout.screen)
+        self.screen_edge_lock_handler = ScreenEdgeLockHandler(layout.screen, layout.without_lfe)
+        self.screen_scale_handler = ScreenScaleHandler(layout.screen, layout.without_lfe)
         self.ego_channel_lock_handler = EgoChannelLockHandler(layout.without_lfe)
         self.allo_channel_lock_handler = AlloChannelLockHandler(layout.without_lfe)
         self.polar_extent_panner = PolarExtentHandler(self.point_source_panner)
@@ -363,9 +363,13 @@ class GainCalc(object):
 
         position = coord_trans(block_format.position)
 
-        position = self.screen_scale_handler.handle(position, block_format.screenRef, object_meta.extra_data.reference_screen)
+        position = self.screen_scale_handler.handle(position, block_format.screenRef,
+                                                    object_meta.extra_data.reference_screen,
+                                                    block_format.cartesian)
 
-        position = self.screen_edge_lock_handler.handle_vector(position, block_format.position.screenEdgeLock)
+        position = self.screen_edge_lock_handler.handle_vector(position,
+                                                               block_format.position.screenEdgeLock,
+                                                               block_format.cartesian)
 
         if block_format.cartesian:
             excluded = allocentric.get_excluded(

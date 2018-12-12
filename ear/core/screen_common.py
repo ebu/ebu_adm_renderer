@@ -52,37 +52,13 @@ class PolarEdges(object):
                    top_elevation=elevation(centre + z_vec))
 
 
-@attrs(slots=True)
-class CartesianEdges(object):
-    """Internal screen representation for scaling cartesian coordinates.
+def compensate_position(az, el, layout):
+    """Modify az and el so that vertical panning in allocentric coordinates
+    produces vertical source positions in the given layout."""
+    if "U+045" in layout.channel_names:
+        right_az = np.interp(el, [0, 30, 90], [30, 30.0 * (30.0/45.0), 30])
+        new_az = np.interp(az, [-180, -30, 30, 180], [-180, -right_az, right_az, 180])
 
-    This stores the Xs of the right and left edges, and the Zs of
-    the top and bottom edges.
-    """
-    left_X = attrib()
-    right_X = attrib()
-    bottom_Z = attrib()
-    top_Z = attrib()
-
-    @classmethod
-    def from_screen(cls, screen):
-        if isinstance(screen, PolarScreen):
-            centre_position = screen.centrePosition.as_cartesian_position()
-            width_x = (2.0 * screen.centrePosition.distance *
-                       np.tan(np.radians(screen.widthAzimuth / 2.0)))
-            height_z = width_x / screen.aspectRatio
-            return cls(left_X=centre_position.X - width_x / 2.0,
-                       right_X=centre_position.X + width_x / 2.0,
-                       bottom_Z=centre_position.Z - height_z / 2.0,
-                       top_Z=centre_position.Z + height_z / 2.0)
-
-        elif isinstance(screen, CartesianScreen):
-            height_z = screen.widthX / screen.aspectRatio
-
-            return cls(left_X=screen.centrePosition.X - screen.widthX / 2.0,
-                       right_X=screen.centrePosition.X + screen.widthX / 2.0,
-                       bottom_Z=screen.centrePosition.Z - height_z / 2.0,
-                       top_Z=screen.centrePosition.Z + height_z / 2.0)
-
-        else:
-            assert False
+        return new_az, el
+    else:
+        return az, el

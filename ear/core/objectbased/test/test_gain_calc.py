@@ -4,11 +4,12 @@ import numpy.testing as npt
 from ... import bs2051
 from ..gain_calc import GainCalc
 from ....fileio.adm.elements import (AudioBlockFormatObjects, ChannelLock, ObjectDivergence,
-                                     CartesianZone, PolarZone, ScreenEdgeLock, ObjectPolarPosition)
+                                     CartesianZone, PolarZone, ScreenEdgeLock, ObjectPolarPosition, ObjectCartesianPosition)
 from ...metadata_input import ObjectTypeMetadata, ExtraData
 from ...geom import cart, elevation, PolarPosition
 from ....common import PolarScreen
-from ...test.test_screen_common import default_edge_elevation
+from ..conversion import point_polar_to_cart
+from ...test.test_screen_common import default_edge_elevation, default_edge_x, default_edge_z
 from ... import point_source
 
 
@@ -272,6 +273,12 @@ def test_screen_scale_right(layout, gain_calc):
                                               widthAzimuth=30.0)))
 
 
+def test_screen_scale_cart(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(X=1.0, Y=1.0, Z=1.0), cartesian=True, screenRef=True),
+             direct_gains=[("U-030", 1.0)])
+
+
 def test_screen_edge_lock_right(layout, gain_calc):
     run_test(layout, gain_calc,
              dict(position=ObjectPolarPosition(azimuth=0.0, elevation=0.0, distance=1.0,
@@ -305,6 +312,59 @@ def test_screen_edge_lock_top_right(layout, gain_calc):
              dict(position=ObjectPolarPosition(azimuth=0.0, elevation=0.0, distance=1.0,
                                                screenEdgeLock=ScreenEdgeLock(vertical="top", horizontal="right"))),
              direct_position=cart(-29, default_edge_elevation, 1))
+
+
+def test_screen_edge_lock_left_cart(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=ObjectCartesianPosition(X=0.0, Y=1.0, Z=0.0,
+                                                   screenEdgeLock=ScreenEdgeLock(horizontal="left")),
+                  cartesian=True),
+             direct_position=[-default_edge_x, 1.0, 0.0], cart_psp=True)
+
+
+def test_screen_edge_lock_right_cart(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=ObjectCartesianPosition(X=0.0, Y=1.0, Z=0.0,
+                                                   screenEdgeLock=ScreenEdgeLock(horizontal="right")),
+                  cartesian=True),
+             direct_position=[default_edge_x, 1.0, 0.0], cart_psp=True)
+
+
+def test_screen_edge_lock_top_cart(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=ObjectCartesianPosition(X=0.0, Y=1.0, Z=0.0,
+                                                   screenEdgeLock=ScreenEdgeLock(vertical="top")),
+                  cartesian=True),
+             direct_position=[0.0, 1.0, default_edge_z], cart_psp=True)
+
+
+def test_screen_edge_lock_bottom_cart(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=ObjectCartesianPosition(X=0.0, Y=1.0, Z=0.0,
+                                                   screenEdgeLock=ScreenEdgeLock(vertical="bottom")),
+                  cartesian=True),
+             direct_position=[0.0, 1.0, -default_edge_z], cart_psp=True)
+
+
+def test_screen_edge_lock_top_right_cart(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=ObjectCartesianPosition(X=0.0, Y=1.0, Z=0.0,
+                                                   screenEdgeLock=ScreenEdgeLock(horizontal="right", vertical="top")),
+                  cartesian=True),
+             direct_position=[default_edge_x, 1.0, default_edge_z], cart_psp=True)
+
+
+def test_screen_edge_lock_top_right_cart_470():
+    screen = PolarScreen(aspectRatio=1.0,
+                         centrePosition=PolarPosition(0.0, 0.0, 1.0),
+                         widthAzimuth=60.0)
+    layout = evolve(bs2051.get_layout("4+7+0"), screen=screen)
+    run_test(layout, GainCalc(layout),
+             dict(position=ObjectCartesianPosition(X=0.0, Y=1.0, Z=0.0,
+                                                   screenEdgeLock=ScreenEdgeLock(horizontal="right", vertical="top")),
+                  cartesian=True),
+             extra_data=ExtraData(reference_screen=screen),
+             direct_position=point_polar_to_cart(-20.0, 30.0, 1.0), cart_psp=True)
 
 
 def test_screen_scale_no_screen(layout):

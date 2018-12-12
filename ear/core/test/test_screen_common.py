@@ -1,8 +1,14 @@
 import numpy as np
-from ..screen_common import PolarEdges, PolarScreen, CartesianEdges, CartesianScreen
+from pytest import approx
+from ..screen_common import PolarEdges, PolarScreen, CartesianScreen, compensate_position
 from ...common import default_screen, PolarPosition, CartesianPosition, cart, azimuth
+from ..objectbased.conversion import point_polar_to_cart
+from .. import bs2051
 
 default_edge_elevation = np.degrees(np.arctan(np.tan(np.radians(58.0/2.0)) / 1.78))
+
+default_edge_x = point_polar_to_cart(-58.0 / 2.0, 0.0, 1.0)[0]
+default_edge_z = point_polar_to_cart(0.0, default_edge_elevation, 1.0)[2]
 
 
 def test_polar_edges_from_polar():
@@ -58,22 +64,20 @@ def test_polar_edges_from_cart_default():
     assert np.isclose(screen_edges.bottom_elevation, -default_edge_elevation)
 
 
-def test_cartesian_edges():
-    screen_edges = CartesianEdges.from_screen(default_screen)
-    assert np.isclose(screen_edges.left_X, -0.554309051452769)
-    assert np.isclose(screen_edges.right_X, 0.554309051452769)
-    assert np.isclose(screen_edges.top_Z, 0.31140957946784775)
-    assert np.isclose(screen_edges.bottom_Z, -0.31140957946784775)
+def test_compensate_position():
+    layout = bs2051.get_layout("4+7+0")
+    # no compensation
+    for el in [-90, -30, 0, 90]:
+        for az in [-180, -30, 0, 30, 180]:
+            assert compensate_position(az, el, layout) == approx((az, el))
 
-    cartesian_default_screen = CartesianScreen(
-        aspectRatio=1.78,
-        centrePosition=CartesianPosition(
-            X=0.0,
-            Y=1.0,
-            Z=0.0),
-        widthX=1.108618102905538)
-    screen_edges = CartesianEdges.from_screen(cartesian_default_screen)
-    assert np.isclose(screen_edges.left_X, -0.554309051452769)
-    assert np.isclose(screen_edges.right_X, 0.554309051452769)
-    assert np.isclose(screen_edges.top_Z, 0.31140957946784775)
-    assert np.isclose(screen_edges.bottom_Z, -0.31140957946784775)
+    # full compensation
+    for az in [-30, 0, 30]:
+        assert compensate_position(az, 30, layout) == approx(((30.0 / 45.0) * az, 30))
+
+    # half compensation
+    for az in [-30, 0, 30]:
+        assert compensate_position(az, 15, layout) == approx(((37.5 / 45.0) * az, 15))
+
+    # only in layouts with U+-045
+    assert compensate_position(30, 30, bs2051.get_layout("0+5+0")) == approx((30, 30))

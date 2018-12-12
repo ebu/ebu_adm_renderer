@@ -244,7 +244,7 @@ class DirectSpeakersPanner(object):
         self.positions = layout.nominal_positions
         self.is_lfe = layout.is_lfe
 
-        self._screen_edge_lock_handler = ScreenEdgeLockHandler(self.layout.screen)
+        self._screen_edge_lock_handler = ScreenEdgeLockHandler(self.layout.screen, layout)
 
         self.pvs = np.eye(self.n_channels)
 
