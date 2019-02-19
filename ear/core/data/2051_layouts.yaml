@@ -212,11 +212,11 @@
     az_range: [-150.0, -100.0]
     el_range: [30.0, 55.0]
   - name: M+SC
-    position: {az: 20.0, el: 0.0}  # XXX: M+SC does not have a specified position
-    az_range: [-180, 180]
+    position: {az: 15.0, el: 0.0}  # XXX: M+SC does not have a specified position
+    az_range: [5.0, 25.0]
   - name: M-SC
-    position: {az: -20.0, el: 0.0}  # XXX: M-SC does not have a specified position
-    az_range: [-180, 180]
+    position: {az: -15.0, el: 0.0}  # XXX: M-SC does not have a specified position
+    az_range: [-25.0, -5.0]
 - name: 9+10+3
   channels:
   - name: M+060
