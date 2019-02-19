@@ -83,6 +83,7 @@ class OfflineRenderDriver(object):
         if self.speakers_file is not None:
             real_layout = layout.load_real_layout(self.speakers_file)
             spkr_layout, upmix = spkr_layout.with_real_layout(real_layout)
+            spkr_layout.check_positions()
             spkr_layout.check_upmix_matrix(upmix)
             upmix = scipy.sparse.csc_matrix(upmix.T)
             n_channels = upmix.shape[1]
