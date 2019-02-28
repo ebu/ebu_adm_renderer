@@ -1,7 +1,12 @@
 from attr import attrs, attrib, Factory
 from attr.validators import instance_of, optional
-import collections
 from ....common import PolarPositionMixin, CartesianPositionMixin, PolarPosition, CartesianPosition, cart, validate_range
+
+try:
+    # moved in py3.3
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
 
 
 def convert_object_position(value):
@@ -11,7 +16,7 @@ def convert_object_position(value):
         return ObjectPolarPosition.from_PolarPosition(value)
     elif isinstance(value, CartesianPosition):
         return ObjectCartesianPosition.from_CartesianPosition(value)
-    elif isinstance(value, collections.Mapping):
+    elif isinstance(value, Mapping):
         if 'azimuth' in value:
             return ObjectPolarPosition(**value)
         else:
