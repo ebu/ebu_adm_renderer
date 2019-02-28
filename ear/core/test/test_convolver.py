@@ -17,8 +17,8 @@ def test_convolve(nchannels):
     in_all = np.concatenate(in_blocks)
     out_all = np.concatenate(out_blocks)
 
-    out_all_expected = np.stack((np.convolve(in_chan, f_chan, mode="full")[:len(out_all)]
-                                 for in_chan, f_chan in zip(in_all.T, f.T)),
+    out_all_expected = np.stack([np.convolve(in_chan, f_chan, mode="full")[:len(out_all)]
+                                 for in_chan, f_chan in zip(in_all.T, f.T)],
                                 axis=1)
 
     npt.assert_allclose(out_all_expected, out_all)
