@@ -1,4 +1,4 @@
-from attr import evolve
+from attr import attrs, attrib, evolve
 from multipledispatch import dispatch
 import numpy as np
 import re
@@ -12,6 +12,208 @@ from ...fileio.adm.elements import DirectSpeakerCartesianPosition, DirectSpeaker
 
 
 inside_angle_range_vec = np.vectorize(inside_angle_range)
+
+
+@attrs
+class MappingRule(object):
+    """Remap a particular channel if all output loudspeakers in gains exist and
+    the input layout is as given.
+
+    Attributes:
+        speakerLabel (str): Label of speaker to match.
+        gains (list of (channel name, gain)): Gains to match and apply.
+        input_layouts (list of str or None): Optional ITU names of input
+            layouts to match against. If this isn't given then the rule applies
+            for any input layout.
+        output_layouts (list of str or None): Optional ITU names of output
+            layouts to match against. If this isn't given then the rule applies
+            for any output layout.
+    """
+    speakerLabel = attrib()
+    gains = attrib()
+    input_layouts = attrib(default=None)
+    output_layouts = attrib(default=None)
+
+    def apply(self, input_layout, speakerLabel, output_layout):
+        """Get the gains given my the rule.
+
+        Parameters:
+            input_layout (str): ITU name of input layout to map from.
+            speakerLabel (str): Label of speaker to map.
+            output_layout (Layout): Output channel layout to map to.
+        Returns:
+            None if the rule does not apply, or a list of (channel name, gain)
+            tuples.
+        """
+        if self.input_layouts is not None and input_layout not in self.input_layouts:
+            return
+
+        if self.output_layouts is not None and output_layout.name not in self.output_layouts:
+            return
+
+        if speakerLabel != self.speakerLabel:
+            return
+
+        output_channel_names = set(output_layout.channel_names)
+        if all(channel_name in output_channel_names for channel_name, gain in self.gains):
+            return self.gains
+
+
+def _add_symmetric_rules(rules):
+    """Given a list of MappingRules, yield an expanded set of rules with
+    symmetric rules added. Symmetric rules are the same except with + and -
+    switched
+    """
+    def opposite_name(channel_name):
+        if channel_name.endswith("000") or channel_name.endswith("180"):
+            return channel_name
+        else:
+            return channel_name.replace("+", "-") if "+" in channel_name else channel_name.replace("-", "+")
+
+    for rule in rules:
+        yield rule
+
+        new_rule = evolve(rule,
+                          speakerLabel=opposite_name(rule.speakerLabel),
+                          gains=[(opposite_name(l), g) for l, g in rule.gains],
+                          )
+
+        # don't add rules which would have the same effect
+        if (rule.speakerLabel != new_rule.speakerLabel
+                or sorted(rule.gains) != sorted(new_rule.gains)):
+            yield new_rule
+
+
+rules = list(_add_symmetric_rules([
+    MappingRule("M+000", [("M+000", 1.0)]),
+    MappingRule("M+000", [("M+030", np.sqrt(1.0/2.0)), ("M-030", np.sqrt(1.0/2.0))]),
+
+    MappingRule("M+060", [("M+060", 1.0)]),
+    MappingRule("M+060", [("M+030", np.sqrt(2.0/3.0)), ("M+110", np.sqrt(1.0/3.0))]),
+    MappingRule("M+060", [("M+030", np.sqrt(1.0/2.0)), ("M+090", np.sqrt(1.0/2.0))]),
+    MappingRule("M+060", [("M+030", 1.0)]),
+
+    MappingRule("M+090", [("M+090", 1.0)]),
+    MappingRule("M+090", [("M+030", np.sqrt(1.0/3.0)), ("M+110", np.sqrt(2.0/3.0))], input_layouts=["9+10+3"]),
+    MappingRule("M+090", [("M+030", np.sqrt(1.0/2.0)), ("M+110", np.sqrt(1.0/2.0))]),
+    MappingRule("M+090", [("M+030", np.sqrt(1.0/2.0))]),
+
+    MappingRule("M+110", [("M+110", 1.0)]),
+    MappingRule("M+110", [("M+135", 1.0)]),
+    MappingRule("M+110", [("M+030", np.sqrt(1.0/2.0))]),
+
+    MappingRule("M+135", [("M+135", 1.0)]),
+    MappingRule("M+135", [("M+110", 1.0)]),
+    MappingRule("M+135", [("M+030", np.sqrt(1.0/2.0))]),
+
+    MappingRule("M+180", [("M+180", 1.0)]),
+    MappingRule("M+180", [("M+135", np.sqrt(1.0/2.0)),
+                          ("M-135", np.sqrt(1.0/2.0))]),
+    MappingRule("M+180", [("M+110", np.sqrt(1.0/2.0)),
+                          ("M-110", np.sqrt(1.0/2.0))]),
+    MappingRule("M+180", [("M+030", np.sqrt(1.0/4.0)),
+                          ("M-030", np.sqrt(1.0/4.0))]),
+
+    MappingRule("U+000", [("U+000", 1.0)]),
+    MappingRule("U+000", [("U+030", np.sqrt(1.0/2.0)), ("U-030", np.sqrt(1.0/2.0))]),
+    MappingRule("U+000", [("U+045", np.sqrt(1.0/2.0)), ("U-045", np.sqrt(1.0/2.0))]),
+    MappingRule("U+000", [("M+000", 1.0)]),
+    MappingRule("U+000", [("M+030", np.sqrt(1.0/2.0)), ("M-030", np.sqrt(1.0/2.0))]),
+
+    MappingRule("U+030", [("U+030", 1.0)]),
+    MappingRule("U+030", [("U+045", 1.0)]),
+    MappingRule("U+030", [("M+030", 1.0)]),
+
+    MappingRule("U+045", [("U+045", 1.0)]),
+    MappingRule("U+045", [("U+030", 1.0)]),
+    MappingRule("U+045", [("M+030", 1.0)]),
+
+    MappingRule("U+090", [("U+090", 1.0)]),
+    MappingRule("U+090", [("U+045", np.sqrt(2.0/3.0)), ("UH+180", np.sqrt(1.0/3.0))], input_layouts=["9+10+3"]),
+    MappingRule("U+090", [("U+030", np.sqrt(1.0/2.0)), ("U+110", np.sqrt(1.0/2.0))]),
+    MappingRule("U+090", [("U+045", np.sqrt(1.0/2.0)), ("U+135", np.sqrt(1.0/2.0))]),
+    MappingRule("U+090", [("M+090", 1.0)]),
+    MappingRule("U+090", [("U+030", np.sqrt(1.0/2.0)), ("M+110", np.sqrt(1.0/2.0))]),
+    MappingRule("U+090", [("M+030", np.sqrt(1.0/2.0)), ("M+110", np.sqrt(1.0/2.0))]),
+    MappingRule("U+090", [("M+030", np.sqrt(1.0/2.0))]),
+
+    MappingRule("U+110", [("U+110", 1.0)]),
+    MappingRule("U+110", [("U+135", 1.0)]),
+    MappingRule("U+110", [("U+045", np.sqrt(1.0/2.0)), ("UH+180", np.sqrt(1.0/2.0))]),
+    MappingRule("U+110", [("M+110", 1.0)]),
+    MappingRule("U+110", [("M+135", 1.0)]),
+    MappingRule("U+110", [("M+030", np.sqrt(1.0/2.0))]),
+
+    MappingRule("U+135", [("U+135", 1.0)]),
+    MappingRule("U+135", [("U+110", 1.0)]),
+    MappingRule("U+135", [("U+045", np.sqrt(1.0/3.0)), ("UH+180", np.sqrt(2.0/3.0))], input_layouts=["9+10+3"]),
+    MappingRule("U+135", [("U+045", np.sqrt(1.0/2.0)), ("UH+180", np.sqrt(1.0/2.0))]),
+    MappingRule("U+135", [("M+135", 1.0)]),
+    MappingRule("U+135", [("M+110", 1.0)]),
+    MappingRule("U+135", [("M+030", np.sqrt(1.0/2.0))]),
+
+    MappingRule("U+180", [("U+180", 1.0)]),
+    MappingRule("U+180", [("UH+180", 1.0)]),
+    MappingRule("U+180", [("U+135", np.sqrt(1.0/2.0)), ("U-135", np.sqrt(1.0/2.0))]),
+    MappingRule("U+180", [("U+110", np.sqrt(1.0/2.0)), ("U-110", np.sqrt(1.0/2.0))]),
+    MappingRule("U+180", [("M+135", np.sqrt(1.0/2.0)), ("M-135", np.sqrt(1.0/2.0))]),
+    MappingRule("U+180", [("M+110", np.sqrt(1.0/2.0)), ("M-110", np.sqrt(1.0/2.0))]),
+    MappingRule("U+180", [("M+030", np.sqrt(1.0/4.0)), ("M-030", np.sqrt(1.0/4.0))]),
+
+    MappingRule("UH+180", [("UH+180", 1.0)]),
+    MappingRule("UH+180", [("U+180", 1.0)]),
+    MappingRule("UH+180", [("U+135", np.sqrt(1.0/2.0)), ("U-135", np.sqrt(1.0/2.0))]),
+    MappingRule("UH+180", [("U+110", np.sqrt(1.0/2.0)), ("U-110", np.sqrt(1.0/2.0))]),
+    MappingRule("UH+180", [("M+135", np.sqrt(1.0/2.0)), ("M-135", np.sqrt(1.0/2.0))]),
+    MappingRule("UH+180", [("M+110", np.sqrt(1.0/2.0)), ("M-110", np.sqrt(1.0/2.0))]),
+    MappingRule("UH+180", [("M+030", np.sqrt(1.0/4.0)), ("M-030", np.sqrt(1.0/4.0))]),
+
+    MappingRule("T+000", [("T+000", 1.0)]),
+    MappingRule("T+000", [("U+045", np.sqrt(1.0/4.0)), ("U-045", np.sqrt(1.0/4.0)),
+                          ("U+135", np.sqrt(1.0/4.0)), ("U-135", np.sqrt(1.0/4.0))]),
+    MappingRule("T+000", [("U+030", np.sqrt(1.0/4.0)), ("U-030", np.sqrt(1.0/4.0)),
+                          ("U+110", np.sqrt(1.0/4.0)), ("U-110", np.sqrt(1.0/4.0))]),
+    MappingRule("T+000", [("U+045", np.sqrt(1.0/3.0)), ("U-045", np.sqrt(1.0/3.0)), ("UH+180", np.sqrt(1.0/3.0))]),
+    MappingRule("T+000", [("U+045", np.sqrt(1.0/4.0)), ("U-045", np.sqrt(1.0/4.0)),
+                          ("M+135", np.sqrt(1.0/4.0)), ("M-135", np.sqrt(1.0/4.0))]),
+    MappingRule("T+000", [("U+030", np.sqrt(1.0/4.0)), ("U-030", np.sqrt(1.0/4.0)),
+                          ("M+110", np.sqrt(1.0/4.0)), ("M-110", np.sqrt(1.0/4.0))]),
+    MappingRule("T+000", [("M+030", np.sqrt(1.0/4.0)), ("M-030", np.sqrt(1.0/4.0)),
+                          ("M+135", np.sqrt(1.0/4.0)), ("M-135", np.sqrt(1.0/4.0))]),
+    MappingRule("T+000", [("M+030", np.sqrt(1.0/4.0)), ("M-030", np.sqrt(1.0/4.0)),
+                          ("M+110", np.sqrt(1.0/4.0)), ("M-110", np.sqrt(1.0/4.0))]),
+    MappingRule("T+000", [("M+030", np.sqrt(1.0/4.0)), ("M-030", np.sqrt(1.0/4.0))]),
+
+    MappingRule("B+000", [("B+000", 1.0)]),
+    MappingRule("B+000", [("M+000", 1.0)]),
+    MappingRule("B+000", [("M+030", np.sqrt(1.0/2.0)), ("M-030", np.sqrt(1.0/2.0))]),
+
+    MappingRule("B+045", [("B+045", 1.0)]),
+    MappingRule("B+045", [("M+030", 1.0)]),
+
+    MappingRule("LFE1", [("LFE1", 1.0)], input_layouts=["9+10+3", "3+7+0"], output_layouts=["9+10+3", "3+7+0"]),
+    MappingRule("LFE2", [("LFE2", 1.0)], input_layouts=["9+10+3", "3+7+0"], output_layouts=["9+10+3", "3+7+0"]),
+
+    MappingRule("LFE1", [("LFE1", np.sqrt(1.0/2.0))], input_layouts=["9+10+3", "3+7+0"]),
+    MappingRule("LFE2", [("LFE1", np.sqrt(1.0/2.0))], input_layouts=["9+10+3", "3+7+0"]),
+
+    MappingRule("LFE1", [("LFE1", 1.0)]),
+]))
+
+itu_packs = {
+    "AP_00010001": "0+1+0",
+    "AP_00010002": "0+2+0",
+    "AP_0001000c": "0+5+0",
+    "AP_00010003": "0+5+0",
+    "AP_00010004": "2+5+0",
+    "AP_00010005": "4+5+0",
+    "AP_00010010": "4+5+1",
+    "AP_00010007": "3+7+0",
+    "AP_00010008": "4+9+0",
+    "AP_00010009": "9+10+3",
+    "AP_0001000f": "0+7+0",
+    "AP_00010017": "4+7+0",
+}
 
 
 class DirectSpeakersPanner(object):
@@ -185,6 +387,22 @@ class DirectSpeakersPanner(object):
         block_format = type_metadata.block_format
 
         is_lfe_channel = self.is_lfe_channel(type_metadata)
+
+        if type_metadata.audioPackFormats is not None:
+            pack = type_metadata.audioPackFormats[-1]
+            if pack.is_common_definition and pack.id in itu_packs:
+                itu_layout_name = itu_packs[pack.id]
+                label = block_format.speakerLabel[0]
+                nominal_label = self.nominal_speaker_label(label)
+
+                for rule in rules:
+                    gains = rule.apply(itu_layout_name, nominal_label, self.layout)
+
+                    if gains is not None:
+                        pv = np.zeros(self.n_channels)
+                        for channel_name, gain in gains:
+                            pv[self.channel_names.index(channel_name)] = gain
+                        return pv
 
         # try to find a speaker that matches a speakerLabel and type; earlier
         # speakerLabel values have higher priority

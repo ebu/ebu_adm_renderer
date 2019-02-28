@@ -3,6 +3,8 @@ import numpy.testing as npt
 import pytest
 from ..panner import DirectSpeakersPanner
 from ...metadata_input import DirectSpeakersTypeMetadata, ExtraData
+from ....fileio.adm.adm import ADM
+from ....fileio.adm.common_definitions import load_common_definitions
 from ....fileio.adm.elements import AudioBlockFormatDirectSpeakers, BoundCoordinate, Frequency, ScreenEdgeLock
 from ....fileio.adm.elements import DirectSpeakerCartesianPosition, DirectSpeakerPolarPosition
 from ... import bs2051
@@ -26,9 +28,33 @@ def tm_with_labels(labels, lfe_freq=False):
     )
 
 
+adm_common_defs = ADM()
+load_common_definitions(adm_common_defs)
+
+
+def tm_common_defs(apf_id, acf_id):
+    """Get a DirectSpeakersTypeMetadata with the given audioPackFormat and
+    audioChannelFormat selected by ID from the common definitions.
+    """
+    apf = adm_common_defs[apf_id]
+    acf = adm_common_defs[acf_id]
+
+    return DirectSpeakersTypeMetadata(
+        block_format=acf.audioBlockFormats[0],
+        audioPackFormats=[apf],
+    )
+
+
 def direct_pv(layout, channel):
     pv = np.zeros(len(layout.channels))
     pv[layout.channel_names.index(channel)] = 1.0
+    return pv
+
+
+def multi_pv(layout, gains):
+    pv = np.zeros(len(layout.channels))
+    for channel_name, gain in gains:
+        pv[layout.channel_names.index(channel_name)] = gain
     return pv
 
 
@@ -90,6 +116,29 @@ def test_lfe():
 
     assert len(record) == 6 and all(str(w.message) == "LFE indication from frequency element does not match speakerLabel."
                                     for w in record)
+
+
+def test_mapping():
+    layout = bs2051.get_layout("4+5+0")
+    p = DirectSpeakersPanner(layout)
+
+    # M+135
+    npt.assert_allclose(p.handle(tm_common_defs("AP_0001000f", "AC_0001001c")), direct_pv(layout, "M+110"))
+
+    # U+180
+    npt.assert_allclose(p.handle(tm_common_defs("AP_00010009", "AC_00010011")),
+                        multi_pv(layout, [("U+110", np.sqrt(0.5)), ("U-110", np.sqrt(0.5))]))
+
+
+def test_mapping_per_input():
+    layout = bs2051.get_layout("4+5+0")
+    p = DirectSpeakersPanner(layout)
+
+    # M+090 has different mapping in 9+10+3 and 4+7+0 input layouts
+    npt.assert_allclose(p.handle(tm_common_defs("AP_00010009", "AC_0001000a")),
+                        multi_pv(layout, [("M+030", np.sqrt(1.0/3.0)), ("M+110", np.sqrt(2.0/3.0))]))
+    npt.assert_allclose(p.handle(tm_common_defs("AP_00010017", "AC_0001000a")),
+                        multi_pv(layout, [("M+030", np.sqrt(1.0/2.0)), ("M+110", np.sqrt(1.0/2.0))]))
 
 
 def test_one_lfe_out():
