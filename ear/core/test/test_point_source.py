@@ -1,7 +1,9 @@
 import numpy as np
 import numpy.testing as npt
+from .. import bs2051
 from ..point_source import Triplet, VirtualNgon, StereoPanDownmix, PointSourcePanner, configure
-from ..geom import cart, azimuth
+from ..geom import cart, azimuth, PolarPosition
+from ..layout import Speaker
 import pytest
 
 
@@ -143,3 +145,24 @@ def test_all_layouts(layout):
     vv = np.dot(pv, layout.positions)
     vv /= np.linalg.norm(vv, axis=2, keepdims=True)
     npt.assert_allclose(vv[vv_at_pos], positions[vv_at_pos], atol=1e-10)
+
+
+def test_screen_pos_check():
+    invalid_screen_speakers = [
+        Speaker(channel=0,
+                names=["M+SC"], polar_position=PolarPosition(azimuth=30.0,
+                                                             elevation=0.0,
+                                                             distance=1.0)),
+        Speaker(channel=1,
+                names=["M-SC"], polar_position=PolarPosition(azimuth=-30.0,
+                                                             elevation=0.0,
+                                                             distance=1.0)),
+    ]
+
+    layout = bs2051.get_layout("4+9+0").without_lfe.with_speakers(invalid_screen_speakers)[0]
+
+    expected = ("channel M\\+SC has azimuth 30.0, which is not "
+                "in the allowed ranges of 5 to 25 and 35 to 60 "
+                "degrees.")
+    with pytest.raises(ValueError, match=expected):
+        configure(layout)

@@ -427,7 +427,48 @@ def _adjacent_verts(facets, vert):
             set([vert]))
 
 
+def set_screen_speaker_nominal_positions(layout):
+    """Modify layout to set the nominal positions of M+-SC; 45 degrees if they
+    are wider than 30 degrees, otherwise 15. This ensures that the
+    triangulation is correct for both the nominal and real loudspeaker
+    positions when the ordering is changed.
+    """
+    if "M+SC" not in layout.channel_names:
+        return layout
+
+    def mod_channel(channel):
+        if channel.name not in ("M+SC", "M-SC"):
+            return channel
+
+        old_az = channel.polar_position.azimuth
+        new_azimuth = np.sign(old_az) * (45 if np.abs(old_az) > 30 else 15)
+        return evolve(channel,
+                      polar_nominal_position=PolarPosition(
+                          azimuth=new_azimuth,
+                          elevation=0.0,
+                          distance=1.0))
+
+    return evolve(layout,
+                  channels=[mod_channel(channel) for channel in layout.channels])
+
+
+def check_screen_speakers(layout):
+    """Check that screen loudspeakers are within allowed ranges."""
+    for channel in layout.channels:
+        if channel.name in ("M+SC", "M-SC"):
+            abs_az = np.abs(channel.polar_position.azimuth)
+            if not (5.0 <= abs_az <= 25.0
+                    or 35.0 <= abs_az <= 60.0):
+                raise ValueError("channel {name} has azimuth {az}, which is not "
+                                 "in the allowed ranges of 5 to 25 and 35 to 60 "
+                                 "degrees.".format(
+                                    name=channel.name,
+                                    az=channel.polar_position.azimuth,
+                                ))
+
 def _configure_full(layout):
+    layout = set_screen_speaker_nominal_positions(layout)
+
     # add some extra height speakers that are treated as real speakers until
     # the downmix in PointSourcePannerDownmix
     extra_channels, downmix = extra_pos_vertical_nominal(layout)
@@ -499,6 +540,8 @@ def configure(layout):
     """
     assert not any(channel.is_lfe for channel in layout.channels), \
         "lfe channel passed to point source panner"
+
+    check_screen_speakers(layout)
 
     if layout.name == "0+2+0":
         return _configure_stereo(layout)

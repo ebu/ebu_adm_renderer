@@ -18,7 +18,12 @@ def test_no_change_in_pvs(layout):
     positions = cart(azimuths, elevations, 1)
     pv = np.apply_along_axis(config.handle, 2, positions)
 
-    data_path = files_dir / (layout.name + ".npz")
+    test_name = layout.name
+    if layout.name == "4+9+0":
+        channel = layout.channels_by_name["M+SC"]
+        test_name += "_{az}".format(az=int(channel.polar_position.azimuth))
+
+    data_path = files_dir / (test_name + ".npz")
 
     if data_path.check():
         loaded_pv = np.load(str(data_path))["pv"]
@@ -26,4 +31,4 @@ def test_no_change_in_pvs(layout):
     else:
         data_path.dirpath().ensure_dir()
         np.savez_compressed(str(data_path), pv=pv)
-        pytest.skip("generated pv file for layout {layout.name}".format(layout=layout))
+        pytest.skip("generated pv file for layout {test_name}".format(test_name=test_name))
