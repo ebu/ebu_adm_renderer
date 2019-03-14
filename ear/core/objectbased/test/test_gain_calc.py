@@ -323,7 +323,7 @@ def test_steps(layout, gain_calc):
                                          width=width, height=height, depth=depth)
             similar_gains.append(gain_calc.render(ObjectTypeMetadata(bf)).direct)
         for gains in similar_gains[1:]:
-            npt.assert_allclose(gains, similar_gains[0], atol=1e-3)
+            npt.assert_allclose(gains, similar_gains[0], atol=1.5e-3)
 
 
 def test_divergence_normalised(layout, gain_calc):

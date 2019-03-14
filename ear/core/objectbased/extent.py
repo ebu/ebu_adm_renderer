@@ -204,17 +204,17 @@ class PolarExtentPanner(ExtentPanner):
         ammount_point = 1.0 - ammount_spread
 
         pv = 0.0
-        if ammount_point != 0:
-            pv += ammount_point * self.panning_func(position)
-        if ammount_spread != 0:
+        if ammount_point > 1e-10:
+            pv += ammount_point * self.panning_func(position) ** 2
+        if ammount_spread > 1e-10:
             # minimum width and height as above
             width = np.maximum(width, self.fade_width / 2)
             height = np.maximum(height, self.fade_width / 2)
 
             weight_f = self.get_weight_func(position, width, height)
-            pv += ammount_spread * self.spreading_panner.panning_values_for_weight(weight_f)
+            pv += ammount_spread * self.spreading_panner.panning_values_for_weight(weight_f) ** 2
 
-        return pv
+        return np.sqrt(pv)
 
 
 class CartExtentPanner(ExtentPanner):
