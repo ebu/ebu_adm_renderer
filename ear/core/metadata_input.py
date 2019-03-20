@@ -204,6 +204,7 @@ class DirectSpeakersTypeMetadata(TypeMetadata):
         extra_data (ExtraData): Extra parameters from outside block format.
     """
     block_format = attrib(validator=instance_of(AudioBlockFormatDirectSpeakers))
+    audioPackFormats = attrib(validator=optional(list_of(AudioPackFormat)), default=None)
 
     extra_data = attrib(validator=instance_of(ExtraData), default=Factory(ExtraData))
 

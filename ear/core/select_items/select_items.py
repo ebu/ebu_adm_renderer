@@ -624,25 +624,41 @@ def _select_single_channel(state):
                      )
 
 
-def _get_RenderingItems_single(state, RenderingItemType, TypeMetadataType):
-    """Get a RenderingItem for given RenderingItemType and TypeMetadataType
-    types which are represented by single channels; this is shared between
-    Objects and DirectSpeakers.
-    """
+def _get_RenderingItems_Objects(state):
+    """Get a RenderingItem for each selected Objects channel."""
     for state in _select_single_channel(state):
         extra_data = _get_extra_data(state)
         importance = _get_importance(state)
         adm_path = _get_adm_path(state)
 
-        metadata_source = MetadataSourceIter([TypeMetadataType(block_format=block_format,
-                                                               extra_data=extra_data)
+        metadata_source = MetadataSourceIter([ObjectTypeMetadata(block_format=block_format,
+                                                                 extra_data=extra_data)
                                               for block_format in state.audioChannelFormat.audioBlockFormats])
 
-        yield RenderingItemType(track_spec=state.track_spec,
-                                metadata_source=metadata_source,
-                                importance=importance,
-                                adm_path=adm_path,
-                                )
+        yield ObjectRenderingItem(track_spec=state.track_spec,
+                                  metadata_source=metadata_source,
+                                  importance=importance,
+                                  adm_path=adm_path,
+                                  )
+
+
+def _get_RenderingItems_DirectSpeakers(state):
+    """Get a RenderingItem for each selected DirectSpeakers channel."""
+    for state in _select_single_channel(state):
+        extra_data = _get_extra_data(state)
+        importance = _get_importance(state)
+        adm_path = _get_adm_path(state)
+
+        metadata_source = MetadataSourceIter([DirectSpeakersTypeMetadata(block_format=block_format,
+                                                                         audioPackFormats=state.audioPackFormat_path,
+                                                                         extra_data=extra_data)
+                                              for block_format in state.audioChannelFormat.audioBlockFormats])
+
+        yield DirectSpeakersRenderingItem(track_spec=state.track_spec,
+                                          metadata_source=metadata_source,
+                                          importance=importance,
+                                          adm_path=adm_path,
+                                          )
 
 
 def _get_RenderingItems_HOA(state):
@@ -677,9 +693,9 @@ def _get_RenderingItems_HOA(state):
 
 def _get_rendering_items(state):
     if state.audioPackFormat.type == TypeDefinition.Objects:
-        return _get_RenderingItems_single(state, ObjectRenderingItem, ObjectTypeMetadata)
+        return _get_RenderingItems_Objects(state)
     elif state.audioPackFormat.type == TypeDefinition.DirectSpeakers:
-        return _get_RenderingItems_single(state, DirectSpeakersRenderingItem, DirectSpeakersTypeMetadata)
+        return _get_RenderingItems_DirectSpeakers(state)
     elif state.audioPackFormat.type == TypeDefinition.HOA:
         return _get_RenderingItems_HOA(state)
     else:
