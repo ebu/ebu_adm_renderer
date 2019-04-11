@@ -24,6 +24,7 @@ from ...common import PolarPosition, CartesianPosition, CartesianScreen, PolarSc
 namespaces = [None,
               "urn:ebu:metadata-schema:ebuCore_2014",
               "urn:ebu:metadata-schema:ebuCore_2015",
+              "urn:ebu:metadata-schema:ebuCore_2016",
               "urn:ebu:metadata-schema:ebuCore_2017",
               "urn:ebu:metadata-schema:ebuCore",
               "urn:metadata-schema:adm",
