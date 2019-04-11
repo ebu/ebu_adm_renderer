@@ -242,7 +242,7 @@ def test_screenRef(base):
 
 
 def test_importance(base):
-    assert base.bf_after_mods().importance is 10
+    assert base.bf_after_mods().importance == 10
     assert base.bf_after_mods(add_children(bf_path, E.importance("5"))).importance == 5
 
 
