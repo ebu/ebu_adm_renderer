@@ -476,16 +476,16 @@ def parse_objects_position(element):
             distance=position.get('distance', 1.0),
             screenEdgeLock=screen_edge_lock
         )
-    elif coordinates == {"X", "Y", "Z"}:
+    elif coordinates in ({"X", "Y"}, {"X", "Y", "Z"}):
         return ObjectCartesianPosition(
             X=position["X"],
             Y=position["Y"],
-            Z=position["Z"],
+            Z=position.get("Z", 0.0),
             screenEdgeLock=screen_edge_lock
         )
     else:
         raise ValueError("Found coordinates {{{found}}}, but expected either "
-                         "{{azimuth,elevation,distance}}, {{azimuth,elevation}} or {{X,Y,Z}}."
+                         "{{azimuth,elevation,distance}}, {{azimuth,elevation}}, {{X,Y,Z}} or {{X,Y}}."
                          .format(found=','.join(coordinates)))
 
 
@@ -514,7 +514,8 @@ def object_position_to_xml(parent, obj):
     elif isinstance(pos, ObjectCartesianPosition):
         dump_coordinate("X", pos.X, pos.screenEdgeLock.horizontal)
         dump_coordinate("Y", pos.Y)
-        dump_coordinate("Z", pos.Z, pos.screenEdgeLock.vertical)
+        if pos.Z != 0.0 or pos.screenEdgeLock.vertical is not None:
+            dump_coordinate("Z", pos.Z, pos.screenEdgeLock.vertical)
     else:
         assert False, "unexpected type"  # pragma: no cover
 
@@ -688,16 +689,16 @@ def parse_speaker_position(element):
             bounded_distance=BoundCoordinate(**position.get('distance', dict(value=1.0))),
             screenEdgeLock=screen_edge_lock
         )
-    elif coordinates == {"X", "Y", "Z"}:
+    elif coordinates in ({"X", "Y"}, {"X", "Y", "Z"}):
         return DirectSpeakerCartesianPosition(
             bounded_X=BoundCoordinate(**position["X"]),
             bounded_Y=BoundCoordinate(**position["Y"]),
-            bounded_Z=BoundCoordinate(**position["Z"]),
+            bounded_Z=BoundCoordinate(**position.get("Z", dict(value=0.0))),
             screenEdgeLock=screen_edge_lock
         )
     else:
         raise ValueError("Found coordinates {{{found}}}, but expected either "
-                         "{{azimuth,elevation,distance}}, {{azimuth,elevation}} or {{X,Y,Z}}."
+                         "{{azimuth,elevation,distance}}, {{azimuth,elevation}}, {{X,Y,Z}} or {{X,Y}}."
                          .format(found=','.join(coordinates)))
 
 

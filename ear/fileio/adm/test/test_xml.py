@@ -186,6 +186,17 @@ def test_polar_position(base):
     assert block_format.position.screenEdgeLock.vertical == "top"
 
 
+def test_polar_position_default_distance(base):
+    block_format = base.bf_after_mods(remove_children("//adm:position"),
+                                      add_children(bf_path,
+                                                   E.position("10", coordinate="azimuth"),
+                                                   E.position("20", coordinate="elevation")))
+
+    assert block_format.position.azimuth == 10.0
+    assert block_format.position.elevation == 20.0
+    assert block_format.position.distance == 1.0
+
+
 def test_cart_position(base):
     block_format = base.bf_after_mods(remove_children("//adm:position"),
                                       add_children(bf_path,
@@ -196,6 +207,17 @@ def test_cart_position(base):
     assert block_format.position.X == 0.2
     assert block_format.position.Y == 0.3
     assert block_format.position.Z == 0.5
+
+
+def test_cart_position_default_Z(base):
+    block_format = base.bf_after_mods(remove_children("//adm:position"),
+                                      add_children(bf_path,
+                                                   E.position("0.2", coordinate="X"),
+                                                   E.position("0.3", coordinate="Y")))
+
+    assert block_format.position.X == 0.2
+    assert block_format.position.Y == 0.3
+    assert block_format.position.Z == 0.0
 
 
 def test_exceptions(base):
@@ -286,6 +308,13 @@ def test_directspeakers(base):
     assert block_format.position.screenEdgeLock.vertical == "top"
     assert block_format.position.distance == 0.9
 
+    # default distance
+    block_format = with_children(E.position("-29", coordinate="azimuth"),
+                                 E.position("15", coordinate="elevation"))
+    assert block_format.position.azimuth == -29.0
+    assert block_format.position.elevation == 15.0
+    assert block_format.position.distance == 1.0
+
     # distance defaults to 1
     block_format = with_children(E.position("-29", coordinate="azimuth"),
                                  E.position("15", coordinate="elevation"))
@@ -332,6 +361,15 @@ def test_directspeakers(base):
     assert block_format.position.Z == 0.7
     assert block_format.position.bounded_Z.max == 0.8
     assert block_format.position.bounded_Z.min == 0.9
+
+    # default Z
+    block_format = with_children(
+        E.position("0.1", coordinate="X"),
+        E.position("0.4", coordinate="Y"),
+    )
+    assert block_format.position.X == 0.1
+    assert block_format.position.Y == 0.4
+    assert block_format.position.Z == 0.0
 
     # test speaker label
     for labels in ([], ["U-030"], ["U-030", "U-SC"]):
