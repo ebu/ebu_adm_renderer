@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.1] - 2019-04-12
+
+### Fixed
+- `aspectRatio` is an attribute not an element.
+- Accept the `urn:ebu:metadata-schema:ebuCore_2016` namespace.
+- Added default for Z coordinates.
+- Various deprecation warnings.
+
+### Added
+- Specified loudspeaker positions are now checked against the allowed ranges.
+- Validation of screenEdgeLock in Objects.
+
 ## [1.1.0] - 2018-11-26
 
 ### Removed
@@ -65,5 +77,6 @@
 
 Initial release.
 
+[1.1.1]: https://github.com/ebu/ebu_adm_renderer/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/ebu/ebu_adm_renderer/compare/1.0.1...1.1.0
 [1.0.1]: https://github.com/ebu/ebu_adm_renderer/compare/1.0.0...1.0.1
