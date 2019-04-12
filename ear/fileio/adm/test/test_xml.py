@@ -197,6 +197,15 @@ def test_polar_position_default_distance(base):
     assert block_format.position.distance == 1.0
 
 
+def test_invalid_screen_edge_lock(base):
+    expected = "invalid screenEdgeLock value top for coordinate azimuth"
+    with pytest.raises(ParseError, match=expected):
+        base.bf_after_mods(remove_children("//adm:position"),
+                           add_children(bf_path,
+                                        E.position("10", coordinate="azimuth", screenEdgeLock="top"),
+                                        E.position("20", coordinate="elevation", screenEdgeLock="top")))
+
+
 def test_cart_position(base):
     block_format = base.bf_after_mods(remove_children("//adm:position"),
                                       add_children(bf_path,

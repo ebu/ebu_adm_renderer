@@ -462,10 +462,18 @@ def parse_objects_position(element):
         position[coordinate] = float(text(element))
 
         if "screenEdgeLock" in element.attrib:
-            if element.attrib["coordinate"] in ["azimuth", "X"] and element.attrib["screenEdgeLock"] in ["left", "right"]:
-                screen_edge_lock.horizontal = element.attrib["screenEdgeLock"]
-            if element.attrib["coordinate"] in ["elevation", "Z"] and element.attrib["screenEdgeLock"] in ["top", "bottom"]:
-                screen_edge_lock.vertical = element.attrib["screenEdgeLock"]
+            coordinate = element.attrib["coordinate"]
+            screenEdgeLock = element.attrib["screenEdgeLock"]
+
+            if coordinate in ["azimuth", "X"] and screenEdgeLock in ["left", "right"]:
+                screen_edge_lock.horizontal = screenEdgeLock
+            elif coordinate in ["elevation", "Z"] and screenEdgeLock in ["top", "bottom"]:
+                screen_edge_lock.vertical = screenEdgeLock
+            else:
+                raise ValueError("invalid screenEdgeLock value {screenEdgeLock} for coordinate {coordinate}".format(
+                    screenEdgeLock=screenEdgeLock,
+                    coordinate=coordinate,
+                ))
 
     coordinates = set(position.keys())
 
