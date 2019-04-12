@@ -206,6 +206,16 @@ def test_invalid_screen_edge_lock(base):
                                         E.position("20", coordinate="elevation", screenEdgeLock="top")))
 
 
+def test_wrong_coordinates(base):
+    expected = ("Found coordinates {(azimuth,X|X,azimuth)}, but expected either "
+                "{azimuth,elevation,distance}, {azimuth,elevation}, {X,Y,Z} or {X,Y}.")
+    with pytest.raises(ParseError, match=expected):
+        base.bf_after_mods(remove_children("//adm:position"),
+                           add_children(bf_path,
+                                        E.position("10", coordinate="azimuth"),
+                                        E.position("0", coordinate="X")))
+
+
 def test_cart_position(base):
     block_format = base.bf_after_mods(remove_children("//adm:position"),
                                       add_children(bf_path,
