@@ -318,9 +318,12 @@ def cart_on_basis(basis, az, el):
 
 
 def azimuth_elevation_on_basis(basis, vsource_pos):
-    """Cartesian to polar in radians, in a given basis."""
+    """Cartesian to polar in radians, in a given basis, assuming unit-length vectors."""
     # project onto each basis
     components = np.dot(vsource_pos, basis.T)
+
+    # clip components to keep arcsin happy
+    components = np.clip(components, -1.0, 1.0)
 
     azimuth = np.arctan2(components[..., 0],   # right
                          components[..., 1])   # forward
