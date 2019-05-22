@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0] - 2019-05-22
+
+Changes for ITU ADM renderer reference code.
+
+- Changes to rendering of Objects specified using Cartesian parameters.
+- Added conversion between Cartesian and polar Objects parameters.
+- Changed to BSD-Clear license.
+
 ## [1.2.0] - 2019-05-22
 
 ### Fixed
@@ -96,6 +104,7 @@
 
 Initial release.
 
+[2.0.0]: https://github.com/ebu/ebu_adm_renderer/compare/1.2.0...2.0.0
 [1.2.0]: https://github.com/ebu/ebu_adm_renderer/compare/1.1.2...1.2.0
 [1.1.2]: https://github.com/ebu/ebu_adm_renderer/compare/1.1.1...1.1.2
 [1.1.1]: https://github.com/ebu/ebu_adm_renderer/compare/1.1.0...1.1.1
