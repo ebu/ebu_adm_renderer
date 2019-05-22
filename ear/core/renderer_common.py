@@ -35,7 +35,7 @@ class ProcessingBlock(object):
     end_sample = attrib()
 
     # integer sample numbers of the first and last sample affected; sample
-    # number s is affected if first_sample <= s <= last_sample
+    # number s is affected if first_sample <= s < last_sample
     first_sample = attrib(init=False, cmp=False)
     last_sample = attrib(init=False, cmp=False)
 
