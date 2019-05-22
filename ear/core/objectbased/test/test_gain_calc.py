@@ -1,31 +1,32 @@
-from attr import attrs, attrib, Factory, evolve
-import pytest
+from attr import evolve
 import numpy as np
 import numpy.testing as npt
+from ... import bs2051
 from ..gain_calc import GainCalc
 from ....fileio.adm.elements import (AudioBlockFormatObjects, ChannelLock, ObjectDivergence,
-                                     CartesianZone, PolarZone, Frequency, ScreenEdgeLock, ObjectPolarPosition)
+                                     CartesianZone, PolarZone, ScreenEdgeLock, ObjectPolarPosition)
 from ...metadata_input import ObjectTypeMetadata, ExtraData
 from ...geom import cart, elevation, PolarPosition
 from ....common import PolarScreen
 from ...test.test_screen_common import default_edge_elevation
+from ... import point_source
 
 
-@attrs
-class GainCalcTestCase(object):
-    name = attrib()
-    block_format = attrib()
-    extra_data = attrib(default=Factory(ExtraData))
+def run_test(layout, gain_calc,
+             block_format,
+             extra_data=ExtraData(),
+             direct_gains=[], diffuse_gains=[],
+             direct_position=None, diffuse_position=None,
+             cart_psp=False,
+             ):
 
-    direct_gains = attrib(default=Factory(list))
-    diffuse_gains = attrib(default=Factory(list))
-
-    direct_position = attrib(default=None)
-    diffuse_position = attrib(default=None)
-
-    def _get_gains(self, layout, gain_calc, position, gains):
+    def get_gains(position, gains):
         if position is not None:
-            gains = gain_calc.point_source_panner.handle(position)
+            if cart_psp:
+                psp = point_source.configure_allocentric(layout.without_lfe)
+            else:
+                psp = gain_calc.point_source_panner
+            gains = psp.handle(position)
             gains_full = np.zeros(len(layout.channels))
             gains_full[~layout.is_lfe] = gains
             return gains_full
@@ -36,203 +37,293 @@ class GainCalcTestCase(object):
                 expected_direct[layout.channel_names.index(name)] = gain
             return expected_direct
 
-    def get_direct_gains(self, layout, gain_calc):
-        return self._get_gains(layout, gain_calc, self.direct_position, self.direct_gains)
+    block_format = AudioBlockFormatObjects(**block_format)
+    gains = gain_calc.render(ObjectTypeMetadata(block_format=block_format,
+                                                extra_data=extra_data))
 
-    def get_diffuse_gains(self, layout, gain_calc):
-        return self._get_gains(layout, gain_calc, self.diffuse_position, self.diffuse_gains)
+    expected_direct = get_gains(direct_position, direct_gains)
+    expected_diffuse = get_gains(diffuse_position, diffuse_gains)
 
-    def run(self, layout, gain_calc):
-        block_format = AudioBlockFormatObjects(**self.block_format)
-        gains = gain_calc.render(ObjectTypeMetadata(block_format=block_format,
-                                                    extra_data=self.extra_data))
-
-        expected_direct = self.get_direct_gains(layout, gain_calc)
-        expected_diffuse = self.get_diffuse_gains(layout, gain_calc)
-
-        npt.assert_allclose(gains.diffuse, expected_diffuse, atol=1e-10)
-        npt.assert_allclose(gains.direct, expected_direct, atol=1e-10)
+    npt.assert_allclose(gains.diffuse, expected_diffuse, atol=1e-10)
+    npt.assert_allclose(gains.direct, expected_direct, atol=1e-10)
 
 
-test_cases = []
+def test_basic_centre(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0)),
+             direct_gains=[("M+000", 1.0)])
 
 
-def add_test(*args, **kwargs):
-    test_cases.append(GainCalcTestCase(*args, **kwargs))
+def test_basic_left(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=30.0, elevation=0.0, distance=1.0)),
+             direct_gains=[("M+030", 1.0)])
 
 
-add_test("basic_centre",
-         dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0)),
-         direct_gains=[("M+000", 1.0)])
-add_test("basic_left",
-         dict(position=dict(azimuth=30.0, elevation=0.0, distance=1.0)),
-         direct_gains=[("M+030", 1.0)])
-add_test("basic_left_up",
-         dict(position=dict(azimuth=30.0, elevation=30.0, distance=1.0)),
-         direct_gains=[("U+030", 1.0)])
-
-add_test("diffuse_half",
-         dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0), diffuse=0.5),
-         direct_gains=[("M+000", np.sqrt(0.5))],
-         diffuse_gains=[("M+000", np.sqrt(0.5))])
-add_test("diffuse_full",
-         dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0), diffuse=1.0),
-         diffuse_gains=[("M+000", 1.0)])
-
-add_test("gain",
-         dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0), gain=0.5),
-         direct_gains=[("M+000", 0.5)])
-
-add_test("coord_trans_cart_cart",
-         dict(position=dict(zip("XYZ", cart(30, 30, 4.0/3.0))), cartesian=True),
-         direct_gains=[("U+030", 1.0)])
-add_test("coord_trans_polar_cart",
-         dict(position=dict(azimuth=30.0, elevation=30.0, distance=4.0/3.0), cartesian=True),
-         direct_gains=[("U+030", 1.0)])
-add_test("coord_trans_cart_polar",
-         dict(position=dict(zip("XYZ", cart(30, 30, 1.0)))),
-         direct_gains=[("U+030", 1.0)])
-add_test("coord_trans_polar_polar",
-         dict(position=dict(azimuth=30.0, elevation=30.0, distance=1.0)),
-         direct_gains=[("U+030", 1.0)])
-
-add_test("channel_lock_on_speaker",
-         dict(channelLock=ChannelLock(maxDistance=1.0),
-              position=dict(azimuth=0.0, elevation=0.0, distance=1.0)),
-         direct_gains=[("M+000", 1.0)])
-add_test("channel_lock_close",
-         dict(channelLock=ChannelLock(maxDistance=1.0),
-              position=dict(azimuth=14.0, elevation=0.0, distance=1.0)),
-         direct_gains=[("M+000", 1.0)])
-add_test("channel_lock_not_close_enough",
-         dict(channelLock=ChannelLock(maxDistance=np.linalg.norm(cart(0, 0, 1) - cart(15, 0, 1)) - 0.01),
-              position=dict(azimuth=15.0, elevation=0.0, distance=1.0)),
-         direct_gains=[("M+000", np.sqrt(0.5)), ("M+030", np.sqrt(0.5))])
-
-add_test("channel_lock_abs_elevation_priority",
-         dict(channelLock=ChannelLock(),
-              position=dict(azimuth=30.0, elevation=15.0, distance=1.0)),
-         direct_gains=[("M+030", 1.0)])
-add_test("channel_lock_abs_az_priority_left",
-         dict(channelLock=ChannelLock(),
-              position=dict(azimuth=15.0, elevation=0.0, distance=1.0)),
-         direct_gains=[("M+000", 1.0)])
-add_test("channel_lock_abs_az_priority_right",
-         dict(channelLock=ChannelLock(),
-              position=dict(azimuth=-15.0, elevation=0.0, distance=1.0)),
-         direct_gains=[("M+000", 1.0)])
-add_test("channel_lock_az_priority_front_top",
-         dict(channelLock=ChannelLock(),
-              position=dict(azimuth=0.0, elevation=30.0, distance=1.0)),
-         direct_gains=[("U-030", 1.0)])
-add_test("channel_lock_az_priority_rear_top",
-         dict(channelLock=ChannelLock(),
-              position=dict(azimuth=180.0, elevation=30.0, distance=1.0)),
-         direct_gains=[("U-110", 1.0)])
-add_test("channel_lock_az_priority_rear_mid",
-         dict(channelLock=ChannelLock(),
-              position=dict(azimuth=180.0, elevation=0.0, distance=1.0)),
-         direct_gains=[("M-110", 1.0)])
-
-add_test("diverge_half",
-         dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0),
-              objectDivergence=ObjectDivergence(0.5, azimuthRange=30.0)),
-         direct_gains=[("M+000", np.sqrt(1.0/3.0)), ("M+030", np.sqrt(1.0/3.0)), ("M-030", np.sqrt(1.0/3.0))])
-add_test("diverge_full",
-         dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0),
-              objectDivergence=ObjectDivergence(1.0, azimuthRange=30.0)),
-         direct_gains=[("M+030", np.sqrt(0.5)), ("M-030", np.sqrt(0.5))])
-
-add_test("diverge_cart",
-         dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0), cartesian=True,
-              objectDivergence=ObjectDivergence(0.5, positionRange=np.tan(np.radians(30.0)))),
-         direct_gains=[("M+000", np.sqrt(1.0/3.0)), ("M+030", np.sqrt(1.0/3.0)), ("M-030", np.sqrt(1.0/3.0))])
-
-add_test("diverge_azimuth",
-         dict(position=dict(azimuth=(30.0+110.0)/2.0, elevation=0.0, distance=1.0),
-              objectDivergence=ObjectDivergence(1.0, azimuthRange=(110-30.0)/2.0)),
-         direct_gains=[("M+030", np.sqrt(0.5)), ("M+110", np.sqrt(0.5))])
-add_test("diverge_elevation",
-         dict(position=dict(azimuth=0.0, elevation=elevation(cart(30, 30, 1) * [0, 1, 1]), distance=1.0),
-              objectDivergence=ObjectDivergence(1.0, azimuthRange=np.degrees(np.arcsin(cart(-30, 30, 1)[0])))),
-         direct_gains=[("U+030", np.sqrt(0.5)), ("U-030", np.sqrt(0.5))])
-add_test("diverge_azimuth_elevation",
-         dict(position=dict(azimuth=70.0, elevation=elevation(cart(40, 30, 1) * [0, 1, 1]), distance=1.0),
-              objectDivergence=ObjectDivergence(1.0, azimuthRange=np.degrees(np.arcsin(cart(-40, 30, 1)[0])))),
-         direct_gains=[("U+030", np.sqrt(0.5)), ("U+110", np.sqrt(0.5))])
-
-add_test("zone_front",
-         dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0),
-              zoneExclusion=[PolarZone(minAzimuth=0.0, maxAzimuth=0.0, minElevation=0.0, maxElevation=0.0)]),
-         direct_gains=[("M+030", np.sqrt(0.5)), ("M-030", np.sqrt(0.5))])
-add_test("zone_mid_front",
-         dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0),
-              zoneExclusion=[PolarZone(minAzimuth=-180.0, maxAzimuth=180.0, minElevation=0.0, maxElevation=0.0)]),
-         direct_gains=[("U+030", np.sqrt(0.5)), ("U-030", np.sqrt(0.5))])
-add_test("zone_mid_rear",
-         dict(position=dict(azimuth=180.0, elevation=0.0, distance=1.0),
-              zoneExclusion=[PolarZone(minAzimuth=-180.0, maxAzimuth=180.0, minElevation=0.0, maxElevation=0.0)]),
-         direct_gains=[("U+110", np.sqrt(0.5)), ("U-110", np.sqrt(0.5))])
-
-add_test("screen_scale_null",
-         dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0), screenRef=True),
-         direct_gains=[("M+000", 1.0)])
-
-add_test("screen_scale_right",
-         dict(position=dict(azimuth=30.0, elevation=0.0, distance=1.0), screenRef=True),
-         direct_gains=[("M+000", 1.0)],
-         extra_data=ExtraData(
-             reference_screen=PolarScreen(aspectRatio=1.5,
-                                          centrePosition=PolarPosition(30.0, 0.0, 1.0),
-                                          widthAzimuth=30.0)))
-
-add_test("screen_edge_lock_right",
-         dict(position=ObjectPolarPosition(azimuth=0.0, elevation=0.0, distance=1.0,
-                                           screenEdgeLock=ScreenEdgeLock(horizontal="right"))),
-         direct_position=cart(-29, 0, 1))
-add_test("screen_edge_lock_left",
-         dict(position=ObjectPolarPosition(azimuth=0.0, elevation=0.0, distance=1.0,
-                                           screenEdgeLock=ScreenEdgeLock(horizontal="left"))),
-         direct_position=cart(29, 0, 1))
-add_test("screen_edge_lock_top",
-         dict(position=ObjectPolarPosition(azimuth=0.0, elevation=0.0, distance=1.0,
-                                           screenEdgeLock=ScreenEdgeLock(vertical="top"))),
-         direct_position=cart(0, default_edge_elevation, 1))
-add_test("screen_edge_lock_bottom",
-         dict(position=ObjectPolarPosition(azimuth=0.0, elevation=0.0, distance=1.0,
-                                           screenEdgeLock=ScreenEdgeLock(vertical="bottom"))),
-         direct_position=cart(0, -default_edge_elevation, 1))
-add_test("screen_edge_lock_top_right",
-         dict(position=ObjectPolarPosition(azimuth=0.0, elevation=0.0, distance=1.0,
-                                           screenEdgeLock=ScreenEdgeLock(vertical="top", horizontal="right"))),
-         direct_position=cart(-29, default_edge_elevation, 1))
+def test_basic_left_up(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=30.0, elevation=30.0, distance=1.0)),
+             direct_gains=[("U+030", 1.0)])
 
 
-@pytest.mark.parametrize("test_case", test_cases, ids=[case.name for case in test_cases])
-def test_objectbased(layout, gain_calc, test_case):
-    test_case.run(layout, gain_calc)
+def test_diffuse_half(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0), diffuse=0.5),
+             direct_gains=[("M+000", np.sqrt(0.5))],
+             diffuse_gains=[("M+000", np.sqrt(0.5))])
 
 
-def test_no_screen_scale(layout):
+def test_diffuse_full(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0), diffuse=1.0),
+             diffuse_gains=[("M+000", 1.0)])
+
+
+def test_gain(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0), gain=0.5),
+             direct_gains=[("M+000", 0.5)])
+
+
+def test_coord_trans_cart_polar(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(zip("XYZ", cart(30, 30, 1.0)))),
+             direct_gains=[("U+030", 1.0)])
+
+
+def test_coord_trans_polar_polar(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=30.0, elevation=30.0, distance=1.0)),
+             direct_gains=[("U+030", 1.0)])
+
+
+def test_channel_lock_on_speaker(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(channelLock=ChannelLock(maxDistance=1.0),
+                  position=dict(azimuth=0.0, elevation=0.0, distance=1.0)),
+             direct_gains=[("M+000", 1.0)])
+
+
+def test_channel_lock_close(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(channelLock=ChannelLock(maxDistance=1.0),
+                  position=dict(azimuth=14.0, elevation=0.0, distance=1.0)),
+             direct_gains=[("M+000", 1.0)])
+
+
+def test_channel_lock_not_close_enough(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(channelLock=ChannelLock(maxDistance=np.linalg.norm(cart(0, 0, 1) - cart(15, 0, 1)) - 0.01),
+                  position=dict(azimuth=15.0, elevation=0.0, distance=1.0)),
+             direct_gains=[("M+000", np.sqrt(0.5)), ("M+030", np.sqrt(0.5))])
+
+
+def test_channel_lock_abs_elevation_priority(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(channelLock=ChannelLock(),
+                  position=dict(azimuth=30.0, elevation=15.0, distance=1.0)),
+             direct_gains=[("M+030", 1.0)])
+
+
+def test_channel_lock_abs_az_priority_left(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(channelLock=ChannelLock(),
+                  position=dict(azimuth=15.0, elevation=0.0, distance=1.0)),
+             direct_gains=[("M+000", 1.0)])
+
+
+def test_channel_lock_abs_az_priority_right(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(channelLock=ChannelLock(),
+                  position=dict(azimuth=-15.0, elevation=0.0, distance=1.0)),
+             direct_gains=[("M+000", 1.0)])
+
+
+def test_channel_lock_az_priority_front_top(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(channelLock=ChannelLock(),
+                  position=dict(azimuth=0.0, elevation=30.0, distance=1.0)),
+             direct_gains=[("U-030", 1.0)])
+
+
+def test_channel_lock_az_priority_rear_top(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(channelLock=ChannelLock(),
+                  position=dict(azimuth=180.0, elevation=30.0, distance=1.0)),
+             direct_gains=[("U-110", 1.0)])
+
+
+def test_channel_lock_az_priority_rear_mid(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(channelLock=ChannelLock(),
+                  position=dict(azimuth=180.0, elevation=0.0, distance=1.0)),
+             direct_gains=[("M-110", 1.0)])
+
+
+def test_channel_lock_on_speaker_cart(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(channelLock=ChannelLock(maxDistance=0.01),
+                  cartesian=True,
+                  position=dict(X=1.0, Y=1.0, Z=0.0)),
+             direct_gains=[("M-030", 1.0)])
+
+
+def test_channel_lock_not_close_enough_cart(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(channelLock=ChannelLock(maxDistance=0.01),
+                  cartesian=True,
+                  position=dict(X=0.5, Y=1.0, Z=0.0)),
+             direct_gains=[("M-030", np.sqrt(0.5)), ("M+000", np.sqrt(0.5))])
+
+
+def test_channel_lock_no_max_enough_cart(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(channelLock=ChannelLock(),
+                  cartesian=True,
+                  position=dict(X=0.6, Y=1.0, Z=0.0)),
+             direct_gains=[("M-030", 1.0)])
+
+
+def test_channel_lock_no_max_exclude(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(channelLock=ChannelLock(),
+                  cartesian=True,
+                  zoneExclusion=[PolarZone(minAzimuth=0.0, maxAzimuth=0.0, minElevation=0.0, maxElevation=0.0)],
+                  position=dict(X=0.1, Y=1.0, Z=0.0)),
+             direct_gains=[("M-030", 1.0)])
+
+
+def test_diverge_half(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0),
+                  objectDivergence=ObjectDivergence(0.5, azimuthRange=30.0)),
+             direct_gains=[("M+000", np.sqrt(1.0/3.0)), ("M+030", np.sqrt(1.0/3.0)), ("M-030", np.sqrt(1.0/3.0))])
+
+
+def test_diverge_full(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0),
+                  objectDivergence=ObjectDivergence(1.0, azimuthRange=30.0)),
+             direct_gains=[("M+030", np.sqrt(0.5)), ("M-030", np.sqrt(0.5))])
+
+
+def test_diverge_cart(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0), cartesian=True,
+                  objectDivergence=ObjectDivergence(0.5, positionRange=1.0)),
+             direct_gains=[("M+000", np.sqrt(1.0/3.0)), ("M+030", np.sqrt(1.0/3.0)), ("M-030", np.sqrt(1.0/3.0))])
+
+
+def test_diverge_azimuth(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=(30.0+110.0)/2.0, elevation=0.0, distance=1.0),
+                  objectDivergence=ObjectDivergence(1.0, azimuthRange=(110-30.0)/2.0)),
+             direct_gains=[("M+030", np.sqrt(0.5)), ("M+110", np.sqrt(0.5))])
+
+
+def test_diverge_elevation(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=0.0, elevation=elevation(cart(30, 30, 1) * [0, 1, 1]), distance=1.0),
+                  objectDivergence=ObjectDivergence(1.0, azimuthRange=np.degrees(np.arcsin(cart(-30, 30, 1)[0])))),
+             direct_gains=[("U+030", np.sqrt(0.5)), ("U-030", np.sqrt(0.5))])
+
+
+def test_diverge_azimuth_elevation(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=70.0, elevation=elevation(cart(40, 30, 1) * [0, 1, 1]), distance=1.0),
+                  objectDivergence=ObjectDivergence(1.0, azimuthRange=np.degrees(np.arcsin(cart(-40, 30, 1)[0])))),
+             direct_gains=[("U+030", np.sqrt(0.5)), ("U+110", np.sqrt(0.5))])
+
+
+def test_zone_front(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0),
+                  zoneExclusion=[PolarZone(minAzimuth=0.0, maxAzimuth=0.0, minElevation=0.0, maxElevation=0.0)]),
+             direct_gains=[("M+030", np.sqrt(0.5)), ("M-030", np.sqrt(0.5))])
+
+
+def test_zone_mid_front(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0),
+                  zoneExclusion=[PolarZone(minAzimuth=-180.0, maxAzimuth=180.0, minElevation=0.0, maxElevation=0.0)]),
+             direct_gains=[("U+030", np.sqrt(0.5)), ("U-030", np.sqrt(0.5))])
+
+
+def test_zone_mid_rear(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=180.0, elevation=0.0, distance=1.0),
+                  zoneExclusion=[PolarZone(minAzimuth=-180.0, maxAzimuth=180.0, minElevation=0.0, maxElevation=0.0)]),
+             direct_gains=[("U+110", np.sqrt(0.5)), ("U-110", np.sqrt(0.5))])
+
+
+def test_screen_scale_null(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0), screenRef=True),
+             direct_gains=[("M+000", 1.0)])
+
+
+def test_screen_scale_right(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=dict(azimuth=30.0, elevation=0.0, distance=1.0), screenRef=True),
+             direct_gains=[("M+000", 1.0)],
+             extra_data=ExtraData(
+                 reference_screen=PolarScreen(aspectRatio=1.5,
+                                              centrePosition=PolarPosition(30.0, 0.0, 1.0),
+                                              widthAzimuth=30.0)))
+
+
+def test_screen_edge_lock_right(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=ObjectPolarPosition(azimuth=0.0, elevation=0.0, distance=1.0,
+                                               screenEdgeLock=ScreenEdgeLock(horizontal="right"))),
+             direct_position=cart(-29, 0, 1))
+
+
+def test_screen_edge_lock_left(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=ObjectPolarPosition(azimuth=0.0, elevation=0.0, distance=1.0,
+                                               screenEdgeLock=ScreenEdgeLock(horizontal="left"))),
+             direct_position=cart(29, 0, 1))
+
+
+def test_screen_edge_lock_top(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=ObjectPolarPosition(azimuth=0.0, elevation=0.0, distance=1.0,
+                                               screenEdgeLock=ScreenEdgeLock(vertical="top"))),
+             direct_position=cart(0, default_edge_elevation, 1))
+
+
+def test_screen_edge_lock_bottom(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=ObjectPolarPosition(azimuth=0.0, elevation=0.0, distance=1.0,
+                                               screenEdgeLock=ScreenEdgeLock(vertical="bottom"))),
+             direct_position=cart(0, -default_edge_elevation, 1))
+
+
+def test_screen_edge_lock_top_right(layout, gain_calc):
+    run_test(layout, gain_calc,
+             dict(position=ObjectPolarPosition(azimuth=0.0, elevation=0.0, distance=1.0,
+                                               screenEdgeLock=ScreenEdgeLock(vertical="top", horizontal="right"))),
+             direct_position=cart(-29, default_edge_elevation, 1))
+
+
+def test_screen_scale_no_screen(layout):
     layout = evolve(layout, screen=None)
-    gain_calc = GainCalc(layout)
+    run_test(layout, GainCalc(layout),
+             dict(position=dict(azimuth=30.0, elevation=0.0, distance=1.0), screenRef=True),
+             direct_gains=[("M+030", 1.0)],
+             extra_data=ExtraData(
+                 reference_screen=PolarScreen(aspectRatio=1.5,
+                                              centrePosition=PolarPosition(30.0, 0.0, 1.0),
+                                              widthAzimuth=30.0)))
 
-    GainCalcTestCase(
-        "screen_scale_no_screen",
-        dict(position=dict(azimuth=30.0, elevation=0.0, distance=1.0), screenRef=True),
-        direct_gains=[("M+030", 1.0)],
-        extra_data=ExtraData(
-            reference_screen=PolarScreen(aspectRatio=1.5,
-                                         centrePosition=PolarPosition(30.0, 0.0, 1.0),
-                                         widthAzimuth=30.0)),
-    ).run(layout, gain_calc)
 
-    GainCalcTestCase(
-        "screen_edge_lock_right_no_screen",
-        dict(position=ObjectPolarPosition(azimuth=0.0, elevation=0.0, distance=1.0,
-                                          screenEdgeLock=ScreenEdgeLock(horizontal="right"))),
-        direct_gains=[("M+000", 1.0)],
-    ).run(layout, gain_calc)
+def test_screen_edge_lock_right_no_screen(layout, gain_calc):
+    layout = evolve(layout, screen=None)
+    run_test(layout, GainCalc(layout),
+             dict(position=ObjectPolarPosition(azimuth=0.0, elevation=0.0, distance=1.0,
+                                               screenEdgeLock=ScreenEdgeLock(horizontal="right"))),
+             direct_gains=[("M+000", 1.0)])
 
 
 def test_objectbased_extent(layout, gain_calc):
@@ -326,7 +417,6 @@ def test_divergence_normalised(layout, gain_calc):
 
 
 def test_zone_exclusion():
-    from ... import bs2051
     from ..gain_calc import ZoneExclusionHandler
 
     layout = bs2051.get_layout("9+10+3").without_lfe
@@ -382,18 +472,3 @@ def test_zone_exclusion():
           "T+000")
     check([PolarZone(minAzimuth=90.0, maxAzimuth=90.0, minElevation=90.0, maxElevation=90.0)],
           "T+000")
-
-
-def test_cube_to_sphere():
-    from ..gain_calc import cube_to_sphere, sphere_to_cube
-    pos = np.array([1, 1, 0])
-    pos_sph = cube_to_sphere(pos)
-    pos_cube = sphere_to_cube(pos_sph)
-
-    npt.assert_allclose(pos, pos_cube)
-    npt.assert_allclose(cart(-45, 0, 1), pos_sph)
-
-    npt.assert_allclose(np.array([0.0, 0.0, 0.0]),
-                        sphere_to_cube(np.array([0.0, 0.0, 0.0])))
-    npt.assert_allclose(np.array([0.0, 0.0, 0.0]),
-                        cube_to_sphere(np.array([0.0, 0.0, 0.0])))

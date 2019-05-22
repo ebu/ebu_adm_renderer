@@ -1,82 +1,41 @@
 from collections import namedtuple
 import numpy as np
 import warnings
-from . import extent
+from . import allo_extent, extent
 from .. import point_source
 from ...options import SubOptions, OptionsHandler
 from ..geom import azimuth, elevation, cart, inside_angle_range, local_coordinate_system
 from .zone import ZoneExclusionDownmix
+from .. import allocentric
 from ...fileio.adm.elements import CartesianZone, PolarZone, ObjectCartesianPosition, ObjectPolarPosition
 from ..screen_scale import ScreenScaleHandler
 from ..screen_edge_lock import ScreenEdgeLockHandler
 
 
-def cube_to_sphere(position):
-    """Warp from positions in a cube to positions in a sphere by scaling
-    dependant on the direction.
+def coord_trans(position):
+    """Get a Cartesian position vector given the ADM position object.
 
     Parameters:
-        position (array of length 3): Cartesian position
+        position (ObjectPolarPosition or ObjectCartesianPosition): ADM position object.
 
     Returns:
-        array of length 3: warped position
-    """
-    norm = np.linalg.norm(position)
-    if norm > 1e-10:
-        return position * (np.max(np.abs(position)) / norm)
-    else:
-        return position
-
-
-def sphere_to_cube(position):
-    """Warp from positions in a sphere to positions in a cube by scaling
-    dependant on the direction.
-
-    Parameters:
-        position (array of length 3): Cartesian position
-
-    Returns:
-        array of length 3: warped position
-    """
-    norm = np.linalg.norm(position)
-    if norm > 1e-10:
-        return position * (norm / np.max(np.abs(position)))
-    else:
-        return position
-
-
-def coord_trans(position, cartesian):
-    """Transform from ADM position information to a unit Cartesian direction
-    vector and a distance.
-
-    Parameters:
-        position (PolarPosition or CartesianPosition): If Cartesian, has keys X, Y, Z; otherwise has keys
-            azimuth, elevation, distance.
-        cartesian (bool): Block format 'cartesian' flag.
-
-    Returns:
-        array of shape (3,): The direction component as a normalised Cartesian vector.
-        float: The distance component of the source.
+        array of shape (3,): Cartesian position, either in spherical space
+        (where a distance of 1 is on the loudspeakers) for Polar positions, or
+        cubic space (where an L-infinity norm of 1 is on the loudspeakers) for
+        Cartesian positions.
     """
     if isinstance(position, ObjectPolarPosition):
-        cart_pos = cart(position.azimuth, position.elevation, position.distance)
+        return cart(position.azimuth, position.elevation, position.distance)
     elif isinstance(position, ObjectCartesianPosition):
-        cart_pos = position.as_cartesian_array()
+        return np.clip(position.as_cartesian_array(), -1, 1)
     else:
         assert False, "position should be ObjectPolarPosition or ObjectCartesianPosition"  # pragma: no cover
 
-    if cartesian:
-        cart_pos = cube_to_sphere(cart_pos)
 
-    return cart_pos
-
-
-class ChannelLockHandler(object):
+class ChannelLockHandlerBase(object):
     """Implementation of channel locking as a position transformation."""
 
     def __init__(self, layout):
-        self.positions = layout.norm_positions
-
         azimuths = np.array([channel.polar_position.azimuth for channel in layout.channels])
         elevations = np.array([channel.polar_position.elevation for channel in layout.channels])
 
@@ -88,30 +47,93 @@ class ChannelLockHandler(object):
                                      elevations, np.abs(elevations)))
         self.channel_priority = np.arange(len(layout.channels))[priority_order]
 
-    def handle(self, position, channelLock):
+    def handle(self, position, channelLock, excluded=None):
         """Apply channel lock to a position.
 
         Parameters:
             position (array of length 3): Cartesian source position
             channelLock (fileio.adm.elements.ChannelLock or None):
                 Channel lock information if it is enabled
+            excluded (boolean array of length n or None): channel exclusion
+                mask; if None, then no channels are exclused
         Returns:
             array of shape (3,) representing a Cartesian position.
         """
         tol = 1e-5
+        if excluded is None:
+            excluded = np.zeros(len(self.channel_positions), dtype=bool)
 
-        if channelLock is not None:
-            distances = np.linalg.norm(position - self.positions, axis=1)
-            min_dist = np.min(distances)
+        if channelLock is None:
+            return position
 
-            all_closest = np.where(distances < min_dist + tol)[0]
-            all_closest_priorities = self.channel_priority[all_closest]
+        # don't consider excluded channels at all
+        channel_positions = self.channel_positions[~excluded]
+        channel_priority = self.channel_priority[~excluded]
 
-            closest = all_closest[np.argmin(all_closest_priorities)]
+        # find possible channels closer than the maxDistance if given
+        distances = np.linalg.norm(position - channel_positions, axis=1)
+        possible = (distances < channelLock.maxDistance + tol
+                    if channelLock.maxDistance is not None
+                    else np.ones(len(channel_positions), dtype=bool))
 
-            if channelLock.maxDistance is None or distances[closest] <= channelLock.maxDistance + tol:
-                return self.positions[closest]
-        return position
+        # if there are no possible channels, don't channel lock
+        if not np.any(possible):
+            return position
+
+        # otherwise only consider the possible channels
+        channel_positions = channel_positions[possible]
+        channel_priority = channel_priority[possible]
+
+        # find the minimum weighted distance, and the indexes of channels with
+        # the same distance; of these, return the position of the channel with
+        # the lowest priority
+        distances_w = self.get_weighted_distances(channel_positions, position)
+        min_dist = np.min(distances_w)
+
+        all_closest = np.where(distances_w < min_dist + tol)[0]
+        all_closest_priorities = channel_priority[all_closest]
+
+        closest = all_closest[np.argmin(all_closest_priorities)]
+        return channel_positions[closest]
+
+    def get_weighted_distances(self, channel_positions, position):
+        """Get distances used for finding the closest loudspeaker.
+
+        Parameters:
+            channel_positions (array of shape (3, n)): loudspeaker positions
+            position (array of shape (3,)): object position
+        Returns:
+            array of shape (n,), the distance between each position in
+            channel_positions and position.
+        """
+        raise NotImplementedError()  # pragma: no cover
+
+
+class EgoChannelLockHandler(ChannelLockHandlerBase):
+    """Channel lock specialised for egocentric; real normalised loudspeaker
+    positions are used, and the distance calculation is unweighted."""
+
+    def __init__(self, layout):
+        super(EgoChannelLockHandler, self).__init__(layout)
+
+        self.channel_positions = layout.norm_positions
+
+    def get_weighted_distances(self, channel_positions, position):
+        return np.linalg.norm(position - channel_positions, axis=1)
+
+
+class AlloChannelLockHandler(ChannelLockHandlerBase):
+    """Channel lock specialised for allocentric; allocentric loudspeaker
+    positions are used, and the distance calculation is unweighted."""
+
+    def __init__(self, layout):
+        super(AlloChannelLockHandler, self).__init__(layout)
+
+        self.channel_positions = allocentric.positions_for_layout(layout)
+
+    def get_weighted_distances(self, channel_positions, position):
+        w = np.array([1.0 / 16, 4, 32])
+        return np.sqrt(np.sum(w * (position - channel_positions) ** 2, axis=1))
 
 
 def diverge(position, objectDivergence, cartesian):
@@ -144,21 +166,17 @@ def diverge(position, objectDivergence, cartesian):
             if objectDivergence.azimuthRange is not None:
                 warnings.warn("azimuthRange specified for blockFormat in Cartesian mode; using Cartesian divergence")
 
-            # apply divergence in cube-space then translate back
-            pos_cube = sphere_to_cube(position)
-
             positionRange = (objectDivergence.positionRange
                              if objectDivergence.positionRange is not None
                              else 0.0)
 
-            pos_left_cube = pos_cube + np.array([positionRange, 0, 0])
-            pos_right_cube = pos_cube - np.array([positionRange, 0, 0])
+            pos_left = position + np.array([positionRange, 0, 0])
+            pos_right = position - np.array([positionRange, 0, 0])
 
-            pos_centre = cube_to_sphere(pos_cube)
-            pos_left = cube_to_sphere(pos_left_cube)
-            pos_right = cube_to_sphere(pos_right_cube)
+            positions = np.clip([pos_left, position, pos_right],
+                                -1, 1)
 
-            return np.array([g_l, g_c, g_r]), np.array([pos_left, pos_centre, pos_right])
+            return np.array([g_l, g_c, g_r]), positions
         else:
             if objectDivergence.positionRange is not None:
                 warnings.warn("positionRange specified for blockFormat in polar mode; using polar divergence")
@@ -177,7 +195,7 @@ def diverge(position, objectDivergence, cartesian):
             return np.array([g_l, g_c, g_r]), np.array([p_l, position, p_r])
 
 
-class ExtentHandler(object):
+class PolarExtentHandler(object):
     """Implementation of extent panning that also handles point source panning
     for zero-size objects.
     """
@@ -189,8 +207,6 @@ class ExtentHandler(object):
                 panner to use
         """
         self.polar_extent_panner = extent.PolarExtentPanner(point_source_panner.handle)
-        self.cart_extent_panner = extent.CartExtentPanner(point_source_panner.handle,
-                                                          spreading_panner=self.polar_extent_panner.spreading_panner)
 
     @classmethod
     def extent_mod(cls, extent, distance):
@@ -212,7 +228,7 @@ class ExtentHandler(object):
                          [0, extent_1, 360.0],
                          [0, extent, 360.0])
 
-    def handle(self, position, width, height, depth, cartesian):
+    def handle(self, position, width, height, depth):
         """Calculate loudspeaker gains given position and extent parameters.
 
         Parameters:
@@ -220,34 +236,37 @@ class ExtentHandler(object):
             width (float): block format width parameter
             height (float): block format height parameter
             depth (float): block format depth parameter
-            distance (float): distance part of the position
-            cartesian (bool): is this block format in Cartesian mode?
         Returns:
             gain (array of length n): loudspeaker gains of length
             self.point_source_panner.num_channels.
         """
-        if cartesian:
-            size = np.array([width, depth, height])
-            return self.cart_extent_panner.calc_pv_spread(position, size)
+        distance = np.linalg.norm(position)
+
+        if depth != 0:
+            distances = np.array([distance + depth / 2.0,
+                                  distance - depth / 2.0])
+            distances[distances < 0] = 0.0
         else:
-            distance = np.linalg.norm(position)
+            distances = [distance]
 
-            if depth != 0:
-                distances = np.array([distance + depth / 2.0,
-                                      distance - depth / 2.0])
-                distances[distances < 0] = 0.0
-            else:
-                distances = [distance]
+        pvs = [self.polar_extent_panner.calc_pv_spread(position,
+                                                       self.extent_mod(width, end_distance),
+                                                       self.extent_mod(height, end_distance))
+               for end_distance in distances]
 
-            pvs = [self.polar_extent_panner.calc_pv_spread(position,
-                                                           self.extent_mod(width, end_distance),
-                                                           self.extent_mod(height, end_distance))
-                   for end_distance in distances]
+        if len(pvs) == 1:
+            return pvs[0]
+        else:
+            return np.sqrt(np.mean(np.square(pvs), axis=0))
 
-            if len(pvs) == 1:
-                return pvs[0]
-            else:
-                return np.sqrt(np.mean(np.square(pvs), axis=0))
+
+def allocentric_extent_pan(channel_positions,
+                           position, width, height, depth):
+    if width == 0 and height == 0 and depth == 0:
+        point_source_panner = point_source.AllocentricPanner(channel_positions)
+        return point_source_panner.handle(position)
+    else:
+        return allo_extent.get_gains(channel_positions, position, width, height, depth)
 
 
 class ZoneExclusionHandler(object):
@@ -330,32 +349,53 @@ class GainCalc(object):
         self.point_source_panner = point_source.configure(layout.without_lfe, **point_source_opts)
         self.screen_edge_lock_handler = ScreenEdgeLockHandler(layout.screen)
         self.screen_scale_handler = ScreenScaleHandler(layout.screen)
-        self.channel_lock_handler = ChannelLockHandler(layout.without_lfe)
-        self.extent_panner = ExtentHandler(self.point_source_panner)
+        self.ego_channel_lock_handler = EgoChannelLockHandler(layout.without_lfe)
+        self.allo_channel_lock_handler = AlloChannelLockHandler(layout.without_lfe)
+        self.polar_extent_panner = PolarExtentHandler(self.point_source_panner)
         self.zone_exclusion_handler = ZoneExclusionHandler(layout.without_lfe)
 
         self.is_lfe = layout.is_lfe
 
+        self.allo_channel_positions = allocentric.positions_for_layout(layout.without_lfe)
+
     def render(self, object_meta):
         block_format = object_meta.block_format
 
-        position = coord_trans(block_format.position, block_format.cartesian)
+        position = coord_trans(block_format.position)
 
         position = self.screen_scale_handler.handle(position, block_format.screenRef, object_meta.extra_data.reference_screen)
 
         position = self.screen_edge_lock_handler.handle_vector(position, block_format.position.screenEdgeLock)
 
-        position = self.channel_lock_handler.handle(position, block_format.channelLock)
+        if block_format.cartesian:
+            excluded = allocentric.get_excluded(
+                self.allo_channel_positions,
+                self.zone_exclusion_handler.get_excluded(block_format.zoneExclusion))
+
+            position = self.allo_channel_lock_handler.handle(position, block_format.channelLock, excluded)
+
+            def extent_pan(position, width, height, depth):
+                gains = allocentric_extent_pan(self.allo_channel_positions[~excluded],
+                                               position, width, height, depth)
+
+                gains_full = np.zeros(len(excluded))
+                gains_full[~excluded] = gains
+                return gains_full
+
+        else:
+            position = self.ego_channel_lock_handler.handle(position, block_format.channelLock)
+
+            extent_pan = self.polar_extent_panner.handle
 
         diverged_gains, diverged_positions = diverge(position, block_format.objectDivergence, block_format.cartesian)
 
-        gains_for_each_pos = np.apply_along_axis(self.extent_panner.handle, 1, diverged_positions,
-                                                 block_format.width, block_format.height, block_format.depth,
-                                                 block_format.cartesian)
+        gains_for_each_pos = np.apply_along_axis(extent_pan, 1, diverged_positions,
+                                                 block_format.width, block_format.height, block_format.depth)
 
         gains = np.sqrt(np.dot(diverged_gains, gains_for_each_pos**2))
 
-        gains = self.zone_exclusion_handler.handle(gains, block_format.zoneExclusion)
+        if not block_format.cartesian:
+            gains = self.zone_exclusion_handler.handle(gains, block_format.zoneExclusion)
 
         gains = np.nan_to_num(gains)
 
