@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.2] - 2019-05-22
+
+### Fixed
+- Bug whereby NaNs could be produced in polar extent panner.
+
 ## [1.1.1] - 2019-04-12
 
 ### Fixed
@@ -77,6 +82,7 @@
 
 Initial release.
 
+[1.1.2]: https://github.com/ebu/ebu_adm_renderer/compare/1.1.1...1.1.2
 [1.1.1]: https://github.com/ebu/ebu_adm_renderer/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/ebu/ebu_adm_renderer/compare/1.0.1...1.1.0
 [1.0.1]: https://github.com/ebu/ebu_adm_renderer/compare/1.0.0...1.0.1
