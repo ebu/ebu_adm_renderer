@@ -47,7 +47,8 @@ The *EAR* reference implementation comes with two command line tools:
 usage: ear-render [-h] [-d] -s target_system [-l layout_file]
                   [--output-gain-db gain_db] [--fail-on-overload]
                   [--enable-block-duration-fix] [--programme id]
-                  [--comp-object id] [--strict]
+                  [--comp-object id]
+                  [--apply-conversion {to_cartesian,to_polar}] [--strict]
                   input_file output_file
 
 EBU ADM renderer
@@ -74,6 +75,9 @@ optional arguments:
                         automatically try to fix faulty block format durations
   --programme id        select an audioProgramme to render by ID
   --comp-object id      select an audioObject by ID from a complementary group
+  --apply-conversion {to_cartesian,to_polar}
+                        Apply conversion to Objects audioBlockFormats before
+                        rendering
   --strict              treat unknown ADM attributes as errors
 ```
 

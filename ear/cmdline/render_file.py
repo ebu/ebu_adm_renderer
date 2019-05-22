@@ -6,7 +6,7 @@ import scipy.sparse
 from itertools import chain
 from ..core import bs2051, layout, Renderer
 from ..core.monitor import PeakMonitor
-from ..core.metadata_processing import preprocess_rendering_items
+from ..core.metadata_processing import preprocess_rendering_items, convert_objects_to_cartesian, convert_objects_to_polar
 from ..core.select_items import select_rendering_items
 from ..fileio import openBw64, openBw64Adm
 from ..fileio.adm.elements import AudioProgramme, AudioObject
@@ -34,6 +34,8 @@ class OfflineRenderDriver(object):
     programme_id = attrib(default=None)
     complementary_object_ids = attrib(default=Factory(list))
 
+    conversion_mode = attrib(default=None)
+
     blocksize = 8192
 
     @classmethod
@@ -58,6 +60,9 @@ class OfflineRenderDriver(object):
         parser.add_argument("--comp-object", metavar="id", action="append", default=[],
                             help="select an audioObject by ID from a complementary group")
 
+        parser.add_argument('--apply-conversion', choices=("to_cartesian", "to_polar"),
+                            help='Apply conversion to Objects audioBlockFormats before rendering')
+
     @classmethod
     def from_args(cls, args):
         return cls(
@@ -68,6 +73,7 @@ class OfflineRenderDriver(object):
             enable_block_duration_fix=args.enable_block_duration_fix,
             programme_id=args.programme,
             complementary_object_ids=args.comp_object,
+            conversion_mode=args.apply_conversion,
         )
 
     def load_output_layout(self):
@@ -124,6 +130,16 @@ class OfflineRenderDriver(object):
         return [self.lookup_adm_element(adm, obj_id, AudioObject, "audioObject")
                 for obj_id in self.complementary_object_ids]
 
+    def apply_conversion(self, selected_items):
+        if self.conversion_mode is None:
+            return selected_items
+        elif self.conversion_mode == "to_cartesian":
+            return convert_objects_to_cartesian(selected_items)
+        elif self.conversion_mode == "to_polar":
+            return convert_objects_to_polar(selected_items)
+        else:
+            assert False
+
     def get_rendering_items(self, adm):
         """Get rendering items from the input file adm.
 
@@ -140,7 +156,11 @@ class OfflineRenderDriver(object):
             audio_programme=audio_programme,
             selected_complementary_objects=comp_objects)
 
-        return preprocess_rendering_items(selected_items)
+        selected_items = preprocess_rendering_items(selected_items)
+
+        selected_items = self.apply_conversion(selected_items)
+
+        return selected_items
 
     def render_input_file(self, infile, spkr_layout, upmix=None):
         """Get sample blocks of the input file after rendering.
