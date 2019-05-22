@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0] - 2019-05-22
+
+### Fixed
+- Slightly non-normalised gains in extent panner.
+
+### Changed
+- Improved downmix/upmix behaviour for DirectSpeakers content specified using
+  the common definitions.
+- Change default azimuth of M+-SC to 15.
+- Support wider azimuths for M+-SC; they may now be between 5 and 25 degrees,
+  or 35 and 60 degrees.
+- Removed LFE behaviour for Objects.
+- Validate Cartesian and frequency information for Objects
+
 ## [1.1.2] - 2019-05-22
 
 ### Fixed
@@ -82,6 +96,7 @@
 
 Initial release.
 
+[1.2.0]: https://github.com/ebu/ebu_adm_renderer/compare/1.1.2...1.2.0
 [1.1.2]: https://github.com/ebu/ebu_adm_renderer/compare/1.1.1...1.1.2
 [1.1.1]: https://github.com/ebu/ebu_adm_renderer/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/ebu/ebu_adm_renderer/compare/1.0.1...1.1.0
