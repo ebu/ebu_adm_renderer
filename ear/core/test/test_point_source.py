@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.testing as npt
 from .. import bs2051
-from ..point_source import Triplet, VirtualNgon, StereoPanDownmix, PointSourcePanner, configure
+from ..point_source import Triplet, VirtualNgon, StereoPanDownmix, PointSourcePanner, configure, AllocentricPanner
 from ..geom import cart, azimuth, PolarPosition
 from ..layout import Speaker
 import pytest
@@ -166,3 +166,247 @@ def test_screen_pos_check():
                 "degrees.")
     with pytest.raises(ValueError, match=expected):
         configure(layout)
+
+
+def test_allocentric_single_balance_pan():
+    fn = AllocentricPanner._single_balance_pan
+
+    # Halfway
+    npt.assert_allclose(np.array(fn(0.0, 1.0, 0.5)), np.array([2.0**-0.5]*2))
+    npt.assert_allclose(np.array(fn(-1.0, 1.0, 0.0)), np.array([2.0**-0.5]*2))
+    npt.assert_allclose(np.array(fn(-1.0, 0.0, -0.5)), np.array([2.0**-0.5]*2))
+
+    # Outside range
+    npt.assert_allclose(np.array(fn(-1.0, 0.0, 1.0)), np.array([1.0, 0.0]))
+    npt.assert_allclose(np.array(fn(0.0, 1.0, -1.0)), np.array([0.0, 1.0]))
+
+    # No range (this feels like a bit of a special case - we want the
+    # result to be 1.0/1.0, instead of something where a^2+b^2=1.0,
+    # but this is helpful behaviour to have here for implementation
+    # to avoid ugliness in avoiding multiplication by 0.0.
+    npt.assert_allclose(np.array(fn(0.0, 0.0, 0.0)), np.array([1.0, 1.0]))
+    npt.assert_allclose(np.array(fn(0.0, 0.0, 1.0)), np.array([1.0, 1.0]))
+    npt.assert_allclose(np.array(fn(0.0, 0.0, -1.0)), np.array([1.0, 1.0]))
+
+    # At range
+    npt.assert_allclose(np.array(fn(0.0, 1.0, 1.0)), np.array([1.0, 0.0]))
+    npt.assert_allclose(np.array(fn(0.0, 1.0, 0.0)), np.array([0.0, 1.0]))
+
+    # Quarter/Three-quarter
+    npt.assert_allclose(np.array(fn(0.0, 1.0, 0.25)), np.array([np.cos(np.pi * 0.125), np.sin(np.pi * 0.125)]))
+    npt.assert_allclose(np.array(fn(0.0, 1.0, 0.75)), np.array([np.sin(np.pi * 0.125), np.cos(np.pi * 0.125)]))
+    assert fn(0.0, 1.0, 0.25)[0] < fn(0.0, 0.1, 0.75)[0]
+    assert fn(0.0, 1.0, 0.25)[1] > fn(0.0, 0.1, 0.75)[1]
+
+
+def speaker_positions(names):
+    def P(x, y, z):
+        return np.array([x, y, z])
+    pos = {"M+000": P( 0.0,      1.0,       0.0),  # noqa
+           "M+SC":  P(-0.414214, 1.0,       0.0),  # noqa
+           "M-SC":  P( 0.414214, 1.0,       0.0),  # noqa
+           "M+030": P(-1.0,      1.0,       0.0),  # noqa
+           "M-030": P( 1.0,      1.0,       0.0),  # noqa
+           "M+060": P(-1.0,      0.414214,  0.0),  # noqa
+           "M-060": P( 1.0,      0.414214,  0.0),  # noqa
+           "M+090": P(-1.0,      0.0,       0.0),  # noqa
+           "M-090": P( 1.0,      0.0,       0.0),  # noqa
+           # M?110 and M?135 are treated as synonyms
+           "M+110": P(-1.0,     -1.0,       0.0),  # noqa
+           "M-110": P( 1.0,     -1.0,       0.0),  # noqa
+           "M+135": P(-1.0,     -1.0,       0.0),  # noqa
+           "M-135": P( 1.0,     -1.0,       0.0),  # noqa
+           "M+180": P( 0.0,     -1.0,       0.0),  # noqa
+           "U+000": P( 0.0,      1.0,       1.0),  # noqa
+           # U?030 and U?045 are treated as synonyms
+           "U+030": P(-1.0,      1.0,       1.0),  # noqa
+           "U-030": P( 1.0,      1.0,       1.0),  # noqa
+           "U+045": P(-1.0,      1.0,       1.0),  # noqa
+           "U-045": P( 1.0,      1.0,       1.0),  # noqa
+           "U+090": P(-1.0,      0.0,       1.0),  # noqa
+           "U-090": P( 1.0,      0.0,       1.0),  # noqa
+           # U?110 and U?135 are treated as synonyms
+           "U+110": P(-1.0,     -1.0,       1.0),  # noqa
+           "U-110": P( 1.0,     -1.0,       1.0),  # noqa
+           "U+135": P(-1.0,     -1.0,       1.0),  # noqa
+           "U-135": P( 1.0,     -1.0,       1.0),  # noqa
+           "U+180": P( 0.0,     -1.0,       1.0),  # noqa
+           "T+000": P( 0.0,      0.0,       1.0),  # noqa
+           "B+000": P( 0.0,      1.0,      -1.0),  # noqa
+           "B+045": P(-1.0,      1.0,      -1.0),  # noqa
+           "B-045": P( 1.0,      1.0,      -1.0)}  # noqa
+    return np.array([pos[s] for s in names])
+
+
+def test_allocentric_find_planes():
+    spks = speaker_positions(["M+000", "U+000", "B+000"])
+    a = AllocentricPanner(spks)
+
+    # Note that the outputs here have B+000=0, M+000=1, U+000=2, even
+    # though the order of speakers given to the constructor was different.
+    # This is correct, and we want these to be based on the (z) sorted order
+    assert a._find_planes(0.0) == [1, 1]
+    assert a._find_planes(1.0) == [2, 2]
+    assert a._find_planes(-1.0) == [0, 0]
+    assert a._find_planes(0.5) == [1, 2]
+    assert a._find_planes(-0.5) == [0, 1]
+    assert a._find_planes(2.0) == [2, 2]
+    assert a._find_planes(-2.0) == [0, 0]
+
+    # Just M and U planes
+    spks = speaker_positions(["M+000", "U+000", "M+030", "M-030", "U+110", "U-110"])
+    a = AllocentricPanner(spks)
+
+    assert a._find_planes(0.0) == [0, 0]
+    assert a._find_planes(1.0) == [1, 1]
+    assert a._find_planes(-1.0) == [0, 0]
+    assert a._find_planes(0.5) == [0, 1]
+    assert a._find_planes(-0.5) == [0, 0]
+    assert a._find_planes(2.0) == [1, 1]
+    assert a._find_planes(-2.0) == [0, 0]
+
+
+def test_allocentric_find_rows():
+    # Two row case
+    spks = speaker_positions(["M+000", "M+030", "M-030", "M+110", "M-110"])
+    a = AllocentricPanner(spks)
+    assert a._find_rows(a.st[0], 0.0) == [0, 1]
+    assert a._find_rows(a.st[0], 1.0) == [1, 1]
+    assert a._find_rows(a.st[0], -1.0) == [0, 0]
+    assert a._find_rows(a.st[0], 0.5) == [0, 1]
+    assert a._find_rows(a.st[0], -0.5) == [0, 1]
+    assert a._find_rows(a.st[0], 2.0) == [1, 1]
+    assert a._find_rows(a.st[0], -2.0) == [0, 0]
+
+    # Three row case
+    spks = speaker_positions(["M+000", "M+030", "M-030", "M+090", "M-090", "M+135", "M-135"])
+    a = AllocentricPanner(spks)
+    assert a._find_rows(a.st[0], 0.0) == [1, 1]
+    assert a._find_rows(a.st[0], 1.0) == [2, 2]
+    assert a._find_rows(a.st[0], -1.0) == [0, 0]
+    assert a._find_rows(a.st[0], 0.5) == [1, 2]
+    assert a._find_rows(a.st[0], -0.5) == [0, 1]
+    assert a._find_rows(a.st[0], 2.0) == [2, 2]
+    assert a._find_rows(a.st[0], -2.0) == [0, 0]
+
+
+def test_allocentric_find_columns():
+    # Two column case
+    spks = speaker_positions(["M+030", "M-030", "M+110", "M-110"])
+    a = AllocentricPanner(spks)
+    assert a._find_columns(a.st[0][0], 0.0) == [0, 1]
+    assert a._find_columns(a.st[0][0], 1.0) == [1, 1]
+    assert a._find_columns(a.st[0][0], -1.0) == [0, 0]
+    assert a._find_columns(a.st[0][0], 0.5) == [0, 1]
+    assert a._find_columns(a.st[0][0], -0.5) == [0, 1]
+    assert a._find_columns(a.st[0][0], 2.0) == [1, 1]
+    assert a._find_columns(a.st[0][0], -2.0) == [0, 0]
+
+    # Three column case
+    spks = speaker_positions(["M+000", "M+030", "M-030", "M+110", "M-110"])
+    a = AllocentricPanner(spks)
+    assert a._find_columns(a.st[0][1], 0.0) == [1, 1]
+    assert a._find_columns(a.st[0][1], 1.0) == [2, 2]
+    assert a._find_columns(a.st[0][1], -1.0) == [0, 0]
+    assert a._find_columns(a.st[0][1], 0.5) == [1, 2]
+    assert a._find_columns(a.st[0][1], -0.5) == [0, 1]
+    assert a._find_columns(a.st[0][1], 2.0) == [2, 2]
+    assert a._find_columns(a.st[0][1], -2.0) == [0, 0]
+
+
+def test_allocentric_speaker_tree():
+    def check_tree_invariants(st):
+        # if  A = ret[az][ay][ax]
+        # and B = ret[bz][by][bx]
+        # then A[0] < B[0] <=> ax < bx
+        #      A[1] < B[1] <=> ay < by
+        #      A[2] < B[2] <=> az < bz
+        speakers = []
+        for az in range(len(st)):
+            for ay in range(len(st[az])):
+                for ax in range(len(st[az][ay])):
+                    A = st[az][ay][ax]
+                    speakers.append(A)
+                    for bz in range(len(st)):
+                        for by in range(len(st[bz])):
+                            for bx in range(len(st[bz][by])):
+                                B = st[bz][by][bx]
+                                if az == bz:
+                                    if ay == by:
+                                        assert (ax < bx) == (A[1][0] < B[1][0])
+                                    assert (ay < by) == (A[1][1] < B[1][1])
+                                assert (az < bz) == (A[1][2] < B[1][2])
+        return speakers
+
+    for spkrs in [speaker_positions(["M-030", "M+030"]),
+                  speaker_positions(["M-030", "M+030", "M+000", "M-110", "M+110"]),
+                  speaker_positions(["M-030", "M+030", "M+000", "M-135", "M+135", "M+090", "M-090"]),
+                  speaker_positions(["M-030", "M+030", "M+000", "M-135", "M+135", "M+090", "M-090", "U-030", "U+030", "B+000", "B+045", "B-045"]),
+                  speaker_positions(["M-030", "M+030", "M+000", "M-110", "M+110", "U+030", "U-030", "U+110", "U-110"])]:
+        t = AllocentricPanner._speaker_tree(spkrs)
+        speakers_from_tree = check_tree_invariants(t)
+        assert len(spkrs) == len(speakers_from_tree)
+        for idx, pos in speakers_from_tree:
+            assert all(pos == spkrs[idx])
+
+
+def test_allocentric_point_source():
+    spks = speaker_positions(["M+000", "M+030", "M-030", "M+110", "M-110"])
+    a = AllocentricPanner(spks)
+
+    # Objects on speakers only go to those speakers
+    npt.assert_allclose(a.handle(np.array([ 0.0,  1.0, 0.0])), [1.0, 0.0, 0.0, 0.0, 0.0])  # noqa
+    npt.assert_allclose(a.handle(np.array([-1.0,  1.0, 0.0])), [0.0, 1.0, 0.0, 0.0, 0.0])  # noqa
+    npt.assert_allclose(a.handle(np.array([ 1.0,  1.0, 0.0])), [0.0, 0.0, 1.0, 0.0, 0.0])  # noqa
+    npt.assert_allclose(a.handle(np.array([-1.0, -1.0, 0.0])), [0.0, 0.0, 0.0, 1.0, 0.0])  # noqa
+    npt.assert_allclose(a.handle(np.array([ 1.0, -1.0, 0.0])), [0.0, 0.0, 0.0, 0.0, 1.0])  # noqa
+
+    # Z doesn't do anything on a one plane layout
+    npt.assert_allclose(a.handle(np.array([ 0.0,  1.0,  1.0])), [1.0, 0.0, 0.0, 0.0, 0.0])  # noqa
+    npt.assert_allclose(a.handle(np.array([-1.0,  1.0,  0.5])), [0.0, 1.0, 0.0, 0.0, 0.0])  # noqa
+    npt.assert_allclose(a.handle(np.array([ 1.0,  1.0,  0.0])), [0.0, 0.0, 1.0, 0.0, 0.0])  # noqa
+    npt.assert_allclose(a.handle(np.array([-1.0, -1.0, -0.5])), [0.0, 0.0, 0.0, 1.0, 0.0])  # noqa
+    npt.assert_allclose(a.handle(np.array([ 1.0, -1.0, -1.0])), [0.0, 0.0, 0.0, 0.0, 1.0])  # noqa
+
+    # Objects between speakers are panned evenly to those speakers
+    _707 = 2.0 ** -0.5
+    npt.assert_allclose(a.handle(np.array([-0.5,  1.0, 0.0])), [_707, _707,  0.0,  0.0,  0.0])  # noqa
+    npt.assert_allclose(a.handle(np.array([ 0.5,  1.0, 0.0])), [_707,  0.0, _707,  0.0,  0.0])  # noqa
+    npt.assert_allclose(a.handle(np.array([-1.0,  0.0, 0.0])), [ 0.0, _707,  0.0, _707,  0.0])  # noqa
+    npt.assert_allclose(a.handle(np.array([ 1.0,  0.0, 0.0])), [ 0.0,  0.0, _707,  0.0, _707])  # noqa
+    npt.assert_allclose(a.handle(np.array([ 0.0, -1.0, 0.0])), [ 0.0,  0.0,  0.0, _707, _707])  # noqa
+
+    # Object in the centre of the room is another simple case
+    npt.assert_allclose(a.handle(np.array([ 0.0,  0.0, 0.0])), [_707, 0.0, 0.0, 0.5, 0.5])  # noqa
+
+    # Add top and bottom planes
+    spks = speaker_positions(["M+000", "M+030", "M-030", "M+110", "M-110", "U+000", "B+045", "B+000", "B-045"])
+    a = AllocentricPanner(spks)
+
+    # Objects on plane with only one speaker will only go to that speaker
+    npt.assert_allclose(a.handle(np.array([ 0.0,  0.0, 1.0])), [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0])  # noqa
+
+    # Panning between layers
+    npt.assert_allclose(a.handle(np.array([ 0.0,  1.0, -0.5])), [_707, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, _707, 0.0])  # noqa
+    npt.assert_allclose(a.handle(np.array([ 0.0,  1.0,  0.5])), [_707, 0.0, 0.0, 0.0, 0.0, _707, 0.0, 0.0, 0.0])  # noqa
+
+
+def test_all_layouts_allo(layout):
+    """Basic tests of the allocentric panner on all layouts"""
+    from ..allocentric import positions_for_layout
+    spks = positions_for_layout(layout)
+    a = AllocentricPanner(spks)
+
+    # gains on a grid of points
+    positions = np.stack(np.mgrid[-1:1:11j, -1:1:11j, -1:1:11j], -1)
+    gains = np.apply_along_axis(a.handle, -1, positions)
+
+    # positive
+    assert np.all(gains >= 0)
+    # normalised
+    npt.assert_allclose(np.linalg.norm(gains, axis=-1), 1)
+
+    # not changing too quickly
+    for dim in 0, 1, 2:
+        gains_d = np.moveaxis(gains, dim, 0)
+        assert np.max(np.abs(gains_d[:-1] - gains_d[1:])) < 0.9

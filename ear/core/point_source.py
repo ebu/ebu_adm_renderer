@@ -427,7 +427,7 @@ def _adjacent_verts(facets, vert):
             set([vert]))
 
 
-def set_screen_speaker_nominal_positions(layout):
+def _set_screen_speaker_nominal_positions(layout):
     """Modify layout to set the nominal positions of M+-SC; 45 degrees if they
     are wider than 30 degrees, otherwise 15. This ensures that the
     triangulation is correct for both the nominal and real loudspeaker
@@ -452,7 +452,7 @@ def set_screen_speaker_nominal_positions(layout):
                   channels=[mod_channel(channel) for channel in layout.channels])
 
 
-def check_screen_speakers(layout):
+def _check_screen_speakers(layout):
     """Check that screen loudspeakers are within allowed ranges."""
     for channel in layout.channels:
         if channel.name in ("M+SC", "M-SC"):
@@ -467,7 +467,7 @@ def check_screen_speakers(layout):
                                 ))
 
 def _configure_full(layout):
-    layout = set_screen_speaker_nominal_positions(layout)
+    layout = _set_screen_speaker_nominal_positions(layout)
 
     # add some extra height speakers that are treated as real speakers until
     # the downmix in PointSourcePannerDownmix
@@ -525,6 +525,190 @@ def _configure_full(layout):
     return PointSourcePannerDownmix(PointSourcePanner(regions), downmix=downmix)
 
 
+class AllocentricPanner(object):
+
+    def __init__(self, positions):
+        self.positions = positions
+
+        self.st = self._speaker_tree(self.positions)
+
+    def handle(self, position):
+        zPlanes = self._find_planes(position[2])
+
+        ret = np.zeros(len(self.positions))
+
+        zGains = self._single_balance_pan(self.st[zPlanes[0]][0][0][1][2],
+                                          self.st[zPlanes[1]][0][0][1][2],
+                                          position[2])
+        for zgain, zz in zip(zGains, zPlanes):
+            yRows = AllocentricPanner._find_rows(self.st[zz], position[1])
+            yGains = self._single_balance_pan(self.st[zz][yRows[0]][0][1][1],
+                                              self.st[zz][yRows[1]][0][1][1],
+                                              position[1])
+
+            for ygain, yy in zip(yGains, yRows):
+                xColumns = AllocentricPanner._find_columns(self.st[zz][yy], position[0])
+                xGains = self._single_balance_pan(self.st[zz][yy][xColumns[0]][1][0],
+                                                  self.st[zz][yy][xColumns[1]][1][0],
+                                                  position[0])
+
+                for xgain, xx in zip(xGains, xColumns):
+                    ret[self.st[zz][yy][xx][0]] = zgain * ygain * xgain
+        return ret
+
+    @staticmethod
+    def _single_balance_pan(minimum, maximum, value):
+        if minimum == maximum:
+            return (1.0, 1.0)
+        if value <= minimum:
+            return (0.0, 1.0)
+        elif value >= maximum:
+            return (1.0, 0.0)
+        else:
+            a = (value - minimum) / (maximum - minimum)
+            aa = a * np.pi / 2.0
+            return (np.cos(aa), np.sin(aa))
+
+    def _find_planes(self, z):
+        # z is smaller than z for all the channels in our layout
+        if z <= self.st[0][0][0][1][2]:
+            return [0, 0]
+
+        for i, zz in enumerate(self.st):
+            zPos = zz[0][0][1][2]
+            if zPos == z:
+                return [i, i]
+            elif zPos > z:
+                return [i - 1, i]
+
+        return [len(self.st) - 1, len(self.st) - 1]
+
+    @staticmethod
+    def _find_rows(stz, y):
+        # y is smaller than y for all the channels in our layout
+        if y <= stz[0][0][1][1]:
+            return [0, 0]
+
+        for i, yy in enumerate(stz):
+            yPos = yy[0][1][1]
+            if yPos == y:
+                return [i, i]
+            elif yPos > y:
+                return [i - 1, i]
+
+        return [len(stz) - 1, len(stz) - 1]
+
+    @staticmethod
+    def _find_columns(stzy, x):
+        # x is smaller than x for all the channels in our layout
+        if x <= stzy[0][1][0]:
+            return [0, 0]
+
+        for i, xx in enumerate(stzy):
+            xPos = xx[1][0]
+            if xPos == x:
+                return [i, i]
+            elif xPos > x:
+                return [i - 1, i]
+
+        return [len(stzy) - 1, len(stzy) - 1]
+
+    @staticmethod
+    def _speaker_tree(positions):
+        # This returns a 3-deep list. The inner most object is a (int, Channel).
+        # where the 'int' is the index of the channel in the layout.
+        # if  A = ret[az][ay][ax][1]
+        # and B = ret[bz][by][bx][1]
+        # then A[1][0] < B[1][0] <=> ax < bx if ay == by and az == bz
+        #      A[1][1] < B[1][1] <=> ay < by if az == bz
+        #      A[1][2] < B[1][2] <=> az < bz
+
+        # [
+        #   [                     z=z0
+        #     [                   y=y0
+        #       [CH0, CH1, CH2]
+        #     ],
+        #     [                   y=y1. y1>y0
+        #       [CH3, CH4]
+        #     ],
+        #     [                   y=y2. y2>y1
+        #       [CH5, CH6]
+        #     ]
+        #   ],
+        #   []                    z=z1. z1>z0
+        # ]
+        ret = []
+
+        def _zPos(zIndex):
+            return ret[zIndex][0][0][1][2]
+
+        def _yPos(zIndex, yIndex):
+            return ret[zIndex][yIndex][0][1][1]
+
+        def _xPos(zIndex, yIndex, xIndex):
+            return ret[zIndex][yIndex][xIndex][1][0]
+
+        for cc in enumerate(positions):
+            index, c = cc
+            inserted = False
+            # Find z index
+            for zi, _ in enumerate(ret):
+                if _zPos(zi) == c[2]:
+                    break
+                elif _zPos(zi) > c[2]:
+                    ret.insert(zi, [[cc]])
+                    inserted = True
+                    break
+            else:
+                ret.append([[cc]])
+                inserted = True
+
+            if inserted:
+                continue
+
+            # Find y index
+            for yi, _ in enumerate(ret[zi]):
+                if _yPos(zi, yi) == c[1]:
+                    break
+                elif _yPos(zi, yi) > c[1]:
+                    ret[zi].insert(yi, [cc])
+                    inserted = True
+                    break
+            else:
+                ret[zi].append([cc])
+                inserted = True
+
+            if inserted:
+                continue
+
+            # Find x index
+            for xi, _ in enumerate(ret[zi][yi]):
+                if _xPos(zi, yi, xi) == c[0]:
+                    assert False, "Two speakers with same location"
+                elif _xPos(zi, yi, xi) > c[0]:
+                    ret[zi][yi].insert(xi, cc)
+                    inserted = True
+                    break
+            else:
+                ret[zi][yi].append(cc)
+                inserted = True
+
+            assert inserted
+
+        return ret
+
+
+def configure_allocentric(layout):
+    assert not any(channel.is_lfe for channel in layout.channels), \
+        "lfe channel passed to point source panner"
+
+    _check_screen_speakers(layout)
+
+    from . import allocentric
+    positions = allocentric.positions_for_layout(layout)
+    return AllocentricPanner(positions)
+
+
 configure_options = OptionsHandler()
 
 
@@ -541,7 +725,7 @@ def configure(layout):
     assert not any(channel.is_lfe for channel in layout.channels), \
         "lfe channel passed to point source panner"
 
-    check_screen_speakers(layout)
+    _check_screen_speakers(layout)
 
     if layout.name == "0+2+0":
         return _configure_stereo(layout)
