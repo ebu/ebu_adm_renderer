@@ -344,7 +344,7 @@ class DirectSpeakersPanner(object):
         )
 
     def is_lfe_channel(self, type_metadata):
-        """Determine if type_metadata is an LFE channel, issuing a warning is
+        """Determine if type_metadata is an LFE channel, issuing a warning if
         there's a discrepancy between the speakerLabel and the frequency
         element."""
         has_lfe_freq = is_lfe(type_metadata.extra_data.channel_frequency)
