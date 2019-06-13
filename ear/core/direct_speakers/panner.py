@@ -5,6 +5,7 @@ import re
 import warnings
 from ..geom import inside_angle_range
 from .. import point_source
+from .. import allocentric
 from ..renderer_common import is_lfe
 from ...options import OptionsHandler, SubOptions, Option
 from ..screen_edge_lock import ScreenEdgeLockHandler
@@ -244,6 +245,9 @@ class DirectSpeakersPanner(object):
         self.positions = layout.nominal_positions
         self.is_lfe = layout.is_lfe
 
+        self.allo_positions = allocentric.positions_for_layout(layout)
+        self.allo_psp = point_source.configure_allocentric(layout.without_lfe)
+
         self._screen_edge_lock_handler = ScreenEdgeLockHandler(self.layout.screen, layout)
 
         self.pvs = np.eye(self.n_channels)
@@ -272,7 +276,7 @@ class DirectSpeakersPanner(object):
 
         return label
 
-    def closest_channel_index(self, position, candidates, tol):
+    def closest_channel_index(self, positions, position, candidates, tol):
         """Get the index of the candidate speaker closest to a given position.
 
         If there are multiple speakers that are considered equally close with
@@ -280,6 +284,7 @@ class DirectSpeakersPanner(object):
         can be made.
 
         Parameters:
+            positions (array of (n, 3)): n speaker positions
             position (DirectSpeakerPolarPosition or DirectSpeakerCartesianPosition):
                 Target position
             candidates (boolean index array): Subset of self.speakers to be considered
@@ -294,7 +299,7 @@ class DirectSpeakersPanner(object):
         candidate_position_indizes = np.flatnonzero(candidates)
 
         distances = np.linalg.norm(
-            self.positions[candidate_position_indizes] - cart_position[np.newaxis],
+            positions[candidate_position_indizes] - cart_position[np.newaxis],
             axis=1)
 
         min_idx = np.argmin(distances)
@@ -339,8 +344,8 @@ class DirectSpeakersPanner(object):
                       for bound in bounds]
 
         return (
-            np.all(self.positions + tol >= bounds_min, axis=1) &
-            np.all(self.positions - tol <= bounds_max, axis=1)
+            np.all(self.allo_positions + tol >= bounds_min, axis=1) &
+            np.all(self.allo_positions - tol <= bounds_max, axis=1)
         )
 
     def is_lfe_channel(self, type_metadata):
@@ -374,7 +379,8 @@ class DirectSpeakersPanner(object):
     @dispatch(DirectSpeakerCartesianPosition)  # noqa: F811
     def apply_screen_edge_lock(self, position):
         X, Y, Z = self._screen_edge_lock_handler.handle_vector(position.as_cartesian_array(),
-                                                               position.screenEdgeLock)
+                                                               position.screenEdgeLock,
+                                                               cartesian=True)
 
         return evolve(position,
                       bounded_X=evolve(position.bounded_X, value=X),
@@ -385,6 +391,15 @@ class DirectSpeakersPanner(object):
         tol = 1e-5
 
         block_format = type_metadata.block_format
+
+        if isinstance(block_format.position, DirectSpeakerPolarPosition):
+            psp = self.psp
+            positions = self.positions
+        elif isinstance(block_format.position, DirectSpeakerCartesianPosition):
+            psp = self.allo_psp
+            positions = self.allo_positions
+        else:
+            assert False, "unexpected type"
 
         is_lfe_channel = self.is_lfe_channel(type_metadata)
 
@@ -426,6 +441,7 @@ class DirectSpeakersPanner(object):
             within_bounds &= ~self.is_lfe
         if np.any(within_bounds):
             closest = self.closest_channel_index(
+                positions,
                 shifted_position,
                 within_bounds,
                 tol)
@@ -452,5 +468,5 @@ class DirectSpeakersPanner(object):
             position = shifted_position.as_cartesian_array()
 
             pv = np.zeros(self.n_channels)
-            pv[~self.is_lfe] = self.psp.handle(position)
+            pv[~self.is_lfe] = psp.handle(position)
             return pv

@@ -166,8 +166,8 @@ def test_dist_bounds_polar():
 
     # test horizontal bounds
 
-    expected_fr = np.zeros(len(layout.channels))
-    expected_fr[[idx("M+000"), idx("M+030")]] = [np.sqrt(0.5), np.sqrt(0.5)]
+    expected_fr = multi_pv(layout,
+                           [("M+000", np.sqrt(0.5)), ("M+030", np.sqrt(0.5))])
 
     # no bounds, and position not on speaker -> use psp
     bf = AudioBlockFormatDirectSpeakers(
@@ -284,25 +284,32 @@ def test_dist_bounds_cart():
     npt.assert_allclose(p.handle(DirectSpeakersTypeMetadata(bf)), direct_pv(layout, "M-090"))
 
     # pick closest within bound
-    pos_30 = cart(30, 0, 1)
-    pos_5 = cart(5, 0, 1)
-    pos_25 = cart(25, 0, 1)
-
     bf = AudioBlockFormatDirectSpeakers(
         position=DirectSpeakerCartesianPosition(
-            bounded_X=BoundCoordinate(pos_5[0], min=pos_30[0], max=-pos_30[0]),
-            bounded_Y=BoundCoordinate(pos_5[1], min=pos_30[1], max=1.0),
+            bounded_X=BoundCoordinate(-0.45, -1.0, 1.0),
+            bounded_Y=BoundCoordinate(1.0),
             bounded_Z=BoundCoordinate(0.0),
         ))
     npt.assert_allclose(p.handle(DirectSpeakersTypeMetadata(bf)), direct_pv(layout, "M+000"))
 
     bf = AudioBlockFormatDirectSpeakers(
         position=DirectSpeakerCartesianPosition(
-            bounded_X=BoundCoordinate(pos_25[0], min=pos_30[0], max=-pos_30[0]),
-            bounded_Y=BoundCoordinate(pos_25[1], min=pos_30[1], max=1.0),
+            bounded_X=BoundCoordinate(-0.55, -1.0, 1.0),
+            bounded_Y=BoundCoordinate(1.0),
             bounded_Z=BoundCoordinate(0.0),
         ))
     npt.assert_allclose(p.handle(DirectSpeakersTypeMetadata(bf)), direct_pv(layout, "M+030"))
+
+    # no bounds, and position not on speaker -> use psp
+    bf = AudioBlockFormatDirectSpeakers(
+        position=DirectSpeakerCartesianPosition(
+            bounded_X=BoundCoordinate(-0.5),
+            bounded_Y=BoundCoordinate(1.0),
+            bounded_Z=BoundCoordinate(0.0),
+        ))
+    npt.assert_allclose(p.handle(DirectSpeakersTypeMetadata(bf)),
+                        multi_pv(layout,
+                                 [("M+000", np.sqrt(0.5)), ("M+030", np.sqrt(0.5))]))
 
 
 def test_screen_edge_lock_polar():
