@@ -446,7 +446,7 @@ class DirectSpeakersPanner(object):
                 within_bounds,
                 tol)
 
-            # if we can uniquely identify the closes speaker, use it
+            # if we can uniquely identify the closest speaker, use it
             if closest is not None:
                 return self.pvs[closest]
 
