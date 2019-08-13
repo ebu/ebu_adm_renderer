@@ -238,7 +238,7 @@ class AudioStreamFormat(ADMElement):
         super(AudioStreamFormat, self).validate()
         if self.audioPackFormat is not None and self.audioChannelFormat is not None:
             raise AdmError("audioStreamFormat {self.id} has a reference to both an "
-                           "audioPackFormat and an audioTrackFormat".format(self=self))
+                           "audioPackFormat and an audioChannelFormat".format(self=self))
 
         if self.audioPackFormat is None and self.audioChannelFormat is None:
             raise AdmError("audioStreamFormat {self.id} has no reference to an "
