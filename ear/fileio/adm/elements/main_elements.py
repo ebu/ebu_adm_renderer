@@ -242,7 +242,7 @@ class AudioStreamFormat(ADMElement):
 
         if self.audioPackFormat is None and self.audioChannelFormat is None:
             raise AdmError("audioStreamFormat {self.id} has no reference to an "
-                           "audioPackFormat or audioTrackFormat".format(self=self))
+                           "audioPackFormat or audioChannelFormat".format(self=self))
 
 
 @attrs(slots=True)
