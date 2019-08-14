@@ -3,6 +3,7 @@ import numpy.testing as npt
 import soundfile
 import os.path
 import subprocess
+import sys
 import pytest
 
 files_dir = os.path.join(os.path.dirname(__file__), "data")
@@ -32,6 +33,8 @@ def generate_test_bwf(bwf_file=bwf_file):
     assert subprocess.call(args) == 0
 
 
+@pytest.mark.xfail(sys.version_info < (3, 6),
+                   reason="output may vary on platforms where dictionaries are not ordered")
 def test_generate(tmpdir):
     """Check that the output of the test file generator does not change
 

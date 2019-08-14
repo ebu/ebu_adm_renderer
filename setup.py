@@ -19,7 +19,7 @@ setup(
         'scipy~=1.0',
         'attrs~=17.4',
         'ruamel.yaml~=0.15',
-        'lxml~=4.2',
+        'lxml~=4.4',
         'enum34~=1.1',
         'six~=1.11',
         'multipledispatch~=0.5',
