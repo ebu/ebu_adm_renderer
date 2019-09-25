@@ -1159,33 +1159,6 @@ def _set_default_rtimes(channelFormats):
                 bf.rtime = Fraction(0)
 
 
-def _check_block_format_durations(channelFormats, fix=False):
-    for channelFormat in channelFormats:
-        block_formats = channelFormat.audioBlockFormats
-
-        for bf_a, bf_b in zip(block_formats[:-1], block_formats[1:]):
-            if (bf_a.rtime is None or bf_a.duration is None or
-                    bf_b.rtime is None or bf_b.duration is None):
-                continue
-
-            old_duration = bf_a.duration
-            new_duration = bf_b.rtime - bf_a.rtime
-
-            if old_duration != new_duration:
-                if fix:
-                    warnings.warn("{direction} duration of block format {id}; was: {old}, now: {new}".format(
-                        direction="expanded" if new_duration > old_duration else "contracted",
-                        id=bf_a.id,
-                        old=old_duration,
-                        new=new_duration))
-                    bf_a.duration = new_duration
-                else:
-                    warnings.warn(
-                        "(rtime + duration) of block format {id_a} does not equal rtime of block format {id_b}.".format(
-                            id_a=bf_a.id,
-                            id_b=bf_b.id))
-
-
 def load_axml_doc(adm, element, lookup_references=True, fix_block_format_durations=False):
     """Load some axml into an ADM structure.
 
@@ -1197,6 +1170,10 @@ def load_axml_doc(adm, element, lookup_references=True, fix_block_format_duratio
         lookup_references (bool): should we look up references?
         fix_block_format_durations (bool): should we attempt to fix up
             inaccuracies in audioBlockFormat durations?
+
+            .. note::
+               This is deprecated; use the functions in
+               :mod:`ear.fileio.adm.timing_fixes` instead.
     """
     parse_adm_elements(adm, element)
 
@@ -1205,7 +1182,12 @@ def load_axml_doc(adm, element, lookup_references=True, fix_block_format_duratio
 
     _set_default_rtimes(adm.audioChannelFormats)
     _sort_block_formats(adm.audioChannelFormats)
-    _check_block_format_durations(adm.audioChannelFormats, fix=fix_block_format_durations)
+
+    if fix_block_format_durations:
+        from . import timing_fixes
+        warnings.warn("fix_block_format_durations is deprecated, use "
+                      "the functions in ear.fileio.timing_fixes instead", DeprecationWarning)
+        timing_fixes.fix_blockFormat_durations(adm)
 
 
 def load_axml_string(adm, axmlstr, **kwargs):
