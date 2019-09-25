@@ -13,6 +13,7 @@ from ..fileio.adm.elements import AudioProgramme, AudioObject
 from ..fileio.bw64.chunks import FormatInfoChunk
 import warnings
 from ..fileio.adm.exceptions import AdmUnknownAttribute
+from ..fileio.adm import timing_fixes
 
 
 def handle_strict(args):
@@ -195,7 +196,12 @@ class OfflineRenderDriver(object):
 
         output_monitor = PeakMonitor(n_channels)
 
-        with openBw64Adm(input_file, self.enable_block_duration_fix) as infile:
+        with openBw64Adm(input_file) as infile:
+            infile.adm.validate()
+            timing_fixes.check_blockFormat_timings(
+                infile.adm, fix=self.enable_block_duration_fix
+            )
+
             formatInfo = FormatInfoChunk(formatTag=1,
                                          channelCount=n_channels,
                                          sampleRate=infile.sampleRate,
