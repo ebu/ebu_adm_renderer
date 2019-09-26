@@ -359,13 +359,8 @@ def _validate_matrix_channel(acf):
 
     [block_format] = acf.audioBlockFormats
 
-    if block_format.rtime is not None:
-        raise AdmError("matrix audioBlockFormat {block_format.id} has an rtime attribute".format(
-            block_format=block_format,
-        ))
-
-    if block_format.duration is not None:
-        raise AdmError("matrix audioBlockFormat {block_format.id} has a duration attribute".format(
+    if block_format.rtime is not None or block_format.duration is not None:
+        raise AdmError("matrix audioBlockFormat {block_format.id} has rtime or duration attributes".format(
             block_format=block_format,
         ))
 

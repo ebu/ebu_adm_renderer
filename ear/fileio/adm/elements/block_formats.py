@@ -26,6 +26,12 @@ class AudioBlockFormat(object):
     def validate(self):
         validate(self)
 
+        if not (
+            (self.rtime is None and self.duration is None)
+            or (self.rtime is not None and self.duration is not None)
+        ):
+            raise ValueError("rtime and duration must be used together")
+
 
 BlockFormat = AudioBlockFormat
 """Compatibility alias for AudioBlockFormat"""

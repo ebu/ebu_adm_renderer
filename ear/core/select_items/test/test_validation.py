@@ -394,16 +394,15 @@ def test_matrix_one_block_format():
         acf=builder.encode_mid)
 
 
-@pytest.mark.parametrize("name", ["rtime", "duration"])
-def test_matrix_timing(name):
+def test_matrix_timing():
     builder = EncodeDecodeBuilder()
-    setattr(builder.encode_mid.audioBlockFormats[0], name, Fraction(0))
+    builder.encode_mid.audioBlockFormats[0].rtime = Fraction(0)
+    builder.encode_mid.audioBlockFormats[0].duration = Fraction(1)
 
     check_select_items_raises(
         builder,
-        "matrix audioBlockFormat {block_format.id} has an? {name} attribute",
-        block_format=builder.encode_mid.audioBlockFormats[0],
-        name=name)
+        "matrix audioBlockFormat {block_format.id} has rtime or duration attributes",
+        block_format=builder.encode_mid.audioBlockFormats[0])
 
 
 @pytest.mark.parametrize("name,value", [("gainVar", "gain"),
