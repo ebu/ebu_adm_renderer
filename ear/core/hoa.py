@@ -2,7 +2,6 @@ from __future__ import division
 import numpy as np
 import scipy.special
 from scipy.special import eval_legendre, legendre
-from scipy.optimize import fsolve
 
 
 def fact(n):
@@ -207,6 +206,7 @@ def MultipleImpResp(Orders, r1, r2, Fs):
 
 def MaxRECoefficients(Nmax):
     """rE computation (maximum zero of the Nmax+1 degree legendre polynomial)"""
+    from scipy.optimize import fsolve
     t = np.arange(0.5, 1.0, 0.05)  # Sampling the interval [0.5,1]
     # Search the highest root of the N+1 degree legendre polynom in the interval [0.5,1]. This value is the highest rE reachable.
     rE = np.max(fsolve(legendre(Nmax+1), t))

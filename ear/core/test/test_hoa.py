@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.testing as npt
+import pytest
 from .. import hoa
 
 
@@ -105,6 +106,7 @@ def test_allrad_design():
         assert np.argmax(decoded) == i
 
 
+@pytest.mark.filterwarnings("ignore::SyntaxWarning")
 def test_maxRE():
     """Check that the approximate and numeric versions of maxRE are compatible."""
     for order in range(1, 5):
