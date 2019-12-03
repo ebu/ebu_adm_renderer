@@ -36,8 +36,8 @@ class ProcessingBlock(object):
 
     # integer sample numbers of the first and last sample affected; sample
     # number s is affected if first_sample <= s < last_sample
-    first_sample = attrib(init=False, cmp=False)
-    last_sample = attrib(init=False, cmp=False)
+    first_sample = attrib(init=False, eq=False)
+    last_sample = attrib(init=False, eq=False)
 
     @first_sample.default
     def init_start_sample_round(self):
@@ -97,7 +97,7 @@ class InterpGains(ProcessingBlock):
 
     # interpolation coefficients: ramp from 0 to 1 between start_sample and
     # end_sample, sampled for each sample in range first_sample:last_sample
-    _interp_p = attrib(init=False, cmp=False)
+    _interp_p = attrib(init=False, eq=False)
 
     @_interp_p.default
     def init_interp_p(self):

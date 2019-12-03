@@ -72,7 +72,7 @@ class Triplet(RegionHandler):
     output_channels = attrib(converter=as_array(dtype=int), validator=has_shape(3))
     positions = attrib(converter=as_array(dtype=float), validator=has_shape(3, 3))
 
-    _basis = attrib(init=False, cmp=False, repr=False)
+    _basis = attrib(init=False, eq=False, repr=False)
 
     def __attrs_post_init__(self):
         self._basis = np.linalg.inv(self.positions)
@@ -113,7 +113,7 @@ class VirtualNgon(RegionHandler):
     centre_position = attrib(converter=as_array(dtype=float), validator=has_shape(3))
     centre_downmix = attrib(converter=as_array(dtype=float), validator=has_shape(None))
 
-    regions = attrib(init=False, cmp=False, repr=False)
+    regions = attrib(init=False, eq=False, repr=False)
 
     def __attrs_post_init__(self):
         n = len(self.output_channels)

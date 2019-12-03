@@ -56,7 +56,7 @@ def text(element):
     return text if text is not None else ""
 
 
-@attrs(cmp=False)
+@attrs(eq=False)
 class ParseError(Exception):
     """Represents an error that occured while processing a piece of xml."""
     exception = attrib()
