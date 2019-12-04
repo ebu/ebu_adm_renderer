@@ -7,10 +7,11 @@ matrix:
   include:
     - env: PYTHON_VERSION=2.7
     - env: PYTHON_VERSION=3.6
-    - env: PYTHON_VERSION=3.7 COVERAGE=true
+    - env: PYTHON_VERSION=3.7
+    - env: PYTHON_VERSION=3.8 COVERAGE=true
 
 before_install:
-  - docker run -d --name linux -v $(pwd):/travis python:${PYTHON_VERSION}-stretch tail -f /dev/null;
+  - docker run -d --name linux -v $(pwd):/travis python:${PYTHON_VERSION}-buster tail -f /dev/null;
     docker ps
 
 install:
