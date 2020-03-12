@@ -9,6 +9,8 @@ This Renderer implementation is capable of rendering audio signals to all reprod
 
 Further descriptions of the *EAR* algorithms and functionalities can be found in [EBU Tech 3388](https://tech.ebu.ch/publications/adm-renderer-for-use-in-nga-broadcasting).
 
+***Note: Version 2.0 of the renderer represents also the reference implementation of [ITU-R BS.2127 (ITU ADM Renderer)](https://www.itu.int/rec/R-REC-BS.2127/en)***
+
 ## Test files
 A initial set of ADM files to test the *EAR* can be found under
   - https://ebu.io/qc/testmaterial and
