@@ -124,12 +124,12 @@ class AudioObject(ADMElement):
     audioTrackUIDs = attrib(default=Factory(list), repr=False)
     audioObjects = attrib(default=Factory(list), repr=False)
     audioComplementaryObjects = attrib(default=Factory(list), repr=False)
+    audioObjectInteraction = attrib(default=None)
 
     audioPackFormatIDRef = attrib(default=None)
     audioTrackUIDRef = attrib(default=None)
     audioObjectIDRef = attrib(default=None)
     audioComplementaryObjectIDRef = attrib(default=None)
-    audioObjectInteraction = attrib(default=None)
 
     def lazy_lookup_references(self, adm):
         if self.audioPackFormatIDRef is not None:
