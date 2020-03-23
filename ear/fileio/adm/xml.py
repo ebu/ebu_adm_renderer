@@ -2,24 +2,30 @@ import sys
 import warnings
 from fractions import Fraction
 
-from attr import attrs, attrib, Factory
 import lxml.etree
-from lxml.etree import QName
+from attr import Factory, attrib, attrs
 from lxml.builder import ElementMaker
-from six import viewkeys, iteritems, reraise
+from lxml.etree import QName
+from six import iteritems, reraise, viewkeys
 
+from ...common import (CartesianPosition, CartesianScreen, PolarPosition,
+                       PolarScreen)
 from .adm import ADM
-from .elements import (
-    AudioBlockFormatObjects, AudioBlockFormatDirectSpeakers, AudioBlockFormatBinaural, AudioBlockFormatHoa, AudioBlockFormatMatrix,
-    ChannelLock, BoundCoordinate, JumpPosition, ObjectDivergence, CartesianZone, PolarZone, ScreenEdgeLock, MatrixCoefficient)
-from .elements import (
-    AudioProgramme, AudioContent, AudioObject, AudioChannelFormat, AudioPackFormat, AudioStreamFormat, AudioTrackFormat, AudioTrackUID,
-    FormatDefinition, TypeDefinition, Frequency)
-from .elements.geom import (DirectSpeakerPolarPosition, DirectSpeakerCartesianPosition,
-                            ObjectPolarPosition, ObjectCartesianPosition)
+from .elements import (AudioBlockFormatBinaural,
+                       AudioBlockFormatDirectSpeakers, AudioBlockFormatHoa,
+                       AudioBlockFormatMatrix, AudioBlockFormatObjects,
+                       AudioChannelFormat, AudioContent, AudioObject,
+                       AudioObjectInteraction, AudioPackFormat, AudioProgramme,
+                       AudioStreamFormat, AudioTrackFormat, AudioTrackUID,
+                       BoundCoordinate, CartesianZone, ChannelLock,
+                       FormatDefinition, Frequency, GainInteractionRange,
+                       JumpPosition, MatrixCoefficient, ObjectDivergence,
+                       PolarZone, PositionInteractionRange, ScreenEdgeLock,
+                       TypeDefinition)
+from .elements.geom import (DirectSpeakerCartesianPosition,
+                            DirectSpeakerPolarPosition,
+                            ObjectCartesianPosition, ObjectPolarPosition)
 from .time_format import parse_time, unparse_time
-from ...common import PolarPosition, CartesianPosition, CartesianScreen, PolarScreen
-
 
 namespaces = [None,
               "urn:ebu:metadata-schema:ebuCore_2014",
@@ -875,6 +881,130 @@ def frequency_to_xml(parent, obj):
         parent.append(element)
 
 
+def handle_objectInteraction(kwargs, el):
+    objectInteraction = kwargs.setdefault("audioObjectInteraction", AudioObjectInteraction())
+    objectInteraction.gainInteract = el.attrib["gainInteract"]
+    objectInteraction.onOffInteract = el.attrib["onOffInteract"]
+    objectInteraction.positionInteract = el.attrib["positionInteract"]
+
+    objectInteraction.gainInteractionRange = GainInteractionRange()
+    objectInteraction.positionInteractionRange = PositionInteractionRange()
+    for element in el.getiterator():
+        if element.tag == "{urn:ebu:metadata-schema:ebuCore_2017}gainInteractionRange":
+            if element.attrib['bound'] == 'min':
+                objectInteraction.gainInteractionRange.min = float(element.text)
+            else:
+                objectInteraction.gainInteractionRange.max = float(element.text)
+        elif element.tag == "{urn:ebu:metadata-schema:ebuCore_2017}positionInteractionRange":
+            if element.attrib['coordinate'] == 'azimuth' and element.attrib['bound'] == 'min':
+                objectInteraction.positionInteractionRange.azimuthMin = float(element.text)
+            elif element.attrib['coordinate'] == 'azimuth' and element.attrib['bound'] == 'max':
+                objectInteraction.positionInteractionRange.azimuthMax = float(element.text)
+            elif element.attrib['coordinate'] == 'elevation' and element.attrib['bound'] == 'min':
+                objectInteraction.positionInteractionRange.elevationMin = float(element.text)
+            elif element.attrib['coordinate'] == 'elevation' and element.attrib['bound'] == 'max':
+                objectInteraction.positionInteractionRange.elevationMax = float(element.text)
+            elif element.attrib['coordinate'] == 'distance' and element.attrib['bound'] == 'min':
+                objectInteraction.positionInteractionRange.distanceMin = float(element.text)
+            elif element.attrib['coordinate'] == 'distance' and element.attrib['bound'] == 'max':
+                objectInteraction.positionInteractionRange.distanceMax = float(element.text)
+            elif element.attrib['coordinate'] == 'X' and element.attrib['bound'] == 'min':
+                objectInteraction.positionInteractionRange.XMin = float(element.text)
+            elif element.attrib['coordinate'] == 'X' and element.attrib['bound'] == 'max':
+                objectInteraction.positionInteractionRange.XMax = float(element.text)
+            elif element.attrib['coordinate'] == 'Y' and element.attrib['bound'] == 'min':
+                objectInteraction.positionInteractionRange.YMin = float(element.text)
+            elif element.attrib['coordinate'] == 'Y' and element.attrib['bound'] == 'max':
+                objectInteraction.positionInteractionRange.YMax = float(element.text)
+            elif element.attrib['coordinate'] == 'Z' and element.attrib['bound'] == 'min':
+                objectInteraction.positionInteractionRange.ZMin = float(element.text)
+            elif element.attrib['coordinate'] == 'Z' and element.attrib['bound'] == 'max':
+                objectInteraction.positionInteractionRange.ZMax = float(element.text)
+
+def objectInteraction_to_xml(parent, obj):
+    print(parent)
+    if obj.audioObjectInteraction is not None:
+        element = parent.makeelement(QName(default_ns, "objectInteraction"), 
+                                     gainInteract=obj.audioObjectInteraction.gainInteract, 
+                                     onOffInteract=obj.audioObjectInteraction.onOffInteract,
+                                     positionInteract=obj.audioObjectInteraction.positionInteract)
+
+        if obj.audioObjectInteraction.gainInteractionRange is not None:
+            if obj.audioObjectInteraction.gainInteractionRange.min is not None:
+                element_c = element.makeelement(QName(default_ns, "gainInteractionRange"), 
+                                                bound='min')
+                element_c.text = FloatType.dumps(obj.audioObjectInteraction.gainInteractionRange.min)
+                element.append(element_c)
+            if obj.audioObjectInteraction.gainInteractionRange.max is not None:
+                element_c = element.makeelement(QName(default_ns, "gainInteractionRange"),
+                                                bound='max')
+                element_c.text = FloatType.dumps(obj.audioObjectInteraction.gainInteractionRange.max)
+                element.append(element_c)
+
+        if obj.audioObjectInteraction.positionInteractionRange is not None:
+            if obj.audioObjectInteraction.positionInteractionRange.azimuthMin is not None:
+                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
+                                                coordinate='azimuth', bound='min')
+                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.azimuthMin)
+                element.append(element_c)
+            if obj.audioObjectInteraction.positionInteractionRange.azimuthMax is not None:
+                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
+                                                coordinate='azimuth', bound='max')
+                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.azimuthMax)
+                element.append(element_c)
+            if obj.audioObjectInteraction.positionInteractionRange.elevationMin is not None:
+                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
+                                                coordinate='elevation', bound='min')
+                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.elevationMin)
+                element.append(element_c)
+            if obj.audioObjectInteraction.positionInteractionRange.elevationMax is not None:
+                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
+                                                coordinate='elevation', bound='max')
+                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.elevationMax)
+                element.append(element_c)
+            if obj.audioObjectInteraction.positionInteractionRange.distanceMin is not None:
+                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"), 
+                                                coordinate='distance', bound='min')
+                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.distanceMin)
+                element.append(element_c)
+            if obj.audioObjectInteraction.positionInteractionRange.distanceMax is not None:
+                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
+                                                coordinate='distance', bound='max')
+                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.distanceMax)
+                element.append(element_c)
+            if obj.audioObjectInteraction.positionInteractionRange.XMin is not None:
+                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
+                                                coordinate='X', bound='min')
+                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.XMin)
+                element.append(element_c)
+            if obj.audioObjectInteraction.positionInteractionRange.XMax is not None:
+                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
+                                                coordinate='X', bound='max')
+                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.XMax)
+                element.append(element_c)
+            if obj.audioObjectInteraction.positionInteractionRange.YMin is not None:
+                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
+                                                coordinate='Y', bound='min')
+                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.YMin)
+                element.append(element_c)
+            if obj.audioObjectInteraction.positionInteractionRange.YMax is not None:
+                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
+                                                coordinate='Y', bound='max')
+                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.YMax)
+                element.append(element_c)
+            if obj.audioObjectInteraction.positionInteractionRange.ZMin is not None:
+                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
+                                                coordinate='Z', bound='min')
+                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.ZMin)
+                element.append(element_c)
+            if obj.audioObjectInteraction.positionInteractionRange.ZMax is not None:
+                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
+                                                coordinate='Z', bound='max')
+                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.ZMax)
+                element.append(element_c)
+        parent.append(element)
+
+
 channel_format_handler = ElementParser(AudioChannelFormat, "audioChannelFormat", [
     Attribute(adm_name="audioChannelFormatID", arg_name="id", required=True),
     Attribute(adm_name="audioChannelFormatName", arg_name="audioChannelFormatName", required=True),
@@ -1052,6 +1182,8 @@ content_handler = ElementParser(AudioContent, "audioContent", [
     RefList("audioObject"),
 ])
 
+
+
 object_handler = ElementParser(AudioObject, "audioObject", [
     Attribute(adm_name="audioObjectID", arg_name="id", required=True),
     Attribute(adm_name="audioObjectName", arg_name="audioObjectName", required=True),
@@ -1065,6 +1197,7 @@ object_handler = ElementParser(AudioObject, "audioObject", [
     RefList("audioObject"),
     RefList("audioComplementaryObject"),
     ListElement(adm_name="audioTrackUIDRef", arg_name="audioTrackUIDRef", attr_name="audioTrackUIDs", type=TrackUIDRefType),
+    CustomElement("audioObjectInteraction", handle_objectInteraction, to_xml=objectInteraction_to_xml),
 ])
 
 track_uid_handler = ElementParser(AudioTrackUID, "audioTrackUID", [

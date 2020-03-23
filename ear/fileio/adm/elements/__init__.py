@@ -1,10 +1,16 @@
 # flake8: noqa
-from .main_elements import (AudioChannelFormat, AudioPackFormat, AudioTrackFormat,
-                            AudioStreamFormat, AudioProgramme, AudioContent, AudioObject, AudioTrackUID,
-                            FormatDefinition, TypeDefinition, Frequency)
-from .block_formats import (AudioBlockFormatObjects, ChannelLock, ObjectDivergence,
-                            JumpPosition, AudioBlockFormatDirectSpeakers, AudioBlockFormatBinaural, AudioBlockFormatHoa,
-                            AudioBlockFormatMatrix, MatrixCoefficient,
-                            CartesianZone, PolarZone)
-from .geom import (DirectSpeakerPolarPosition, DirectSpeakerCartesianPosition, BoundCoordinate,
-                   ObjectPolarPosition, ObjectCartesianPosition, ScreenEdgeLock)
+from .block_formats import (AudioBlockFormatBinaural,
+                            AudioBlockFormatDirectSpeakers,
+                            AudioBlockFormatHoa, AudioBlockFormatMatrix,
+                            AudioBlockFormatObjects, CartesianZone,
+                            ChannelLock, JumpPosition, MatrixCoefficient,
+                            ObjectDivergence, PolarZone)
+from .geom import (BoundCoordinate, DirectSpeakerCartesianPosition,
+                   DirectSpeakerPolarPosition, ObjectCartesianPosition,
+                   ObjectPolarPosition, ScreenEdgeLock)
+from .main_elements import (AudioChannelFormat, AudioContent, AudioObject,
+                            AudioObjectInteraction, AudioPackFormat,
+                            AudioProgramme, AudioStreamFormat,
+                            AudioTrackFormat, AudioTrackUID, FormatDefinition,
+                            Frequency, GainInteractionRange,
+                            PositionInteractionRange, TypeDefinition)

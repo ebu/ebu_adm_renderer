@@ -1,11 +1,12 @@
-from attr import attrs, attrib, Factory, validate
-from attr.validators import instance_of, optional
 from enum import Enum
 from fractions import Fraction
+
+from attr import Factory, attrib, attrs, validate
+from attr.validators import instance_of, optional
 from six import string_types
 
-from ..exceptions import AdmError
 from ....common import CartesianScreen, PolarScreen, default_screen, list_of
+from ..exceptions import AdmError
 
 
 def _lookup_elements(adm, idRefs):
@@ -83,6 +84,33 @@ class AudioContent(ADMElement):
             self.audioObjects = _lookup_elements(adm, self.audioObjectIDRef)
             self.audioObjectIDRef = None
 
+@attrs(slots=True)
+class PositionInteractionRange(object):
+    azimuthMin = attrib(default=None, validator=optional(instance_of(float)))
+    azimuthMax = attrib(default=None, validator=optional(instance_of(float)))
+    elevationMin = attrib(default=None, validator=optional(instance_of(float)))
+    elevationMax = attrib(default=None, validator=optional(instance_of(float)))
+    distanceMin = attrib(default=None, validator=optional(instance_of(float)))
+    distanceMax = attrib(default=None, validator=optional(instance_of(float)))
+    XMin = attrib(default=None, validator=optional(instance_of(float)))
+    XMax = attrib(default=None, validator=optional(instance_of(float)))
+    YMin = attrib(default=None, validator=optional(instance_of(float)))
+    YMax = attrib(default=None, validator=optional(instance_of(float)))
+    ZMin = attrib(default=None, validator=optional(instance_of(float)))
+    ZMax = attrib(default=None, validator=optional(instance_of(float)))
+
+@attrs(slots=True)
+class GainInteractionRange(object):
+    min = attrib(default=None, validator=optional(instance_of(float)))
+    max = attrib(default=None, validator=optional(instance_of(float)))
+
+@attrs(slots=True)
+class AudioObjectInteraction(object):
+    onOffInteract = attrib(default=None, validator=optional(instance_of(int)))
+    gainInteract = attrib(default=None, validator=optional(instance_of(int)))
+    positionInteract = attrib(default=None, validator=optional(instance_of(int)))
+    gainInteractionRange = attrib(default=None)
+    positionInteractionRange = attrib(default=None)
 
 @attrs(slots=True)
 class AudioObject(ADMElement):
@@ -102,6 +130,7 @@ class AudioObject(ADMElement):
     audioTrackUIDRef = attrib(default=None)
     audioObjectIDRef = attrib(default=None)
     audioComplementaryObjectIDRef = attrib(default=None)
+    audioObjectInteraction = attrib(default=None)
 
     def lazy_lookup_references(self, adm):
         if self.audioPackFormatIDRef is not None:
