@@ -2,30 +2,23 @@ import sys
 import warnings
 from fractions import Fraction
 
+from attr import attrs, attrib, Factory
 import lxml.etree
-from attr import Factory, attrib, attrs
-from lxml.builder import ElementMaker
 from lxml.etree import QName
-from six import iteritems, reraise, viewkeys
+from lxml.builder import ElementMaker
+from six import viewkeys, iteritems, reraise
 
-from ...common import (CartesianPosition, CartesianScreen, PolarPosition,
-                       PolarScreen)
 from .adm import ADM
-from .elements import (AudioBlockFormatBinaural,
-                       AudioBlockFormatDirectSpeakers, AudioBlockFormatHoa,
-                       AudioBlockFormatMatrix, AudioBlockFormatObjects,
-                       AudioChannelFormat, AudioContent, AudioObject,
-                       AudioObjectInteraction, AudioPackFormat, AudioProgramme,
-                       AudioStreamFormat, AudioTrackFormat, AudioTrackUID,
-                       BoundCoordinate, CartesianZone, ChannelLock,
-                       FormatDefinition, Frequency, GainInteractionRange,
-                       JumpPosition, MatrixCoefficient, ObjectDivergence,
-                       PolarZone, PositionInteractionRange, ScreenEdgeLock,
-                       TypeDefinition)
-from .elements.geom import (DirectSpeakerCartesianPosition,
-                            DirectSpeakerPolarPosition,
-                            ObjectCartesianPosition, ObjectPolarPosition)
+from .elements import (
+    AudioBlockFormatObjects, AudioBlockFormatDirectSpeakers, AudioBlockFormatBinaural, AudioBlockFormatHoa, AudioBlockFormatMatrix,
+    ChannelLock, BoundCoordinate, JumpPosition, ObjectDivergence, CartesianZone, PolarZone, ScreenEdgeLock, MatrixCoefficient)
+from .elements import (
+    AudioProgramme, AudioContent, AudioObject, AudioObjectInteraction, AudioChannelFormat, AudioPackFormat, AudioStreamFormat, AudioTrackFormat, AudioTrackUID,
+    FormatDefinition, GainInteractionRange, PositionInteractionRange, TypeDefinition, Frequency)
+from .elements.geom import (DirectSpeakerPolarPosition, DirectSpeakerCartesianPosition,
+                            ObjectPolarPosition, ObjectCartesianPosition)
 from .time_format import parse_time, unparse_time
+from ...common import PolarPosition, CartesianPosition, CartesianScreen, PolarScreen
 
 namespaces = [None,
               "urn:ebu:metadata-schema:ebuCore_2014",

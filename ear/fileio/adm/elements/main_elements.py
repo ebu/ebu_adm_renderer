@@ -1,12 +1,11 @@
+from attr import attrs, attrib, Factory, validate
+from attr.validators import instance_of, optional
 from enum import Enum
 from fractions import Fraction
-
-from attr import Factory, attrib, attrs, validate
-from attr.validators import instance_of, optional
 from six import string_types
 
-from ....common import CartesianScreen, PolarScreen, default_screen, list_of
 from ..exceptions import AdmError
+from ....common import CartesianScreen, PolarScreen, default_screen, list_of
 
 
 def _lookup_elements(adm, idRefs):
