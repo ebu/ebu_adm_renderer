@@ -124,7 +124,8 @@ class AudioObject(ADMElement):
     audioTrackUIDs = attrib(default=Factory(list), repr=False)
     audioObjects = attrib(default=Factory(list), repr=False)
     audioComplementaryObjects = attrib(default=Factory(list), repr=False)
-    audioObjectInteraction = attrib(default=None)
+    audioObjectInteraction = attrib(default=None,
+                                    validator=optional(instance_of(AudioObjectInteraction)))
 
     audioPackFormatIDRef = attrib(default=None)
     audioTrackUIDRef = attrib(default=None)
