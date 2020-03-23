@@ -1,4 +1,4 @@
-from attr import attrs, attrib
+from attr import attrs, attrib, Factory
 from attr.validators import instance_of, optional
 
 
@@ -29,5 +29,11 @@ class AudioObjectInteraction(object):
     onOffInteract = attrib(validator=instance_of(bool))
     gainInteract = attrib(default=False, validator=optional(instance_of(bool)))
     positionInteract = attrib(default=False, validator=optional(instance_of(bool)))
-    gainInteractionRange = attrib(default=None)
-    positionInteractionRange = attrib(default=None)
+    gainInteractionRange = attrib(
+        default=Factory(GainInteractionRange),
+        validator=instance_of(GainInteractionRange),
+    )
+    positionInteractionRange = attrib(
+        default=Factory(PositionInteractionRange),
+        validator=instance_of(PositionInteractionRange),
+    )
