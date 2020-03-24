@@ -875,126 +875,44 @@ def frequency_to_xml(parent, obj):
 
 
 def handle_objectInteraction(kwargs, el):
-    objectInteraction = kwargs.setdefault("audioObjectInteraction", AudioObjectInteraction())
-    objectInteraction.gainInteract = el.attrib["gainInteract"]
-    objectInteraction.onOffInteract = el.attrib["onOffInteract"]
-    objectInteraction.positionInteract = el.attrib["positionInteract"]
+    objectInteraction = kwargs.setdefault("audioObjectInteraction",
+                                          AudioObjectInteraction(onOffInteract=BoolType.loads_func(el.attrib["onOffInteract"])))
+    objectInteraction.gainInteract = BoolType.loads_func(el.attrib["gainInteract"])
+    objectInteraction.positionInteract = BoolType.loads_func(el.attrib["positionInteract"])
 
     objectInteraction.gainInteractionRange = GainInteractionRange()
     objectInteraction.positionInteractionRange = PositionInteractionRange()
     for element in el.getiterator():
-        if element.tag == "{urn:ebu:metadata-schema:ebuCore_2017}gainInteractionRange":
+        if element.tag in qnames("gainInteractionRange"):
             if element.attrib['bound'] == 'min':
                 objectInteraction.gainInteractionRange.min = float(element.text)
-            else:
+            elif element.attrib['bound'] == 'max':
                 objectInteraction.gainInteractionRange.max = float(element.text)
-        elif element.tag == "{urn:ebu:metadata-schema:ebuCore_2017}positionInteractionRange":
-            if element.attrib['coordinate'] == 'azimuth' and element.attrib['bound'] == 'min':
-                objectInteraction.positionInteractionRange.azimuthMin = float(element.text)
-            elif element.attrib['coordinate'] == 'azimuth' and element.attrib['bound'] == 'max':
-                objectInteraction.positionInteractionRange.azimuthMax = float(element.text)
-            elif element.attrib['coordinate'] == 'elevation' and element.attrib['bound'] == 'min':
-                objectInteraction.positionInteractionRange.elevationMin = float(element.text)
-            elif element.attrib['coordinate'] == 'elevation' and element.attrib['bound'] == 'max':
-                objectInteraction.positionInteractionRange.elevationMax = float(element.text)
-            elif element.attrib['coordinate'] == 'distance' and element.attrib['bound'] == 'min':
-                objectInteraction.positionInteractionRange.distanceMin = float(element.text)
-            elif element.attrib['coordinate'] == 'distance' and element.attrib['bound'] == 'max':
-                objectInteraction.positionInteractionRange.distanceMax = float(element.text)
-            elif element.attrib['coordinate'] == 'X' and element.attrib['bound'] == 'min':
-                objectInteraction.positionInteractionRange.XMin = float(element.text)
-            elif element.attrib['coordinate'] == 'X' and element.attrib['bound'] == 'max':
-                objectInteraction.positionInteractionRange.XMax = float(element.text)
-            elif element.attrib['coordinate'] == 'Y' and element.attrib['bound'] == 'min':
-                objectInteraction.positionInteractionRange.YMin = float(element.text)
-            elif element.attrib['coordinate'] == 'Y' and element.attrib['bound'] == 'max':
-                objectInteraction.positionInteractionRange.YMax = float(element.text)
-            elif element.attrib['coordinate'] == 'Z' and element.attrib['bound'] == 'min':
-                objectInteraction.positionInteractionRange.ZMin = float(element.text)
-            elif element.attrib['coordinate'] == 'Z' and element.attrib['bound'] == 'max':
-                objectInteraction.positionInteractionRange.ZMax = float(element.text)
+        elif element.tag in qnames("positionInteractionRange"):
+            attribute = str(element.attrib['bound'])+str(element.attrib['coordinate']).capitalize()
+            if attribute in [a for a in dir(objectInteraction.positionInteractionRange) if not a.startswith('__')]:
+                setattr(objectInteraction.positionInteractionRange, attribute, float(element.text))
 
 def objectInteraction_to_xml(parent, obj):
-    print(parent)
     if obj.audioObjectInteraction is not None:
-        element = parent.makeelement(QName(default_ns, "objectInteraction"), 
-                                     gainInteract=obj.audioObjectInteraction.gainInteract, 
-                                     onOffInteract=obj.audioObjectInteraction.onOffInteract,
-                                     positionInteract=obj.audioObjectInteraction.positionInteract)
-
+        element = parent.makeelement(QName(default_ns, "objectInteraction"),
+                                     gainInteract=BoolType.dumps(obj.audioObjectInteraction.gainInteract),
+                                     onOffInteract=BoolType.dumps(obj.audioObjectInteraction.onOffInteract),
+                                     positionInteract=BoolType.dumps(obj.audioObjectInteraction.positionInteract))
         if obj.audioObjectInteraction.gainInteractionRange is not None:
-            if obj.audioObjectInteraction.gainInteractionRange.min is not None:
-                element_c = element.makeelement(QName(default_ns, "gainInteractionRange"), 
-                                                bound='min')
-                element_c.text = FloatType.dumps(obj.audioObjectInteraction.gainInteractionRange.min)
-                element.append(element_c)
-            if obj.audioObjectInteraction.gainInteractionRange.max is not None:
-                element_c = element.makeelement(QName(default_ns, "gainInteractionRange"),
-                                                bound='max')
-                element_c.text = FloatType.dumps(obj.audioObjectInteraction.gainInteractionRange.max)
-                element.append(element_c)
-
+            for attribute in [a for a in dir(obj.audioObjectInteraction.gainInteractionRange) if not a.startswith('__')]:
+                if getattr(obj.audioObjectInteraction.gainInteractionRange, attribute) is not None:
+                    element_c = element.makeelement(QName(default_ns, "gainInteractionRange"),
+                                                    bound=attribute)
+                    element_c.text = FloatType.dumps(getattr(obj.audioObjectInteraction.gainInteractionRange, attribute))
+                    element.append(element_c)
         if obj.audioObjectInteraction.positionInteractionRange is not None:
-            if obj.audioObjectInteraction.positionInteractionRange.azimuthMin is not None:
-                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
-                                                coordinate='azimuth', bound='min')
-                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.azimuthMin)
-                element.append(element_c)
-            if obj.audioObjectInteraction.positionInteractionRange.azimuthMax is not None:
-                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
-                                                coordinate='azimuth', bound='max')
-                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.azimuthMax)
-                element.append(element_c)
-            if obj.audioObjectInteraction.positionInteractionRange.elevationMin is not None:
-                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
-                                                coordinate='elevation', bound='min')
-                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.elevationMin)
-                element.append(element_c)
-            if obj.audioObjectInteraction.positionInteractionRange.elevationMax is not None:
-                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
-                                                coordinate='elevation', bound='max')
-                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.elevationMax)
-                element.append(element_c)
-            if obj.audioObjectInteraction.positionInteractionRange.distanceMin is not None:
-                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"), 
-                                                coordinate='distance', bound='min')
-                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.distanceMin)
-                element.append(element_c)
-            if obj.audioObjectInteraction.positionInteractionRange.distanceMax is not None:
-                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
-                                                coordinate='distance', bound='max')
-                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.distanceMax)
-                element.append(element_c)
-            if obj.audioObjectInteraction.positionInteractionRange.XMin is not None:
-                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
-                                                coordinate='X', bound='min')
-                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.XMin)
-                element.append(element_c)
-            if obj.audioObjectInteraction.positionInteractionRange.XMax is not None:
-                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
-                                                coordinate='X', bound='max')
-                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.XMax)
-                element.append(element_c)
-            if obj.audioObjectInteraction.positionInteractionRange.YMin is not None:
-                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
-                                                coordinate='Y', bound='min')
-                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.YMin)
-                element.append(element_c)
-            if obj.audioObjectInteraction.positionInteractionRange.YMax is not None:
-                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
-                                                coordinate='Y', bound='max')
-                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.YMax)
-                element.append(element_c)
-            if obj.audioObjectInteraction.positionInteractionRange.ZMin is not None:
-                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
-                                                coordinate='Z', bound='min')
-                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.ZMin)
-                element.append(element_c)
-            if obj.audioObjectInteraction.positionInteractionRange.ZMax is not None:
-                element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
-                                                coordinate='Z', bound='max')
-                element_c.text = FloatType.dumps(obj.audioObjectInteraction.positionInteractionRange.ZMax)
-                element.append(element_c)
+            for attribute in [a for a in dir(obj.audioObjectInteraction.positionInteractionRange) if not a.startswith('__')]:
+                if getattr(obj.audioObjectInteraction.positionInteractionRange, attribute) is not None:
+                    element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
+                                                    coordinate=attribute[3:].lower(), bound=attribute[:3])
+                    element_c.text = FloatType.dumps(getattr(obj.audioObjectInteraction.positionInteractionRange, attribute))
+                    element.append(element_c)
         parent.append(element)
 
 
