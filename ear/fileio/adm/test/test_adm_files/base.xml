@@ -12,6 +12,14 @@
                 <audioObject audioObjectID="AO_1001" audioObjectName="Noise" duration="00:00:12.00000" start="00:00:00.00000">
                     <audioPackFormatIDRef>AP_00031001</audioPackFormatIDRef>
                     <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+                    <audioObjectInteraction onOffInteract="1" gainInteract="1" positionInteract="1">
+                        <gainInteractionRange bound="min">0.5</gainInteractionRange>
+                        <gainInteractionRange bound="max">2.0</gainInteractionRange>
+                        <positionInteractionRange coordinate="elevation" bound="min">-10.0</positionInteractionRange>
+                        <positionInteractionRange coordinate="elevation" bound="max">+10.0</positionInteractionRange>
+                        <positionInteractionRange coordinate="azimuth" bound="min">-30.0</positionInteractionRange>
+                        <positionInteractionRange coordinate="azimuth" bound="max">+30.0</positionInteractionRange>
+                    </audioObjectInteraction>
                 </audioObject>
                 <audioPackFormat audioPackFormatID="AP_00031001" audioPackFormatName="Noise" typeDefinition="Objects" typeLabel="0003">
                     <audioChannelFormatIDRef>AC_00031001</audioChannelFormatIDRef>

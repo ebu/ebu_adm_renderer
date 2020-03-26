@@ -895,7 +895,7 @@ def handle_objectInteraction(kwargs, el):
 
 def objectInteraction_to_xml(parent, obj):
     if obj.audioObjectInteraction is not None:
-        element = parent.makeelement(QName(default_ns, "objectInteraction"),
+        element = parent.makeelement(QName(default_ns, "audioObjectInteraction"),
                                      gainInteract=BoolType.dumps(obj.audioObjectInteraction.gainInteract),
                                      onOffInteract=BoolType.dumps(obj.audioObjectInteraction.onOffInteract),
                                      positionInteract=BoolType.dumps(obj.audioObjectInteraction.positionInteract))
