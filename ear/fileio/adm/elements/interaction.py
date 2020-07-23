@@ -27,8 +27,8 @@ class GainInteractionRange(object):
 @attrs(slots=True)
 class AudioObjectInteraction(object):
     onOffInteract = attrib(validator=instance_of(bool))
-    gainInteract = attrib(default=False, validator=optional(instance_of(bool)))
-    positionInteract = attrib(default=False, validator=optional(instance_of(bool)))
+    gainInteract = attrib(default=None, validator=optional(instance_of(bool)))
+    positionInteract = attrib(default=None, validator=optional(instance_of(bool)))
     gainInteractionRange = attrib(
         default=Factory(GainInteractionRange),
         validator=instance_of(GainInteractionRange),

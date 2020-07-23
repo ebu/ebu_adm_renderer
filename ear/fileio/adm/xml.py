@@ -877,8 +877,10 @@ def frequency_to_xml(parent, obj):
 def handle_objectInteraction(kwargs, el):
     objectInteraction = kwargs.setdefault("audioObjectInteraction",
                                           AudioObjectInteraction(onOffInteract=BoolType.loads_func(el.attrib["onOffInteract"])))
-    objectInteraction.gainInteract = BoolType.loads_func(el.attrib["gainInteract"])
-    objectInteraction.positionInteract = BoolType.loads_func(el.attrib["positionInteract"])
+    if objectInteraction.gainInteract is not None:
+        objectInteraction.gainInteract = BoolType.loads_func(el.attrib["gainInteract"])
+    if objectInteraction.positionInteract is not None:
+        objectInteraction.positionInteract = BoolType.loads_func(el.attrib["positionInteract"])
 
     objectInteraction.gainInteractionRange = GainInteractionRange()
     objectInteraction.positionInteractionRange = PositionInteractionRange()
