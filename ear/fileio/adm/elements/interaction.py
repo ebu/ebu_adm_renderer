@@ -29,11 +29,9 @@ class AudioObjectInteraction(object):
     onOffInteract = attrib(validator=instance_of(bool))
     gainInteract = attrib(default=None, validator=optional(instance_of(bool)))
     positionInteract = attrib(default=None, validator=optional(instance_of(bool)))
-    gainInteractionRange = attrib(
-        default=Factory(GainInteractionRange),
-        validator=instance_of(GainInteractionRange),
+    gainInteractionRange = attrib(default=None,
+        validator=optional(instance_of(GainInteractionRange)),
     )
-    positionInteractionRange = attrib(
-        default=Factory(PositionInteractionRange),
-        validator=instance_of(PositionInteractionRange),
+    positionInteractionRange = attrib(default=None,
+        validator=optional(instance_of(PositionInteractionRange)),
     )

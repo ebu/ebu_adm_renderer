@@ -882,8 +882,10 @@ def handle_objectInteraction(kwargs, el):
     if objectInteraction.positionInteract is not None:
         objectInteraction.positionInteract = BoolType.loads_func(el.attrib["positionInteract"])
 
-    objectInteraction.gainInteractionRange = GainInteractionRange()
-    objectInteraction.positionInteractionRange = PositionInteractionRange()
+    if any([e.text for e in el.getiterator() if e.tag in qnames("gainInteractionRange")]):
+        objectInteraction.gainInteractionRange = GainInteractionRange()
+    if any([e.text for e in el.getiterator() if e.tag in qnames("positionInteractionRange")]):
+        objectInteraction.positionInteractionRange = PositionInteractionRange()
     for element in el.getiterator():
         if element.tag in qnames("gainInteractionRange"):
             if element.attrib['bound'] == 'min':
@@ -898,8 +900,8 @@ def handle_objectInteraction(kwargs, el):
 def objectInteraction_to_xml(parent, obj):
     if obj.audioObjectInteraction is not None:
         element = parent.makeelement(QName(default_ns, "audioObjectInteraction"),
-                                     gainInteract=BoolType.dumps(obj.audioObjectInteraction.gainInteract),
                                      onOffInteract=BoolType.dumps(obj.audioObjectInteraction.onOffInteract),
+                                     gainInteract=BoolType.dumps(obj.audioObjectInteraction.gainInteract),
                                      positionInteract=BoolType.dumps(obj.audioObjectInteraction.positionInteract))
         if obj.audioObjectInteraction.gainInteractionRange is not None:
             for attribute in [a for a in dir(obj.audioObjectInteraction.gainInteractionRange) if not a.startswith('__')]:
