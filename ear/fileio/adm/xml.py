@@ -899,10 +899,23 @@ def handle_objectInteraction(kwargs, el):
 
 def objectInteraction_to_xml(parent, obj):
     if obj.audioObjectInteraction is not None:
-        element = parent.makeelement(QName(default_ns, "audioObjectInteraction"),
+        if obj.audioObjectInteraction.gainInteract is not None and obj.audioObjectInteraction.positionInteract is not None:
+            element = parent.makeelement(QName(default_ns, "audioObjectInteraction"),
                                      onOffInteract=BoolType.dumps(obj.audioObjectInteraction.onOffInteract),
                                      gainInteract=BoolType.dumps(obj.audioObjectInteraction.gainInteract),
                                      positionInteract=BoolType.dumps(obj.audioObjectInteraction.positionInteract))
+        elif obj.audioObjectInteraction.gainInteract is not None and obj.audioObjectInteraction.positionInteract is None:
+            element = parent.makeelement(QName(default_ns, "audioObjectInteraction"),
+                                     onOffInteract=BoolType.dumps(obj.audioObjectInteraction.onOffInteract),
+                                     gainInteract=BoolType.dumps(obj.audioObjectInteraction.gainInteract))
+        elif obj.audioObjectInteraction.gainInteract is None and obj.audioObjectInteraction.positionInteract is not None:
+            element = parent.makeelement(QName(default_ns, "audioObjectInteraction"),
+                                     onOffInteract=BoolType.dumps(obj.audioObjectInteraction.onOffInteract),
+                                     positionInteract=BoolType.dumps(obj.audioObjectInteraction.positionInteract))
+        else:
+            element = parent.makeelement(QName(default_ns, "audioObjectInteraction"),
+                                     onOffInteract=BoolType.dumps(obj.audioObjectInteraction.onOffInteract))
+
         if obj.audioObjectInteraction.gainInteractionRange is not None:
             for attribute in [a for a in dir(obj.audioObjectInteraction.gainInteractionRange) if not a.startswith('__')]:
                 if getattr(obj.audioObjectInteraction.gainInteractionRange, attribute) is not None:
