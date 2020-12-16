@@ -67,8 +67,12 @@ class ProcessingBlock(object):
         overlap_start_sample = max(start_sample, self.first_sample)
         overlap_end_sample = min(end_sample, self.last_sample)
 
-        return (slice(overlap_start_sample - self.first_sample, overlap_end_sample - self.first_sample),
-                slice(overlap_start_sample - start_sample, overlap_end_sample - start_sample))
+        if overlap_start_sample <= overlap_end_sample:
+            return (slice(overlap_start_sample - self.first_sample, overlap_end_sample - self.first_sample),
+                    slice(overlap_start_sample - start_sample, overlap_end_sample - start_sample))
+        else:
+            # no overlap
+            return slice(0), slice(0)
 
 
 @attrs(slots=True, frozen=True)
