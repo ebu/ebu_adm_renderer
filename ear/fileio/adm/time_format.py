@@ -1,5 +1,7 @@
+from decimal import Decimal
 from fractions import Fraction
 import re
+import warnings
 
 
 _TIME_RE = re.compile(r"""
@@ -31,11 +33,29 @@ def parse_time(time_string):
 
 
 def unparse_time(time):
-    minutes, seconds = divmod(time, 60)
+    seconds, fraction = divmod(time, 1)
+    minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
 
-    # XXX: conversion using float here is less than ideal, but there doesn't
-    # seem to be a better (easy) way; this should be accurate enough to
-    # maintain ns resolution, but should be revised
-    return "{hours:02d}:{minutes:02d}:{seconds:08.5f}".format(
-        hours=hours, minutes=minutes, seconds=float(seconds))
+    decimal = Decimal(fraction.numerator) / Decimal(fraction.denominator)
+    if decimal != fraction:
+        warnings.warn(
+            "loss of accuracy when converting fractional time {time} to decimal".format(
+                time=time,
+            )
+        )
+
+    sign, digits, exponent = decimal.as_tuple()
+    assert sign == 0
+    if digits == (0,):
+        decimal_digits = (0,)
+    else:
+        # calc number of zeros to add to front
+        num_zeros = -exponent - len(digits)
+        assert num_zeros >= 0
+        decimal_digits = (0,) * num_zeros + digits
+    decimal_digits_str = "".join(str(d) for d in decimal_digits)
+
+    return "{hours:02d}:{minutes:02d}:{seconds:02d}.{decimal}".format(
+        hours=hours, minutes=minutes, seconds=seconds, decimal=decimal_digits_str,
+    )
