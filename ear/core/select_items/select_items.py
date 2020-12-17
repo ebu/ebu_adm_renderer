@@ -296,14 +296,15 @@ class _PackAllocator(object):
     audioObject) and audioTrackUIDs (in either an audioObject or CHNA-only ADM)
     by pack_allocation.allocate_packs.
 
-    Once an allocation has been found it needs to the real audioPackFormat and
-    track/channel allocation for rendering. For most types this corresponds to
-    the pattern, but for matrix types the mapping is more complex.
+    Once an allocation has been found it determines the real audioPackFormat
+    and track/channel allocation to be used for rendering. For most types this
+    is the same as the matched pattern, but for matrix types the mapping is
+    more complex.
 
-    To achieve this, the pack_allocation.Allocaion* classes which are used to
+    To achieve this, the pack_allocation.Allocation* classes which are used to
     specify the patterns are subclassed to allow them to store information
     about this mapping. The 'input' allocation being the result of the pattern
-    patch, and the 'output' pack/allocation being the pack and track/channel
+    match, and the 'output' pack/allocation being the pack and track/channel
     allocation for the renderer.
 
     In RegularAllocationPack (used for normal types) this is a direct mapping,
