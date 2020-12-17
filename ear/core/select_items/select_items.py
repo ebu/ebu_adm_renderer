@@ -739,3 +739,22 @@ def select_rendering_items(adm,
                     rendering_items.append(rendering_item)
 
     return rendering_items
+
+
+class ObjectChannelMatcher(object):
+    """Interface for using the _PackAllocator to find the audioChannelFormats
+    referenced by audioObjects.
+
+    This doesn't do anything special or interesting, but keeps the details of
+    item selection inside this module.
+    """
+
+    def __init__(self, adm):
+        self._adm = adm
+        self._pack_allocator = _PackAllocator(adm)
+
+    def get_channel_formats_for_object(self, audioObject):
+        state = _ItemSelectionState(adm=self._adm, audioObjects=[audioObject])
+        for state in self._pack_allocator.select_pack_mapping(state):
+            for channelFormat, _track_spec in state.channel_allocation:
+                yield channelFormat
