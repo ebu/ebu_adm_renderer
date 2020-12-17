@@ -20,7 +20,6 @@ setup(
         'attrs~=19.3',
         'ruamel.yaml~=0.15',
         'lxml~=4.4',
-        'enum34~=1.1',
         'six~=1.11',
         'multipledispatch~=0.5',
     ],
