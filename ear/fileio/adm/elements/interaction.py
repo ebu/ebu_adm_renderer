@@ -1,5 +1,5 @@
 from attr import attrs, attrib, Factory
-from attr.validators import instance_of, optional
+from attr.validators import instance_of, optional, in_
 
 
 @attrs(slots=True)
@@ -22,6 +22,7 @@ class PositionInteractionRange(object):
 class GainInteractionRange(object):
     min = attrib(default=None, validator=optional(instance_of(float)))
     max = attrib(default=None, validator=optional(instance_of(float)))
+    gainUnit = attrib(default=None, validator=optional(in_(["linear", "dB"])))
 
 
 @attrs(slots=True)
