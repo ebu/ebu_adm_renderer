@@ -1091,17 +1091,6 @@ def make_audio_programme(referenceScreen=None, **kwargs):
     return AudioProgramme(referenceScreen=referenceScreen, **kwargs)
 
 
-programme_handler = ElementParser(make_audio_programme, "audioProgramme", [
-    Attribute(adm_name="audioProgrammeID", arg_name="id", required=True),
-    Attribute(adm_name="audioProgrammeName", arg_name="audioProgrammeName", required=True),
-    Attribute(adm_name="audioProgrammeLanguage", arg_name="audioProgrammeLanguage"),
-    Attribute(adm_name="start", arg_name="start", type=TimeType),
-    Attribute(adm_name="end", arg_name="end", type=TimeType),
-    Attribute(adm_name="maxDuckingDepth", arg_name="maxDuckingDepth", type=FloatType),
-    RefList("audioContent"),
-    screen_handler.as_handler("referenceScreen", default=default_screen),
-])
-
 
 loudness_handler = ElementParser(LoudnessMetadata, "loudnessMetadata", [
     Attribute(adm_name="loudnessMethod", arg_name="loudnessMethod", type=StringType),
@@ -1113,6 +1102,18 @@ loudness_handler = ElementParser(LoudnessMetadata, "loudnessMetadata", [
     AttrElement(adm_name="maxMomentary", arg_name="maxMomentary", type=FloatType),
     AttrElement(adm_name="maxShortTerm", arg_name="maxShortTerm", type=FloatType),
     AttrElement(adm_name="dialogueLoudness", arg_name="dialogueLoudness", type=FloatType)
+])
+
+programme_handler = ElementParser(make_audio_programme, "audioProgramme", [
+    Attribute(adm_name="audioProgrammeID", arg_name="id", required=True),
+    Attribute(adm_name="audioProgrammeName", arg_name="audioProgrammeName", required=True),
+    Attribute(adm_name="audioProgrammeLanguage", arg_name="audioProgrammeLanguage"),
+    Attribute(adm_name="start", arg_name="start", type=TimeType),
+    Attribute(adm_name="end", arg_name="end", type=TimeType),
+    Attribute(adm_name="maxDuckingDepth", arg_name="maxDuckingDepth", type=FloatType),
+    RefList("audioContent"),
+    screen_handler.as_handler("referenceScreen", default=default_screen),
+    loudness_handler.as_handler("loudnessMetadata")
 ])
 
 content_handler = ElementParser(AudioContent, "audioContent", [

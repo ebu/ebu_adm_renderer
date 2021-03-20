@@ -124,6 +124,15 @@ def test_loudness(base):
     assert base.adm_after_mods().audioContents[0].loudnessMetadata.maxMomentary == -9.9
     assert base.adm_after_mods().audioContents[0].loudnessMetadata.dialogueLoudness == -10.2
 
+    assert base.adm_after_mods().audioProgrammes[0].loudnessMetadata.loudnessMethod == "ITU-R BS.1770"
+    assert base.adm_after_mods().audioProgrammes[0].loudnessMetadata.loudnessRecType == "EBU R128"
+    assert base.adm_after_mods().audioProgrammes[0].loudnessMetadata.loudnessCorrectionType == "file"
+    assert base.adm_after_mods().audioProgrammes[0].loudnessMetadata.integratedLoudness == -24.0
+    assert base.adm_after_mods().audioProgrammes[0].loudnessMetadata.loudnessRange == 12.5
+    assert base.adm_after_mods().audioProgrammes[0].loudnessMetadata.maxTruePeak == -5.2
+    assert base.adm_after_mods().audioProgrammes[0].loudnessMetadata.maxMomentary == -9.9
+    assert base.adm_after_mods().audioProgrammes[0].loudnessMetadata.dialogueLoudness == -10.2   
+
 def test_gain(base):
     assert base.bf_after_mods(add_children(bf_path, E.gain("0"))).gain == 0.0
     assert base.bf_after_mods(add_children(bf_path, E.gain("0.5"))).gain == 0.5
