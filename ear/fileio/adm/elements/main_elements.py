@@ -37,6 +37,19 @@ class FormatDefinition(Enum):
 
 
 @attrs(slots=True)
+class LoudnessMetadata(object):
+    loudnessMethod = attrib(default=None, validator=optional(instance_of(string_types)))
+    loudnessRecType = attrib(default=None, validator=optional(instance_of(string_types)))
+    loudnessCorrectionType = attrib(default=None, validator=optional(instance_of(string_types)))
+    integratedLoudness = attrib(default=None, validator=optional(instance_of(float)))
+    loudnessRange = attrib(default=None, validator=optional(instance_of(float)))
+    maxTruePeak = attrib(default=None, validator=optional(instance_of(float)))
+    maxMomentary = attrib(default=None, validator=optional(instance_of(float)))
+    maxShortTerm = attrib(default=None, validator=optional(instance_of(float)))
+    dialogueLoudness = attrib(default=None, validator=optional(instance_of(float)))
+    
+
+@attrs(slots=True)
 class ADMElement(object):
     id = attrib(default=None)
     is_common_definition = attrib(default=False, validator=instance_of(bool))
@@ -73,7 +86,7 @@ class AudioProgramme(ADMElement):
 class AudioContent(ADMElement):
     audioContentName = attrib(default=None, validator=instance_of(string_types))
     audioContentLanguage = attrib(default=None)
-    loudnessMetadata = attrib(default=None)
+    loudnessMetadata = attrib(default=None, validator=optional(instance_of(LoudnessMetadata)))
     dialogue = attrib(default=None)
     audioObjects = attrib(default=Factory(list), repr=False)
 
