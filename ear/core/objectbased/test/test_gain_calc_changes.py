@@ -25,15 +25,15 @@ def generate_random_ObjectTypeMetadata(cart_pos=None, cartesian=None,
     if cartesian is None: cartesian = random.choice([False, True])
 
     if cart_pos:
-        if azimuth is None: azimuth = random.uniform(-180, 180)
-        if elevation is None: elevation = random.uniform(-90, 90)
-        if distance is None: distance = random.uniform(0, 1)
-        position = ObjectPolarPosition(azimuth=azimuth, elevation=elevation, distance=distance)
-    else:
         if X is None: X = random.uniform(-1, 1)
         if Y is None: Y = random.uniform(-1, 1)
         if Z is None: Z = random.uniform(-1, 1)
         position = ObjectCartesianPosition(X=X, Y=Y, Z=Z)
+    else:
+        if azimuth is None: azimuth = random.uniform(-180, 180)
+        if elevation is None: elevation = random.uniform(-90, 90)
+        if distance is None: distance = random.uniform(0, 1)
+        position = ObjectPolarPosition(azimuth=azimuth, elevation=elevation, distance=distance)
 
     if screen_edge_lock_horizontal is None:
         position.screenEdgeLock.vertical = random.choice([None] * 8 + ["left", "right"])
