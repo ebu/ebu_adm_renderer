@@ -48,9 +48,19 @@ def generate_random_ObjectTypeMetadata(cart_pos=None, cartesian=None,
                                    widthAzimuth=random.uniform(10, 80))
 
     if cartesian:
-        width, height, depth = random.uniform(0, 2), random.uniform(0, 2), random.uniform(0, 2)
+        if width is None:
+            width = random.uniform(0, 2)
+        if height is None:
+            height = random.uniform(0, 2)
+        if depth is None:
+            depth = random.uniform(0, 2)
     else:
-        width, height, depth = random.uniform(0, 360), random.uniform(0, 360), random.uniform(0, 1)
+        if width is None:
+            width = random.uniform(0, 360)
+        if height is None:
+            height = random.uniform(0, 360)
+        if depth is None:
+            depth = random.uniform(0, 1)
 
     if has_divergence is None: has_divergence = random.choice([False, True])
     if divergence_value is None: divergence_value = random.uniform(0, 1)
