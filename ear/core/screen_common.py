@@ -46,8 +46,16 @@ class PolarEdges(object):
         else:
             assert False
 
-        return cls(left_azimuth=azimuth(centre - x_vec),
-                   right_azimuth=azimuth(centre + x_vec),
+        left_azimuth = azimuth(centre - x_vec)
+        right_azimuth = azimuth(centre + x_vec)
+        if right_azimuth > left_azimuth:
+            raise ValueError("invalid screen specification: screen must not extend past -y")
+
+        if (azimuth(centre - z_vec) - azimuth(centre + z_vec)) > 1e-3:
+            raise ValueError("invalid screen specification: screen must not extend past +z or -z")
+
+        return cls(left_azimuth=left_azimuth,
+                   right_azimuth=right_azimuth,
                    bottom_elevation=elevation(centre - z_vec),
                    top_elevation=elevation(centre + z_vec))
 

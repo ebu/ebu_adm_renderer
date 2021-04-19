@@ -1,5 +1,5 @@
 import numpy as np
-from pytest import approx
+from pytest import approx, raises
 from ..screen_common import PolarEdges, PolarScreen, CartesianScreen, compensate_position
 from ...common import default_screen, PolarPosition, CartesianPosition, cart, azimuth
 from ..objectbased.conversion import point_polar_to_cart
@@ -47,6 +47,38 @@ def test_polar_edges_from_polar_up():
     assert np.isclose(screen_edges.right_azimuth, azimuth(cart(0, 10, 1) + [np.tan(np.radians(58/2)), 0, 0]))
     assert np.isclose(screen_edges.top_elevation, default_edge_elevation + 10)
     assert np.isclose(screen_edges.bottom_elevation, -default_edge_elevation + 10)
+
+
+def test_polar_edge_error_az():
+    screen = PolarScreen(
+        aspectRatio=1.78,
+        centrePosition=PolarPosition(
+            azimuth=161.0,
+            elevation=0.0,
+            distance=1.0),
+        widthAzimuth=40.0)
+    expected = "invalid screen specification: screen must not extend past -y"
+    with raises(ValueError, match=expected):
+        PolarEdges.from_screen(screen)
+
+    screen.centrePosition.azimuth = 159.0
+    PolarEdges.from_screen(screen)
+
+
+def test_polar_edge_error_el():
+    screen = PolarScreen(
+        aspectRatio=1.0,
+        centrePosition=PolarPosition(
+            azimuth=30.0,
+            elevation=71.0,
+            distance=1.0),
+        widthAzimuth=40.0)
+    expected = "invalid screen specification: screen must not extend past \\+z or -z"
+    with raises(ValueError, match=expected):
+        PolarEdges.from_screen(screen)
+
+    screen.centrePosition.elevation = 69.0
+    PolarEdges.from_screen(screen)
 
 
 def test_polar_edges_from_cart_default():
