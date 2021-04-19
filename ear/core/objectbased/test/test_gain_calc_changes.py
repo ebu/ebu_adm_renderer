@@ -2,7 +2,7 @@ import pytest
 import random
 import numpy as np
 import numpy.testing as npt
-from ....fileio.adm.elements import (AudioBlockFormatObjects, ObjectDivergence,
+from ....fileio.adm.elements import (AudioBlockFormatObjects, ChannelLock, ObjectDivergence,
                                      ObjectPolarPosition, ObjectCartesianPosition)
 from ...metadata_input import ObjectTypeMetadata, ExtraData
 from ...geom import PolarPosition
@@ -62,6 +62,10 @@ def generate_random_ObjectTypeMetadata(cart_pos=None, cartesian=None,
         if depth is None:
             depth = random.uniform(0, 1)
 
+    channelLock = None
+    if random.randrange(15) == 0:
+        channelLock = ChannelLock(maxDistance=random.uniform(0, 2))
+
     if has_divergence is None: has_divergence = random.choice([False, True])
     if divergence_value is None: divergence_value = random.uniform(0, 1)
     if divergence_range is None: divergence_range = random.uniform(0, 1) if cartesian else random.uniform(0, 180)
@@ -74,6 +78,7 @@ def generate_random_ObjectTypeMetadata(cart_pos=None, cartesian=None,
     block_format = AudioBlockFormatObjects(position=position,
                                            width=width, height=height, depth=depth,
                                            cartesian=cartesian,
+                                           channelLock=channelLock,
                                            objectDivergence=objectDivergence if has_divergence else None,
                                            screenRef=screenRef)
     return ObjectTypeMetadata(block_format=block_format, extra_data=ExtraData(reference_screen=reference_screen))
