@@ -2,6 +2,7 @@ from .geom import azimuth, elevation, cart
 from .objectbased.conversion import point_cart_to_polar, point_polar_to_cart
 import numpy as np
 from .screen_common import PolarEdges, compensate_position
+from .util import interp_sorted
 
 
 class PolarScreenScaler(object):
@@ -17,12 +18,12 @@ class PolarScreenScaler(object):
         self.rep_screen_edges = PolarEdges.from_screen(reproduction_screen)
 
     def scale_az_el(self, az, el):
-        new_az = np.interp(az,
-                           (-180, self.ref_screen_edges.right_azimuth, self.ref_screen_edges.left_azimuth, 180),
-                           (-180, self.rep_screen_edges.right_azimuth, self.rep_screen_edges.left_azimuth, 180))
-        new_el = np.interp(el,
-                           (-90, self.ref_screen_edges.bottom_elevation, self.ref_screen_edges.top_elevation, 90),
-                           (-90, self.rep_screen_edges.bottom_elevation, self.rep_screen_edges.top_elevation, 90))
+        new_az = interp_sorted(az,
+                               (-180, self.ref_screen_edges.right_azimuth, self.ref_screen_edges.left_azimuth, 180),
+                               (-180, self.rep_screen_edges.right_azimuth, self.rep_screen_edges.left_azimuth, 180))
+        new_el = interp_sorted(el,
+                               (-90, self.ref_screen_edges.bottom_elevation, self.ref_screen_edges.top_elevation, 90),
+                               (-90, self.rep_screen_edges.bottom_elevation, self.rep_screen_edges.top_elevation, 90))
 
         return new_az, new_el
 

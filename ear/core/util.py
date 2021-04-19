@@ -65,3 +65,10 @@ def safe_norm_position(position):
         return np.array([0.0, 1.0, 0.0])
     else:
         return position / norm
+
+
+def interp_sorted(x, xp, yp):
+    """same as np.interp, but checks that xp is sorted"""
+    xp = np.array(xp)
+    assert np.all(xp[:-1] <= xp[1:]), "unsorted xp values in call to interp"
+    return np.interp(x, xp, yp)
