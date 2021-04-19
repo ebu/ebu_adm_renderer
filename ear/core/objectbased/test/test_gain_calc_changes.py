@@ -64,7 +64,8 @@ def generate_random_ObjectTypeMetadata(cart_pos=None, cartesian=None,
     block_format = AudioBlockFormatObjects(position=position,
                                            width=width, height=height, depth=depth,
                                            cartesian=cartesian,
-                                           objectDivergence=objectDivergence if has_divergence else None)
+                                           objectDivergence=objectDivergence if has_divergence else None,
+                                           screenRef=screenRef)
     return ObjectTypeMetadata(block_format=block_format, extra_data=ExtraData(reference_screen=reference_screen))
 
 
