@@ -42,10 +42,10 @@ def generate_random_ObjectTypeMetadata(cart_pos=None, cartesian=None,
 
     if screenRef is None: screenRef = bool(random.randrange(2))
     reference_screen = PolarScreen(aspectRatio=random.uniform(1, 2),
-                                   centrePosition=PolarPosition(random.uniform(-180, 180),
-                                                                random.uniform(-90, 90),
+                                   centrePosition=PolarPosition(random.uniform(-45, 45),
+                                                                random.uniform(-45, 45),
                                                                 1.0),
-                                   widthAzimuth=random.uniform(10, 100))
+                                   widthAzimuth=random.uniform(10, 80))
 
     if cartesian:
         width, height, depth = random.uniform(0, 2), random.uniform(0, 2), random.uniform(0, 2)
