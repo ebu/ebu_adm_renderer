@@ -2,11 +2,41 @@ import pytest
 import random
 import numpy as np
 import numpy.testing as npt
-from ....fileio.adm.elements import (AudioBlockFormatObjects, ChannelLock, ObjectDivergence,
-                                     ObjectPolarPosition, ObjectCartesianPosition)
+from ....fileio.adm.elements import (AudioBlockFormatObjects, CartesianZone, ChannelLock, ObjectDivergence,
+                                     ObjectPolarPosition, ObjectCartesianPosition, PolarZone)
 from ...metadata_input import ObjectTypeMetadata, ExtraData
 from ...geom import PolarPosition
 from ....common import PolarScreen
+
+
+def generate_zone_exclusion(cartesian):
+    if cartesian:
+        split = random.choice(["X", "Y", "Z"] + [None] * 7)
+        if split is not None:
+            return [
+                CartesianZone(
+                    minX=0.0 if split == "X" else -1.0,
+                    maxX=1.0,
+                    minY=0.0 if split == "Y" else -1.0,
+                    maxY=1.0,
+                    minZ=0.5 if split == "Z" else -1.0,
+                    maxZ=1.0,
+                ),
+            ]
+            return []
+    else:
+        split = random.choice(["az", "el"] + [None] * 8)
+
+        if split is not None:
+            return [
+                PolarZone(
+                    minElevation=45.0 if split == "el" else -90.0,
+                    maxElevation=90.0,
+                    minAzimuth=0.0 if split == "az" else -180.0,
+                    maxAzimuth=180.0,
+                ),
+            ]
+    return []
 
 
 def generate_random_ObjectTypeMetadata(cart_pos=None, cartesian=None,
@@ -80,7 +110,8 @@ def generate_random_ObjectTypeMetadata(cart_pos=None, cartesian=None,
                                            cartesian=cartesian,
                                            channelLock=channelLock,
                                            objectDivergence=objectDivergence if has_divergence else None,
-                                           screenRef=screenRef)
+                                           screenRef=screenRef,
+                                           zoneExclusion=generate_zone_exclusion(cartesian))
     return ObjectTypeMetadata(block_format=block_format, extra_data=ExtraData(reference_screen=reference_screen))
 
 
