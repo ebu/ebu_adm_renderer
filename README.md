@@ -1,7 +1,6 @@
 # EBU ADM Renderer (EAR)
 
-[![Build Status](https://travis-ci.org/ebu/ebu_adm_renderer.svg?branch=master)](https://travis-ci.org/ebu/ebu_adm_renderer)
-[![codecov](https://codecov.io/gh/ebu/ebu_adm_renderer/branch/master/graph/badge.svg)](https://codecov.io/gh/ebu/ebu_adm_renderer)
+[![build status badge](https://github.com/ebu/ebu_adm_renderer/workflows/test/badge.svg)](https://github.com/ebu/ebu_adm_renderer/actions?workflow=test)
 
 The **EBU ADM Renderer** **(*EAR*)** is a complete interpretation of the **Audio Definition Model (ADM)** format, specified in Recommendation [ITU-R BS.2076-1](https://www.itu.int/rec/R-REC-BS.2076/en). ADM is the recommended format for all stages and use cases within the scope of programme productions of **Next Generation Audio (NGA)**. This repository contains a Python reference implementation of the EBU ADM Renderer.
 
