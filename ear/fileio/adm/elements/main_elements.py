@@ -74,7 +74,7 @@ class AudioProgramme(ADMElement):
 
     referenceScreen = attrib(validator=optional(instance_of((CartesianScreen, PolarScreen))),
                              default=default_screen)
-    loudnessMetadata = attrib(default=None, validator=optional(instance_of(LoudnessMetadata)))
+    loudnessMetadata = attrib(default=Factory(list), validator=list_of(LoudnessMetadata))
 
     def lazy_lookup_references(self, adm):
         if self.audioContentIDRef is not None:
@@ -86,7 +86,7 @@ class AudioProgramme(ADMElement):
 class AudioContent(ADMElement):
     audioContentName = attrib(default=None, validator=instance_of(string_types))
     audioContentLanguage = attrib(default=None)
-    loudnessMetadata = attrib(default=None, validator=optional(instance_of(LoudnessMetadata)))
+    loudnessMetadata = attrib(default=Factory(list), validator=list_of(LoudnessMetadata))
     dialogue = attrib(default=None)
     audioObjects = attrib(default=Factory(list), repr=False)
 

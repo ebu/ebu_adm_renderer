@@ -359,6 +359,22 @@ class ElementParser(object):
             required=False,
         )
 
+    def as_list_handler(self, arg_name):
+        def handle(kwargs, el):
+            kwargs.setdefault(arg_name, []).append(self.parse(el))
+
+        def to_xml(parent, obj):
+            for attr in getattr(obj, arg_name):
+                self.to_xml(parent, attr)
+
+        return CustomElement(
+            adm_name=self.adm_name,
+            handler=handle,
+            to_xml=to_xml,
+            arg_name=arg_name,
+            required=False,
+        )
+
 
 # helpers for common element types
 
@@ -1054,7 +1070,7 @@ programme_handler = ElementParser(make_audio_programme, "audioProgramme", [
     Attribute(adm_name="maxDuckingDepth", arg_name="maxDuckingDepth", type=FloatType),
     RefList("audioContent"),
     screen_handler.as_handler("referenceScreen", default=default_screen),
-    loudness_handler.as_handler("loudnessMetadata")
+    loudness_handler.as_list_handler("loudnessMetadata"),
 ])
 
 content_handler = ElementParser(AudioContent, "audioContent", [
@@ -1063,7 +1079,7 @@ content_handler = ElementParser(AudioContent, "audioContent", [
     Attribute(adm_name="audioContentLanguage", arg_name="audioContentLanguage"),
     AttrElement(adm_name="dialogue", arg_name="dialogue", type=IntType),
     RefList("audioObject"),
-    loudness_handler.as_handler("loudnessMetadata")
+    loudness_handler.as_list_handler("loudnessMetadata"),
 ])
 
 object_handler = ElementParser(AudioObject, "audioObject", [

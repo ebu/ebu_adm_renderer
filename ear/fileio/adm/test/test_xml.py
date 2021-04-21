@@ -113,23 +113,20 @@ bf_path = "//adm:audioBlockFormat"
 
 
 def test_loudness(base):
-    assert base.adm_after_mods().audioContents[0].loudnessMetadata.loudnessMethod == "ITU-R BS.1770"
-    assert base.adm_after_mods().audioContents[0].loudnessMetadata.loudnessRecType == "EBU R128"
-    assert base.adm_after_mods().audioContents[0].loudnessMetadata.loudnessCorrectionType == "file"
-    assert base.adm_after_mods().audioContents[0].loudnessMetadata.integratedLoudness == -24.0
-    assert base.adm_after_mods().audioContents[0].loudnessMetadata.loudnessRange == 12.5
-    assert base.adm_after_mods().audioContents[0].loudnessMetadata.maxTruePeak == -5.2
-    assert base.adm_after_mods().audioContents[0].loudnessMetadata.maxMomentary == -9.9
-    assert base.adm_after_mods().audioContents[0].loudnessMetadata.dialogueLoudness == -10.2
+    def check_loudness(loudnessMetadatas):
+        [loudnessMetadata] = loudnessMetadatas
 
-    assert base.adm_after_mods().audioProgrammes[0].loudnessMetadata.loudnessMethod == "ITU-R BS.1770"
-    assert base.adm_after_mods().audioProgrammes[0].loudnessMetadata.loudnessRecType == "EBU R128"
-    assert base.adm_after_mods().audioProgrammes[0].loudnessMetadata.loudnessCorrectionType == "file"
-    assert base.adm_after_mods().audioProgrammes[0].loudnessMetadata.integratedLoudness == -24.0
-    assert base.adm_after_mods().audioProgrammes[0].loudnessMetadata.loudnessRange == 12.5
-    assert base.adm_after_mods().audioProgrammes[0].loudnessMetadata.maxTruePeak == -5.2
-    assert base.adm_after_mods().audioProgrammes[0].loudnessMetadata.maxMomentary == -9.9
-    assert base.adm_after_mods().audioProgrammes[0].loudnessMetadata.dialogueLoudness == -10.2
+        assert loudnessMetadata.loudnessMethod == "ITU-R BS.1770"
+        assert loudnessMetadata.loudnessRecType == "EBU R128"
+        assert loudnessMetadata.loudnessCorrectionType == "file"
+        assert loudnessMetadata.integratedLoudness == -24.0
+        assert loudnessMetadata.loudnessRange == 12.5
+        assert loudnessMetadata.maxTruePeak == -5.2
+        assert loudnessMetadata.maxMomentary == -9.9
+        assert loudnessMetadata.dialogueLoudness == -10.2
+
+    check_loudness(base.adm_after_mods().audioContents[0].loudnessMetadata)
+    check_loudness(base.adm_after_mods().audioProgrammes[0].loudnessMetadata)
 
 
 def test_gain(base):
