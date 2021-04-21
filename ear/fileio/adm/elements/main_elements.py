@@ -6,6 +6,7 @@ from six import string_types
 
 from ..exceptions import AdmError
 from ....common import CartesianScreen, PolarScreen, default_screen, list_of
+from .interaction import AudioObjectInteraction
 
 
 def _lookup_elements(adm, idRefs):
@@ -83,7 +84,6 @@ class AudioContent(ADMElement):
             self.audioObjects = _lookup_elements(adm, self.audioObjectIDRef)
             self.audioObjectIDRef = None
 
-
 @attrs(slots=True)
 class AudioObject(ADMElement):
     audioObjectName = attrib(default=None, validator=instance_of(string_types))
@@ -97,6 +97,8 @@ class AudioObject(ADMElement):
     audioTrackUIDs = attrib(default=Factory(list), repr=False)
     audioObjects = attrib(default=Factory(list), repr=False)
     audioComplementaryObjects = attrib(default=Factory(list), repr=False)
+    audioObjectInteraction = attrib(default=None,
+                                    validator=optional(instance_of(AudioObjectInteraction)))
 
     audioPackFormatIDRef = attrib(default=None)
     audioTrackUIDRef = attrib(default=None)

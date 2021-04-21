@@ -111,6 +111,8 @@ def get_acf(adm):
 
 bf_path = "//adm:audioBlockFormat"
 
+def test_interact(base):
+    assert base.adm_after_mods()
 
 def test_gain(base):
     assert base.bf_after_mods(add_children(bf_path, E.gain("0"))).gain == 0.0
@@ -719,6 +721,7 @@ def check_round_trip(adm):
     xml = adm_to_xml(adm)
     xml_str = lxml.etree.tostring(xml, pretty_print=True)
     parsed_adm = parse_string(xml_str)
+    print(xml_str)
 
     assert len(list(parsed_adm.elements)) == len(list(adm.elements))
 

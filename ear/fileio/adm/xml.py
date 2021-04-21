@@ -13,13 +13,12 @@ from .elements import (
     AudioBlockFormatObjects, AudioBlockFormatDirectSpeakers, AudioBlockFormatBinaural, AudioBlockFormatHoa, AudioBlockFormatMatrix,
     ChannelLock, BoundCoordinate, JumpPosition, ObjectDivergence, CartesianZone, PolarZone, ScreenEdgeLock, MatrixCoefficient)
 from .elements import (
-    AudioProgramme, AudioContent, AudioObject, AudioChannelFormat, AudioPackFormat, AudioStreamFormat, AudioTrackFormat, AudioTrackUID,
-    FormatDefinition, TypeDefinition, Frequency)
+    AudioProgramme, AudioContent, AudioObject, AudioObjectInteraction, AudioChannelFormat, AudioPackFormat, AudioStreamFormat, AudioTrackFormat, AudioTrackUID,
+    FormatDefinition, GainInteractionRange, PositionInteractionRange, TypeDefinition, Frequency)
 from .elements.geom import (DirectSpeakerPolarPosition, DirectSpeakerCartesianPosition,
                             ObjectPolarPosition, ObjectCartesianPosition)
 from .time_format import parse_time, unparse_time
 from ...common import PolarPosition, CartesianPosition, CartesianScreen, PolarScreen
-
 
 namespaces = [None,
               "urn:ebu:metadata-schema:ebuCore_2014",
@@ -875,6 +874,65 @@ def frequency_to_xml(parent, obj):
         parent.append(element)
 
 
+def handle_objectInteraction(kwargs, el):
+    objectInteraction = kwargs.setdefault("audioObjectInteraction",
+                                          AudioObjectInteraction(onOffInteract=BoolType.loads_func(el.attrib["onOffInteract"])))
+    if objectInteraction.gainInteract is not None:
+        objectInteraction.gainInteract = BoolType.loads_func(el.attrib["gainInteract"])
+    if objectInteraction.positionInteract is not None:
+        objectInteraction.positionInteract = BoolType.loads_func(el.attrib["positionInteract"])
+
+    if any([e.text for e in el.getiterator() if e.tag in qnames("gainInteractionRange")]):
+        objectInteraction.gainInteractionRange = GainInteractionRange()
+    if any([e.text for e in el.getiterator() if e.tag in qnames("positionInteractionRange")]):
+        objectInteraction.positionInteractionRange = PositionInteractionRange()
+    for element in el.getiterator():
+        if element.tag in qnames("gainInteractionRange"):
+            if element.attrib['bound'] == 'min':
+                objectInteraction.gainInteractionRange.min = float(element.text)
+            elif element.attrib['bound'] == 'max':
+                objectInteraction.gainInteractionRange.max = float(element.text)
+        elif element.tag in qnames("positionInteractionRange"):
+            attribute = str(element.attrib['bound'])+str(element.attrib['coordinate']).capitalize()
+            if attribute in [a for a in dir(objectInteraction.positionInteractionRange) if not a.startswith('__')]:
+                setattr(objectInteraction.positionInteractionRange, attribute, float(element.text))
+
+def objectInteraction_to_xml(parent, obj):
+    if obj.audioObjectInteraction is not None:
+        if obj.audioObjectInteraction.gainInteract is not None and obj.audioObjectInteraction.positionInteract is not None:
+            element = parent.makeelement(QName(default_ns, "audioObjectInteraction"),
+                                     onOffInteract=BoolType.dumps(obj.audioObjectInteraction.onOffInteract),
+                                     gainInteract=BoolType.dumps(obj.audioObjectInteraction.gainInteract),
+                                     positionInteract=BoolType.dumps(obj.audioObjectInteraction.positionInteract))
+        elif obj.audioObjectInteraction.gainInteract is not None and obj.audioObjectInteraction.positionInteract is None:
+            element = parent.makeelement(QName(default_ns, "audioObjectInteraction"),
+                                     onOffInteract=BoolType.dumps(obj.audioObjectInteraction.onOffInteract),
+                                     gainInteract=BoolType.dumps(obj.audioObjectInteraction.gainInteract))
+        elif obj.audioObjectInteraction.gainInteract is None and obj.audioObjectInteraction.positionInteract is not None:
+            element = parent.makeelement(QName(default_ns, "audioObjectInteraction"),
+                                     onOffInteract=BoolType.dumps(obj.audioObjectInteraction.onOffInteract),
+                                     positionInteract=BoolType.dumps(obj.audioObjectInteraction.positionInteract))
+        else:
+            element = parent.makeelement(QName(default_ns, "audioObjectInteraction"),
+                                     onOffInteract=BoolType.dumps(obj.audioObjectInteraction.onOffInteract))
+
+        if obj.audioObjectInteraction.gainInteractionRange is not None:
+            for attribute in [a for a in dir(obj.audioObjectInteraction.gainInteractionRange) if not a.startswith('__')]:
+                if getattr(obj.audioObjectInteraction.gainInteractionRange, attribute) is not None:
+                    element_c = element.makeelement(QName(default_ns, "gainInteractionRange"),
+                                                    bound=attribute)
+                    element_c.text = FloatType.dumps(getattr(obj.audioObjectInteraction.gainInteractionRange, attribute))
+                    element.append(element_c)
+        if obj.audioObjectInteraction.positionInteractionRange is not None:
+            for attribute in [a for a in dir(obj.audioObjectInteraction.positionInteractionRange) if not a.startswith('__')]:
+                if getattr(obj.audioObjectInteraction.positionInteractionRange, attribute) is not None:
+                    element_c = element.makeelement(QName(default_ns, "positionInteractionRange"),
+                                                    coordinate=attribute[3:].lower(), bound=attribute[:3])
+                    element_c.text = FloatType.dumps(getattr(obj.audioObjectInteraction.positionInteractionRange, attribute))
+                    element.append(element_c)
+        parent.append(element)
+
+
 channel_format_handler = ElementParser(AudioChannelFormat, "audioChannelFormat", [
     Attribute(adm_name="audioChannelFormatID", arg_name="id", required=True),
     Attribute(adm_name="audioChannelFormatName", arg_name="audioChannelFormatName", required=True),
@@ -1052,6 +1110,8 @@ content_handler = ElementParser(AudioContent, "audioContent", [
     RefList("audioObject"),
 ])
 
+
+
 object_handler = ElementParser(AudioObject, "audioObject", [
     Attribute(adm_name="audioObjectID", arg_name="id", required=True),
     Attribute(adm_name="audioObjectName", arg_name="audioObjectName", required=True),
@@ -1065,6 +1125,7 @@ object_handler = ElementParser(AudioObject, "audioObject", [
     RefList("audioObject"),
     RefList("audioComplementaryObject"),
     ListElement(adm_name="audioTrackUIDRef", arg_name="audioTrackUIDRef", attr_name="audioTrackUIDs", type=TrackUIDRefType),
+    CustomElement("audioObjectInteraction", handle_objectInteraction, to_xml=objectInteraction_to_xml),
 ])
 
 track_uid_handler = ElementParser(AudioTrackUID, "audioTrackUID", [
