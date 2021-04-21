@@ -4,8 +4,8 @@ from .main_elements import (AudioChannelFormat, AudioPackFormat, AudioTrackForma
                             AudioObject, AudioTrackUID, FormatDefinition, TypeDefinition,
                             Frequency, LoudnessMetadata)
 from .block_formats import (AudioBlockFormatObjects, ChannelLock, ObjectDivergence,
-                            JumpPosition, AudioBlockFormatDirectSpeakers, AudioBlockFormatBinaural, 
-                            AudioBlockFormatHoa, AudioBlockFormatMatrix, MatrixCoefficient,
+                            JumpPosition, AudioBlockFormatDirectSpeakers, AudioBlockFormatBinaural, AudioBlockFormatHoa,
+                            AudioBlockFormatMatrix, MatrixCoefficient,
                             CartesianZone, PolarZone)
 from .geom import (DirectSpeakerPolarPosition, DirectSpeakerCartesianPosition, BoundCoordinate,
                    ObjectPolarPosition, ObjectCartesianPosition, ScreenEdgeLock)
