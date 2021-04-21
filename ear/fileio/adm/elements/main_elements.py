@@ -46,7 +46,7 @@ class LoudnessMetadata(object):
     maxMomentary = attrib(default=None, validator=optional(instance_of(float)))
     maxShortTerm = attrib(default=None, validator=optional(instance_of(float)))
     dialogueLoudness = attrib(default=None, validator=optional(instance_of(float)))
-    
+
 
 @attrs(slots=True)
 class ADMElement(object):
