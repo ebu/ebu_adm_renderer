@@ -112,6 +112,23 @@ def get_acf(adm):
 bf_path = "//adm:audioBlockFormat"
 
 
+def test_loudness(base):
+    def check_loudness(loudnessMetadatas):
+        [loudnessMetadata] = loudnessMetadatas
+
+        assert loudnessMetadata.loudnessMethod == "ITU-R BS.1770"
+        assert loudnessMetadata.loudnessRecType == "EBU R128"
+        assert loudnessMetadata.loudnessCorrectionType == "file"
+        assert loudnessMetadata.integratedLoudness == -24.0
+        assert loudnessMetadata.loudnessRange == 12.5
+        assert loudnessMetadata.maxTruePeak == -5.2
+        assert loudnessMetadata.maxMomentary == -9.9
+        assert loudnessMetadata.dialogueLoudness == -10.2
+
+    check_loudness(base.adm_after_mods().audioContents[0].loudnessMetadata)
+    check_loudness(base.adm_after_mods().audioProgrammes[0].loudnessMetadata)
+
+
 def test_gain(base):
     assert base.bf_after_mods(add_children(bf_path, E.gain("0"))).gain == 0.0
     assert base.bf_after_mods(add_children(bf_path, E.gain("0.5"))).gain == 0.5

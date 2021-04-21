@@ -5,9 +5,25 @@
             <audioFormatExtended>
                 <audioProgramme audioProgrammeID="APR_1001" audioProgrammeName="PanningNoise">
                     <audioContentIDRef>ACO_1001</audioContentIDRef>
+                    <loudnessMetadata loudnessMethod="ITU-R BS.1770" loudnessRecType="EBU R128" loudnessCorrectionType="file">
+                        <integratedLoudness>-24.0</integratedLoudness>
+                        <loudnessRange>12.5</loudnessRange>
+                        <maxTruePeak>-5.2</maxTruePeak>
+                        <maxMomentary>-9.9</maxMomentary>
+                        <maxShortTerm>-18.3</maxShortTerm>
+                        <dialogueLoudness>-10.2</dialogueLoudness>
+                    </loudnessMetadata>
                 </audioProgramme>
                 <audioContent audioContentID="ACO_1001" audioContentName="PanningNoise">
                     <audioObjectIDRef>AO_1001</audioObjectIDRef>
+                    <loudnessMetadata loudnessMethod="ITU-R BS.1770" loudnessRecType="EBU R128" loudnessCorrectionType="file">
+                        <integratedLoudness>-24.0</integratedLoudness>
+                        <loudnessRange>12.5</loudnessRange>
+                        <maxTruePeak>-5.2</maxTruePeak>
+                        <maxMomentary>-9.9</maxMomentary>
+                        <maxShortTerm>-18.3</maxShortTerm>
+                        <dialogueLoudness>-10.2</dialogueLoudness>
+                    </loudnessMetadata>
                 </audioContent>
                 <audioObject audioObjectID="AO_1001" audioObjectName="Noise" duration="00:00:12.00000" start="00:00:00.00000">
                     <audioPackFormatIDRef>AP_00031001</audioPackFormatIDRef>
