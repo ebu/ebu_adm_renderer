@@ -14,7 +14,7 @@ from .elements import (
     ChannelLock, BoundCoordinate, JumpPosition, ObjectDivergence, CartesianZone, PolarZone, ScreenEdgeLock, MatrixCoefficient)
 from .elements import (
     AudioProgramme, AudioContent, AudioObject, AudioChannelFormat, AudioPackFormat, AudioStreamFormat, AudioTrackFormat, AudioTrackUID,
-    FormatDefinition, TypeDefinition, Frequency)
+    FormatDefinition, TypeDefinition, Frequency, LoudnessMetadata)
 from .elements.geom import (DirectSpeakerPolarPosition, DirectSpeakerCartesianPosition,
                             ObjectPolarPosition, ObjectCartesianPosition)
 from .time_format import parse_time, unparse_time
@@ -1033,6 +1033,19 @@ def make_audio_programme(referenceScreen=None, **kwargs):
     return AudioProgramme(referenceScreen=referenceScreen, **kwargs)
 
 
+
+loudness_handler = ElementParser(LoudnessMetadata, "loudnessMetadata", [
+    Attribute(adm_name="loudnessMethod", arg_name="loudnessMethod", type=StringType),
+    Attribute(adm_name="loudnessRecType", arg_name="loudnessRecType", type=StringType),
+    Attribute(adm_name="loudnessCorrectionType", arg_name="loudnessCorrectionType", type=StringType),
+    AttrElement(adm_name="integratedLoudness", arg_name="integratedLoudness", type=FloatType),
+    AttrElement(adm_name="loudnessRange", arg_name="loudnessRange", type=FloatType),
+    AttrElement(adm_name="maxTruePeak", arg_name="maxTruePeak", type=FloatType),
+    AttrElement(adm_name="maxMomentary", arg_name="maxMomentary", type=FloatType),
+    AttrElement(adm_name="maxShortTerm", arg_name="maxShortTerm", type=FloatType),
+    AttrElement(adm_name="dialogueLoudness", arg_name="dialogueLoudness", type=FloatType)
+])
+
 programme_handler = ElementParser(make_audio_programme, "audioProgramme", [
     Attribute(adm_name="audioProgrammeID", arg_name="id", required=True),
     Attribute(adm_name="audioProgrammeName", arg_name="audioProgrammeName", required=True),
@@ -1042,6 +1055,7 @@ programme_handler = ElementParser(make_audio_programme, "audioProgramme", [
     Attribute(adm_name="maxDuckingDepth", arg_name="maxDuckingDepth", type=FloatType),
     RefList("audioContent"),
     screen_handler.as_handler("referenceScreen", default=default_screen),
+    loudness_handler.as_handler("loudnessMetadata")
 ])
 
 content_handler = ElementParser(AudioContent, "audioContent", [
@@ -1050,6 +1064,7 @@ content_handler = ElementParser(AudioContent, "audioContent", [
     Attribute(adm_name="audioContentLanguage", arg_name="audioContentLanguage"),
     AttrElement(adm_name="dialogue", arg_name="dialogue", type=IntType),
     RefList("audioObject"),
+    loudness_handler.as_handler("loudnessMetadata")
 ])
 
 object_handler = ElementParser(AudioObject, "audioObject", [
