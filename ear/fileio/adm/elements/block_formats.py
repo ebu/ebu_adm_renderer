@@ -18,6 +18,12 @@ class BlockFormat(object):
     def validate(self):
         validate(self)
 
+        if not (
+            (self.rtime is None and self.duration is None)
+            or (self.rtime is not None and self.duration is not None)
+        ):
+            raise ValueError("rtime and duration must be used together")
+
 
 @attrs(slots=True)
 class MatrixCoefficient(object):

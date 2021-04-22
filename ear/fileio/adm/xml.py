@@ -1126,7 +1126,7 @@ def _set_default_rtimes(channelFormats):
                 bf.rtime = Fraction(0)
 
 
-def _check_block_format_durations(channelFormats, fix=False):
+def _check_block_format_durations(channelFormats):
     for channelFormat in channelFormats:
         block_formats = channelFormat.audioBlockFormats
 
@@ -1135,22 +1135,11 @@ def _check_block_format_durations(channelFormats, fix=False):
                     bf_b.rtime is None or bf_b.duration is None):
                 continue
 
-            old_duration = bf_a.duration
-            new_duration = bf_b.rtime - bf_a.rtime
-
-            if old_duration != new_duration:
-                if fix:
-                    warnings.warn("{direction} duration of block format {id}; was: {old}, now: {new}".format(
-                        direction="expanded" if new_duration > old_duration else "contracted",
-                        id=bf_a.id,
-                        old=old_duration,
-                        new=new_duration))
-                    bf_a.duration = new_duration
-                else:
-                    warnings.warn(
-                        "(rtime + duration) of block format {id_a} does not equal rtime of block format {id_b}.".format(
-                            id_a=bf_a.id,
-                            id_b=bf_b.id))
+            if bf_a.duration != bf_b.rtime - bf_a.rtime:
+                warnings.warn(
+                    "(rtime + duration) of block format {id_a} does not equal rtime of block format {id_b}.".format(
+                        id_a=bf_a.id,
+                        id_b=bf_b.id))
 
 
 def load_axml_doc(adm, element, lookup_references=True, fix_block_format_durations=False):
@@ -1161,7 +1150,13 @@ def load_axml_doc(adm, element, lookup_references=True, fix_block_format_duratio
 
     _set_default_rtimes(adm.audioChannelFormats)
     _sort_block_formats(adm.audioChannelFormats)
-    _check_block_format_durations(adm.audioChannelFormats, fix=fix_block_format_durations)
+    _check_block_format_durations(adm.audioChannelFormats)
+
+    if fix_block_format_durations:
+        from . import timing_fixes
+        warnings.warn("fix_block_format_durations is deprecated, use "
+                      "the functions in ear.fileio.timing_fixes instead", DeprecationWarning)
+        timing_fixes.fix_blockFormat_durations(adm)
 
 
 def load_axml_string(adm, axmlstr, **kwargs):
