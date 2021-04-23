@@ -14,8 +14,8 @@ def to_polar(block_format):
                                                       block_format.position.Y,
                                                       block_format.position.Z,
                                                       block_format.width,
-                                                      block_format.height,
-                                                      block_format.depth)
+                                                      block_format.depth,
+                                                      block_format.height)
 
         return evolve(block_format,
                       position=ObjectPolarPosition(azimuth, elevation, distance,
@@ -31,7 +31,7 @@ def to_cartesian(block_format):
         return block_format
     else:
         (X, Y, Z,
-         width, height, depth) = extent_polar_to_cart(block_format.position.azimuth,
+         width, depth, height) = extent_polar_to_cart(block_format.position.azimuth,
                                                       block_format.position.elevation,
                                                       block_format.position.distance,
                                                       block_format.width,
