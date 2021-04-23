@@ -61,23 +61,6 @@ def test_conversion_corners():
                     npt.assert_allclose(point_cart_to_polar(x*d, y*d, z*d),
                                         (az, el, d), atol=1e-10)
 
-def test_conversion_poles():
-    for sign in [-1, 1]:
-        for d in [0.5, 1, 2]:
-            npt.assert_allclose(point_polar_to_cart(0, sign * 90, d),
-                                [0.0, 0.0, sign * d], atol=1e-10)
-            npt.assert_allclose(point_cart_to_polar(0.0, 0.0, sign * d),
-                                (0, sign * 90, d), atol=1e-10)
-
-def test_conversion_centre():
-    for az in [-90, 0, 90]:
-        for el in [-90, 0, 90]:
-            npt.assert_allclose(point_polar_to_cart(az, el, 0.0),
-                                [0.0, 0.0, 0.0], atol=1e-10)
-
-    _az, _el, dist = point_cart_to_polar(0.0, 0.0, 0.0)
-    assert dist == approx(0.0)
-
 
 def test_conversion_poles():
     for sign in [-1, 1]:
