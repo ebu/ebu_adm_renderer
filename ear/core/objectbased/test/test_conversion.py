@@ -1,5 +1,5 @@
 from ..conversion import to_cartesian, to_polar, point_cart_to_polar, point_polar_to_cart, Conversion
-from ....fileio.adm.elements import AudioBlockFormatObjects, ObjectPolarPosition
+from ....fileio.adm.elements import AudioBlockFormatObjects, ObjectCartesianPosition, ObjectPolarPosition
 from attr import asdict
 import numpy as np
 import numpy.testing as npt
@@ -99,3 +99,46 @@ def test_map_linear_az():
     for az in np.linspace(0, 30):
         x = Conversion._map_az_to_linear(0, -30, az)
         assert Conversion._map_linear_to_az(0, -30, x) == approx(az)
+
+
+# tests for mapping between width height and depth at different positions
+whd_mappings = [
+    # azimuth, elevation, Cartesian equivalent of Width, Height, Depth
+    (0.0, 0.0, "whd"),
+    (90.0, 0.0, "dhw"),  # polar width -> Cartesian depth etc.
+    (-90.0, 0.0, "dhw"),
+    (180.0, 0.0, "whd"),
+    (0.0, 90.0, "wdh"),
+    (0.0, -90.0, "wdh"),
+]
+
+
+@pytest.mark.parametrize("az,el,whd", whd_mappings)
+@pytest.mark.parametrize("polar_axis", "whd")
+def test_whd_mapping_to_cartesian(az, el, whd, polar_axis):
+    cart_axis = "whd"[whd.index(polar_axis)]
+
+    bf = AudioBlockFormatObjects(
+        position=ObjectPolarPosition(az, el, 1.0),
+        cartesian=False,
+        width=20.0 if polar_axis == "w" else 0.0,
+        height=20.0 if polar_axis == "h" else 0.0,
+        depth=0.2 if polar_axis == "d" else 0.0,
+    )
+    bf_c = to_cartesian(bf)
+    assert cart_axis == "whd"[np.argmax([bf_c.width, bf_c.height, bf_c.depth])]
+
+
+@pytest.mark.parametrize("az,el,whd", whd_mappings)
+@pytest.mark.parametrize("polar_axis", "whd")
+def test_whd_mapping_to_polar(az, el, whd, polar_axis):
+    cart_axis = "whd"[whd.index(polar_axis)]
+    bf = AudioBlockFormatObjects(
+        position=ObjectCartesianPosition(*point_polar_to_cart(az, el, 1.0)),
+        cartesian=True,
+        width=0.1 if cart_axis == "w" else 0.0,
+        height=0.1 if cart_axis == "h" else 0.0,
+        depth=0.1 if cart_axis == "d" else 0.0,
+    )
+    bf_p = to_polar(bf)
+    assert polar_axis == "whd"[np.argmax([bf_p.width, bf_p.height, bf_p.depth * 10])]
