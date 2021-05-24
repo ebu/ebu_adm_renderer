@@ -113,20 +113,45 @@ bf_path = "//adm:audioBlockFormat"
 
 
 def test_loudness(base):
+    # test a couple of different method strings to make sure that multiple
+    # elements are handled correctly
+    test_methods = ["ITU-R BS.1770", "proprietary"]
+
+    children = [
+        E.loudnessMetadata(
+            E.integratedLoudness("-24.0"),
+            E.loudnessRange("12.5"),
+            E.maxTruePeak("-5.2"),
+            E.maxMomentary("-9.9"),
+            E.maxShortTerm("-18.3"),
+            E.dialogueLoudness("-10.2"),
+            loudnessMethod=loudnessMethod,
+            loudnessRecType="EBU R128",
+            loudnessCorrectionType="file",
+        )
+        for loudnessMethod in test_methods
+    ]
+
     def check_loudness(loudnessMetadatas):
-        [loudnessMetadata] = loudnessMetadatas
+        assert len(loudnessMetadatas) == len(test_methods)
+        for loudnessMetadata, method in zip(loudnessMetadatas, test_methods):
+            assert loudnessMetadata.loudnessMethod == method
+            assert loudnessMetadata.loudnessRecType == "EBU R128"
+            assert loudnessMetadata.loudnessCorrectionType == "file"
+            assert loudnessMetadata.integratedLoudness == -24.0
+            assert loudnessMetadata.loudnessRange == 12.5
+            assert loudnessMetadata.maxTruePeak == -5.2
+            assert loudnessMetadata.maxMomentary == -9.9
+            assert loudnessMetadata.dialogueLoudness == -10.2
 
-        assert loudnessMetadata.loudnessMethod == "ITU-R BS.1770"
-        assert loudnessMetadata.loudnessRecType == "EBU R128"
-        assert loudnessMetadata.loudnessCorrectionType == "file"
-        assert loudnessMetadata.integratedLoudness == -24.0
-        assert loudnessMetadata.loudnessRange == 12.5
-        assert loudnessMetadata.maxTruePeak == -5.2
-        assert loudnessMetadata.maxMomentary == -9.9
-        assert loudnessMetadata.dialogueLoudness == -10.2
-
-    check_loudness(base.adm_after_mods().audioContents[0].loudnessMetadata)
-    check_loudness(base.adm_after_mods().audioProgrammes[0].loudnessMetadata)
+    # need to copy as lxml doesn't like elements appearing in more than one
+    # place
+    adm = base.adm_after_mods(
+        add_children("//adm:audioContent", *deepcopy(children)),
+        add_children("//adm:audioProgramme", *deepcopy(children)),
+    )
+    check_loudness(adm.audioProgrammes[0].loudnessMetadata)
+    check_loudness(adm.audioContents[0].loudnessMetadata)
 
 
 def test_gain(base):
