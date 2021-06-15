@@ -1,5 +1,5 @@
-import ruamel.yaml
 import lxml.etree
+from ..compatibility import load_yaml
 from ..core import layout
 from ..fileio.adm.builder import ADMBuilder
 from ..fileio.adm.elements import AudioBlockFormatObjects, JumpPosition, Frequency
@@ -152,7 +152,7 @@ def create_item(builder, item):
 
 def load_test_file_adm(filename):
     with open(filename) as f:
-        yaml = ruamel.yaml.safe_load(f)
+        yaml = load_yaml(f)
 
     builder = ADMBuilder()
 

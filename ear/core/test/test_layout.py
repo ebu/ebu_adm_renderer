@@ -1,6 +1,7 @@
 from ..layout import Channel, Layout, load_speakers, load_real_layout, Speaker, RealLayout
 from ..geom import cart, PolarPosition, CartesianPosition
 from ...common import PolarScreen, CartesianScreen
+from ...compatibility import dump_yaml_str
 from attr import evolve
 import pytest
 import numpy as np
@@ -140,9 +141,8 @@ def test_Layout_check_upmix_matrix(layout):
 
 def test_load_layout_info():
     def run_test(yaml_obj, expected, func=load_real_layout):
-        from ruamel import yaml
         from six import StringIO
-        yaml_str = yaml.dump(yaml_obj)
+        yaml_str = dump_yaml_str(yaml_obj)
 
         result = func(StringIO(yaml_str))
 

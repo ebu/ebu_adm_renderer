@@ -5,6 +5,7 @@ import numpy as np
 import sys
 from .geom import CartesianPosition, PolarPosition, inside_angle_range
 from ..common import list_of, CartesianScreen, PolarScreen, default_screen
+from ..compatibility import load_yaml
 
 
 def to_polar_position(pp):
@@ -291,8 +292,6 @@ def load_real_layout(fileobj):
     Returns:
         list of Speaker
     """
-    from ruamel import yaml
-
     def parse_yaml_polar_position(position):
         if set(position.keys()) == set(["az", "el", "r"]):
             return PolarPosition(position["az"], position["el"], position["r"])
@@ -344,7 +343,7 @@ def load_real_layout(fileobj):
         else:
             raise Exception("Unknown screen type: {!r}".format(screen_type))
 
-    yaml_info = yaml.safe_load(fileobj)
+    yaml_info = load_yaml(fileobj)
 
     if isinstance(yaml_info, dict):
         yaml_info_dict = yaml_info

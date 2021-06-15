@@ -1,7 +1,7 @@
 def load_config(args):
-    from ruamel import yaml
+    from ..compatibility import load_yaml
     if args.config is not None:
-        return yaml.safe_load(args.config)
+        return load_yaml(args.config)
     else:
         return {}
 

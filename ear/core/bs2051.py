@@ -1,5 +1,5 @@
 import pkg_resources
-from ruamel import yaml
+from ..compatibility import load_yaml
 from .geom import PolarPosition
 from .layout import Channel, Layout
 
@@ -29,7 +29,7 @@ def _dict_to_layout(d):
 def _load_layouts():
     fname = "data/2051_layouts.yaml"
     with pkg_resources.resource_stream(__name__, fname) as layouts_file:
-        layouts_data = yaml.safe_load(layouts_file)
+        layouts_data = load_yaml(layouts_file)
 
         layouts = list(map(_dict_to_layout, layouts_data))
 

@@ -1,14 +1,14 @@
 import numpy as np
 from .objectbased.conversion import point_polar_to_cart
+from ..compatibility import load_yaml
 
 
 def _load_allo_positions():
     import pkg_resources
-    from ruamel import yaml
 
     fname = "data/allo_positions.yaml"
     with pkg_resources.resource_stream(__name__, fname) as layouts_file:
-        return yaml.safe_load(layouts_file)
+        return load_yaml(layouts_file)
 
 
 _allo_positions = _load_allo_positions()
