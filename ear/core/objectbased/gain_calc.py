@@ -45,7 +45,9 @@ class ChannelLockHandlerBase(object):
         # ties broken by elevation, absolute azimuth then azimuth.
         priority_order = np.lexsort((azimuths, np.abs(azimuths),
                                      elevations, np.abs(elevations)))
-        self.channel_priority = np.arange(len(layout.channels))[priority_order]
+
+        self.channel_priority = np.zeros(len(layout.channels), dtype=int)
+        self.channel_priority[priority_order] = np.arange(len(layout.channels))
 
     def handle(self, position, channelLock, excluded=None):
         """Apply channel lock to a position.
