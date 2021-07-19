@@ -194,6 +194,16 @@ def test_channel_lock_no_max_exclude(layout, gain_calc):
              direct_gains=[("M-030", 1.0)])
 
 
+def test_channel_lock_centre_cart():
+    layout = bs2051.get_layout("9+10+3").without_lfe
+    gain_calc = GainCalc(layout)
+    run_test(layout, gain_calc,
+             dict(channelLock=ChannelLock(),
+                  cartesian=True,
+                  position=dict(X=0.0, Y=0.0, Z=0.0)),
+             direct_gains=[("M-090", 1.0)])
+
+
 def test_diverge_half(layout, gain_calc):
     run_test(layout, gain_calc,
              dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0),
