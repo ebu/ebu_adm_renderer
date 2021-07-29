@@ -1,0 +1,122 @@
+BW64 I/O
+========
+
+.. py:module:: ear.fileio
+   :noindex:
+
+To read or write a BW64 file, the primary interface is the
+:func:`openBw64Adm` and :func:`openBw64` functions.
+
+To read samples and ADM metadata (as an :class:`.ADM` object) from a file, use
+something like:
+
+.. code-block:: python
+
+    from ear.fileio import openBw64Adm
+
+    with openBw64Adm("path/to/file.wav") as f:
+        adm = f.adm # get the ADM metadata
+
+        for sample_block in f.iter_sample_blocks(1024):
+            # do something with sample_block, which will be a numpy float array
+            # of (nsamples, nchannels)
+            print(sample_block.shape)
+
+For lower level access without parsing ADM data:
+
+.. code-block:: python
+
+    from ear.fileio import openBw64
+
+    with openBw64("path/to/file.wav") as f:
+        print(f.axml) # get the raw AXML data
+        print(f.chna) # get the CHNA data
+
+        while True:
+            sample_block = f.read(1024)
+            if not len(sample_block):
+                break
+            print(sample_block.shape)
+
+To write a file, you have to construct the format chunk manually:
+
+.. code-block:: python
+
+    from ear.fileio.bw64.chunks import FormatInfoChunk, ChnaChunk, AudioID
+    import numpy as np
+
+    # dummy ADM data
+    axml = b'some AXML data here'
+    chna = ChnaChunk([
+        AudioID(1, 'ATU_00000001', 'AT_00010001_01', 'AP_00010003'),
+    ])
+
+    formatInfo = FormatInfoChunk(formatTag=1,
+                                 channelCount=1,
+                                 sampleRate=48000,
+                                 bitsPerSample=24)
+
+    with openBw64("path/to/file.wav", "w", formatInfo=formatInfo) as f:
+        # optionally write axml and chna data
+        f.axml = axml
+        f.chna = chna
+
+        # write some sample blocks
+        for i in range(10):
+            f.write(np.zeros((1024, 1)))
+
+To write some generated adm data, use something like this to generate the CHNA
+and AXML chunk data:
+
+.. code-block:: python
+
+    from ear.fileio.adm.chna import populate_chna_chunk
+    from ear.fileio.adm.generate_ids import generate_ids
+    from ear.fileio.adm.xml import adm_to_xml
+    import lxml.etree
+
+    adm = ...
+
+    generate_ids(adm)
+
+    chna = ChnaChunk()
+    populate_chna_chunk(chna, adm)
+
+    xml = adm_to_xml(adm)
+    axml = lxml.etree.tostring(xml, pretty_print=True)
+
+.. seealso::
+
+    :func:`.generate_ids`, :func:`.populate_chna_chunk`, :func:`.adm_to_xml`.
+    For generating ADM metadata, see :ref:`adm builder`.
+
+These functions and classes are documented below:
+
+.. autofunction:: ear.fileio.openBw64
+
+.. autofunction:: ear.fileio.openBw64Adm
+
+.. autoclass:: ear.fileio.utils.Bw64AdmReader
+   :members:
+
+.. autoclass:: ear.fileio.bw64.Bw64Reader
+   :members:
+
+.. autoclass:: ear.fileio.bw64.Bw64Writer
+   :members:
+
+Chunk Classes
+~~~~~~~~~~~~~
+
+These classes represent chunks (or parts of chunks) in a BW64 file:
+
+.. autoclass:: ear.fileio.bw64.chunks.ChnaChunk
+   :members:
+
+.. autoclass:: ear.fileio.bw64.chunks.AudioID
+   :members:
+
+.. autoclass:: ear.fileio.bw64.chunks.FormatInfoChunk
+   :members:
+   :undoc-members:
+
