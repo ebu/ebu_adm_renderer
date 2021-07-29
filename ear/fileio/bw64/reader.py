@@ -33,6 +33,7 @@ class Bw64Reader(object):
 
     @property
     def axml(self):
+        """bytes or None: data contained in axml chunk"""
         if(b'axml' in self._chunks):
             last_position = self._buffer.tell()
             self._buffer.seek(self._chunks[b'axml'].position.data)
@@ -44,6 +45,7 @@ class Bw64Reader(object):
 
     @property
     def bext(self):
+        """bytes or None: data contained in bext chunk"""
         if(b'bext' in self._chunks):
             last_position = self._buffer.tell()
             self._buffer.seek(self._chunks[b'bext'].position.data)
@@ -55,18 +57,22 @@ class Bw64Reader(object):
 
     @property
     def chna(self):
+        """chunks.ChnaChunk or None: CHNA data"""
         return self._chna
 
     @property
     def sampleRate(self):
+        """sample rate in Hz"""
         return self._formatInfo.sampleRate
 
     @property
     def channels(self):
+        """number of channels"""
         return self._formatInfo.channelCount
 
     @property
     def bitdepth(self):
+        """number of bits per sample"""
         return self._formatInfo.bitsPerSample
 
     def seek(self, offset, whence=0):
@@ -89,6 +95,13 @@ class Bw64Reader(object):
             self._buffer.seek(dataChunkOffset + frameOffset)
 
     def read(self, numberOfFrames):
+        """read up to numberOfFrames samples
+
+        Returns:
+            np.ndarray of float: sample blocks of shape (nsamples, nchannels),
+            where nsamples is <= numberOfFrames, and nchannels is the number of
+            channels
+        """
         if(self.tell() + numberOfFrames > len(self)):
             numberOfFrames = len(self) - self.tell()
         rawData = self._buffer.read(
@@ -97,6 +110,7 @@ class Bw64Reader(object):
         return deinterleave(samplesDecoded, self.channels)
 
     def tell(self):
+        """Get the sample number of the next sample returned by read."""
         return ((self._buffer.tell() - self._chunks[b'data'].position.data) //
                 self._formatInfo.blockAlignment)
 
