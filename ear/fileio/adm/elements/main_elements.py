@@ -24,6 +24,10 @@ def _link_track_stream_format(audioTrackFormat, audioStreamFormat):
 
 
 class TypeDefinition(Enum):
+    """ADM type definitions, representing ``typeDefintion`` and ``typeLabel``
+    attributes.
+    """
+
     DirectSpeakers = 1
     Matrix = 2
     Objects = 3
@@ -32,11 +36,29 @@ class TypeDefinition(Enum):
 
 
 class FormatDefinition(Enum):
+    """ADM format definitions, representing ``formatDefintion`` and
+    ``formatLabel`` attributes.
+    """
+
     PCM = 1
 
 
 @attrs(slots=True)
 class LoudnessMetadata(object):
+    """ADM loudnessMetadata
+
+    Attributes:
+        loudnessMethod (Optional[str])
+        loudnessRecType (Optional[str])
+        loudnessCorrectionType (Optional[str])
+        integratedLoudness (Optional[float])
+        loudnessRange (Optional[float])
+        maxTruePeak (Optional[float])
+        maxMomentary (Optional[float])
+        maxShortTerm (Optional[float])
+        dialogueLoudness (Optional[float])
+    """
+
     loudnessMethod = attrib(default=None, validator=optional(instance_of(string_types)))
     loudnessRecType = attrib(default=None, validator=optional(instance_of(string_types)))
     loudnessCorrectionType = attrib(default=None, validator=optional(instance_of(string_types)))
@@ -50,6 +72,13 @@ class LoudnessMetadata(object):
 
 @attrs(slots=True)
 class ADMElement(object):
+    """base class for top-level ADM elements
+
+    Attributes:
+        id (str): ADM ID attribute (e.g. audioProgrammeID)
+        is_common_definition (bool): was this read from the common definitions file?
+    """
+
     id = attrib(default=None)
     is_common_definition = attrib(default=False, validator=instance_of(bool))
 
@@ -63,6 +92,20 @@ class ADMElement(object):
 
 @attrs(slots=True)
 class AudioProgramme(ADMElement):
+    """ADM audioProgramme
+
+    Attributes:
+        audioProgrammeName (str)
+        audioProgrammeLanguage (Optional[str])
+        start (Optional[fractions.Fraction])
+        end (Optional[fractions.Fraction])
+        maxDuckingDepth (Optional[float])
+        audioContents (list[AudioContent]): audioContent elements referenced
+            via audioContentIDRef
+        referenceScreen (Optional[Union[CartesianScreen, PolarScreen]])
+        loudnessMetadata (list[LoudnessMetadata])
+    """
+
     audioProgrammeName = attrib(default=None, validator=instance_of(string_types))
     audioProgrammeLanguage = attrib(default=None)
     start = attrib(default=None)
@@ -84,6 +127,16 @@ class AudioProgramme(ADMElement):
 
 @attrs(slots=True)
 class AudioContent(ADMElement):
+    """ADM audioContent
+
+    Attributes:
+        audioContentName (str)
+        audioContentLanguage (Optional[str])
+        loudnessMetadata (list[LoudnessMetadata])
+        dialogue (Optional[int])
+        audioObject (list[AudioObject])
+    """
+
     audioContentName = attrib(default=None, validator=instance_of(string_types))
     audioContentLanguage = attrib(default=None)
     loudnessMetadata = attrib(default=Factory(list), validator=list_of(LoudnessMetadata))
@@ -100,6 +153,22 @@ class AudioContent(ADMElement):
 
 @attrs(slots=True)
 class AudioObject(ADMElement):
+    """ADM audioObject
+
+    Attributes:
+        audioObjectName (str)
+        start (Optional[fractions.Fraction])
+        duration (Optional[fractions.Fraction])
+        importance (Optional[int])
+        interact (Optional[bool])
+        disableDucking (Optional[bool])
+        dialogue (Optional[int])
+        audioPackFormats (list[AudioPackFormat])
+        audioTrackUIDs (list[AudioTrackUID])
+        audioObjects (list[AudioObject])
+        audioComplementaryObjects (list[AudioObject])
+    """
+
     audioObjectName = attrib(default=None, validator=instance_of(string_types))
     start = attrib(validator=optional(instance_of(Fraction)), default=None)
     duration = attrib(validator=optional(instance_of(Fraction)), default=None)
@@ -135,6 +204,27 @@ class AudioObject(ADMElement):
 
 @attrs(slots=True)
 class AudioPackFormat(ADMElement):
+    """ADM audioPackformat
+
+    Attributes:
+        audioPackFormatName (str)
+        type (TypeDefinition): ``typeDefintion`` and/or ``typeLabel``
+        absoluteDistance (Optional[float])
+        audioChannelFormats (list[AudioChannelFormat])
+        audioPackFormats (list[AudioPackFormat])
+        importance (Optional[int])
+
+        encodePackFormats (list[AudioPackFormat]): Only for type==Matrix.
+            Encode and decode pack references are a single binary many-many
+            relationship; we only store one side.
+        inputPackFormat (Optional[AudioPackFormat]): Only for type==Matrix.
+        outputPackFormat (Optional[AudioPackFormat]): Only for type==Matrix.
+
+        normalization (Optional[str]): Only for type==HOA.
+        nfcRefDist (Optional[float]): Only for type==HOA.
+        screenRef (Optional[bool]): Only for type==HOA.
+    """
+
     audioPackFormatName = attrib(default=None, validator=instance_of(string_types))
     type = attrib(default=None, validator=instance_of(TypeDefinition))
     absoluteDistance = attrib(default=None)
@@ -195,12 +285,28 @@ class AudioPackFormat(ADMElement):
 
 @attrs(slots=True)
 class Frequency(object):
+    """ADM frequency element
+
+    Attributes:
+        lowPass (Optional[float])
+        highPass (Optional[float])
+    """
+
     lowPass = attrib(default=None, validator=optional(instance_of(float)))
     highPass = attrib(default=None, validator=optional(instance_of(float)))
 
 
 @attrs(slots=True)
 class AudioChannelFormat(ADMElement):
+    """ADM audioChannelFormat
+
+    Attributes:
+        audioChannelFormatName (str)
+        type (TypeDefinition): ``typeDefintion`` and/or ``typeLabel``
+        audioBlockFormats (list[AudioBlockFormat])
+        frequency (Frequency)
+    """
+
     audioChannelFormatName = attrib(default=None, validator=instance_of(string_types))
     type = attrib(default=None, validator=instance_of(TypeDefinition))
     audioBlockFormats = attrib(default=Factory(list))
@@ -224,6 +330,15 @@ class AudioChannelFormat(ADMElement):
 
 @attrs(slots=True)
 class AudioStreamFormat(ADMElement):
+    """ADM audioStreamFormat
+
+    Attributes:
+        audioStreamFormatName (str)
+        format (FormatDefinition): ``formatDefintion`` and/or ``formatLabel``
+        audioChannelFormat (Optional[AudioStreamFormat])
+        audioPackFormat (Optional[AudioPackFormat])
+    """
+
     audioStreamFormatName = attrib(default=None, validator=instance_of(string_types))
 
     format = attrib(default=None, validator=instance_of(FormatDefinition))
@@ -261,6 +376,14 @@ class AudioStreamFormat(ADMElement):
 
 @attrs(slots=True)
 class AudioTrackFormat(ADMElement):
+    """ADM audioTrackFormat
+
+    Attributes:
+        audioTrackFormatName (str)
+        format (FormatDefinition): ``formatDefintion`` and/or ``formatLabel``
+        audioStreamFormat (Optional[AudioStreamFormat])
+    """
+
     audioTrackFormatName = attrib(default=None, validator=instance_of(string_types))
     format = attrib(default=None, validator=instance_of(FormatDefinition))
     audioStreamFormat = attrib(default=None, validator=optional(instance_of(AudioStreamFormat)))
@@ -282,6 +405,16 @@ class AudioTrackFormat(ADMElement):
 
 @attrs(slots=True)
 class AudioTrackUID(ADMElement):
+    """ADM audioTrackUID
+
+    Attributes:
+        trackIndex (Optional[int]): 1-based track index from CHNA chunk
+        sampleRate (Optional[int])
+        bitDepth (Optional[int])
+        audioTrackFormat (Optional[AudioTrackFormat])
+        audioPackFormat (Optional[AudioPackFormat])
+    """
+
     trackIndex = attrib(default=None)
     sampleRate = attrib(default=None)
     bitDepth = attrib(default=None)
