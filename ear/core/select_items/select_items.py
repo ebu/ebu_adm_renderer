@@ -16,10 +16,11 @@ from .validate import (validate_structure, validate_selected_audioTrackUID,
                        possible_reference_errors,
                        )
 from ..metadata_input import (ExtraData, ADMPath, MetadataSourceIter,
-                              ObjectTypeMetadata, ObjectRenderingItem,
-                              DirectSpeakersTypeMetadata, DirectSpeakersRenderingItem,
-                              HOATypeMetadata, HOARenderingItem, ImportanceData,
-                              TrackSpec, DirectTrackSpec, SilentTrackSpec,
+                              RenderingItem, ObjectTypeMetadata,
+                              ObjectRenderingItem, DirectSpeakersTypeMetadata,
+                              DirectSpeakersRenderingItem, HOATypeMetadata,
+                              HOARenderingItem, ImportanceData, TrackSpec,
+                              DirectTrackSpec, SilentTrackSpec,
                               MatrixCoefficientTrackSpec, MixTrackSpec
                               )
 
@@ -715,8 +716,8 @@ def select_rendering_items(adm,
             more than one in adm.
         selected_complementary_objects (list): see _select_complementary_objects
 
-    Yields:
-        RenderingItem: selected rendering items
+    Returns:
+        list[RenderingItem]: selected rendering items
     """
     validate_structure(adm)
 
