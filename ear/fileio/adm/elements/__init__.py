@@ -8,4 +8,4 @@ from .block_formats import (AudioBlockFormatObjects, ChannelLock, ObjectDivergen
                             AudioBlockFormatMatrix, MatrixCoefficient,
                             CartesianZone, PolarZone)
 from .geom import (DirectSpeakerPolarPosition, DirectSpeakerCartesianPosition, BoundCoordinate,
-                   ObjectPolarPosition, ObjectCartesianPosition, ScreenEdgeLock)
+                   ObjectPosition, ObjectPolarPosition, ObjectCartesianPosition, ScreenEdgeLock)
