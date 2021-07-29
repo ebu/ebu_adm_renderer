@@ -325,12 +325,10 @@ class DataSize64Chunk(object):
 
 @attrs
 class ChnaChunk(object):
-    """ Class representation of the ChannelAllocationChunk
+    """Class representation of the ChannelAllocationChunk
 
-    To simplify the writing of files the ChnaChunk (like every chunk class in
-    this module) has a asByteArray method. This method returns the correct byte
-    array representation of the chnaChunk, which can be directly written to a
-    file.
+    Attributes:
+        audioIDs (list of AudioID): CHNA entries
     """
     audioIDs = attrib(validator=instance_of(list), default=Factory(list))
 
@@ -350,6 +348,7 @@ class ChnaChunk(object):
         self.audioIDs.append(newAudioID)
 
     def asByteArray(self):
+        """Get the binary representation of this chunk data."""
         fixed_part = struct.pack('<HH', self.numTracks, self.numUIDs)
         table_part = b''.join(audioID.asByteArray() for audioID in self.audioIDs)
 
@@ -362,7 +361,15 @@ class ChnaChunk(object):
 
 @attrs
 class AudioID(object):
-    """Class representation of a chna audioIDs list entry."""
+    """Class representation of a chna audioIDs list entry.
+
+    Attributes:
+        trackIndex(int): 1-based index of the track in the sample data
+        audioTrackUID(str): audioTrackUID of the track
+        audioTrackFormatIDRef(str): audioTrackFormatID of the track
+        audioPackFormatIDRef(str or None): optional audioPackFormatID of the
+            track
+    """
     trackIndex = attrib(validator=instance_of(int))
     audioTrackUID = attrib(validator=instance_of(string_types))
     audioTrackFormatIDRef = attrib(validator=instance_of(string_types))
