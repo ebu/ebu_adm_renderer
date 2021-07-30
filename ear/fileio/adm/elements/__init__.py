@@ -7,5 +7,5 @@ from .block_formats import (AudioBlockFormatObjects, ChannelLock, ObjectDivergen
                             JumpPosition, AudioBlockFormatDirectSpeakers, AudioBlockFormatBinaural, AudioBlockFormatHoa,
                             AudioBlockFormatMatrix, MatrixCoefficient,
                             CartesianZone, PolarZone)
-from .geom import (DirectSpeakerPolarPosition, DirectSpeakerCartesianPosition, BoundCoordinate,
+from .geom import (DirectSpeakerPosition, DirectSpeakerPolarPosition, DirectSpeakerCartesianPosition, BoundCoordinate,
                    ObjectPosition, ObjectPolarPosition, ObjectCartesianPosition, ScreenEdgeLock)
