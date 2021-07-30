@@ -4,7 +4,13 @@ from .elements import AudioProgramme, AudioContent, AudioObject
 from .elements import TypeDefinition, FormatDefinition
 from .elements import AudioChannelFormat, AudioPackFormat, AudioTrackFormat, AudioTrackUID, AudioStreamFormat
 
-DEFAULT = object()
+
+class _Default(object):
+    def __repr__(self):
+        return "DEFAULT"
+
+
+DEFAULT = _Default()
 
 
 @attrs
