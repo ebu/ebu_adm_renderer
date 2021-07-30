@@ -200,7 +200,7 @@ class DirectSpeakersTypeMetadata(TypeMetadata):
     """TypeMetadata for typeDefinition="DirectSpeakers"
 
     Attributes:
-        block_format (AudioBlockFormatDirectSpeakerss): Block format.
+        block_format (AudioBlockFormatDirectSpeakers): Block format.
         extra_data (ExtraData): Extra parameters from outside block format.
     """
     block_format = attrib(validator=instance_of(AudioBlockFormatDirectSpeakers))
