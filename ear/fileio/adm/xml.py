@@ -1187,6 +1187,17 @@ def _check_block_format_durations(channelFormats, fix=False):
 
 
 def load_axml_doc(adm, element, lookup_references=True, fix_block_format_durations=False):
+    """Load some axml into an ADM structure.
+
+    This is a low-level function and doesn't deal with common definitions.
+
+    Parameters:
+        adm (ADM): ADM structure to add to
+        element (lxml.etree._Element): parsed ADM XML
+        lookup_references (bool): should we look up references?
+        fix_block_format_durations (bool): should we attempt to fix up
+            inaccuracies in audioBlockFormat durations?
+    """
     parse_adm_elements(adm, element)
 
     if lookup_references:
@@ -1198,16 +1209,39 @@ def load_axml_doc(adm, element, lookup_references=True, fix_block_format_duratio
 
 
 def load_axml_string(adm, axmlstr, **kwargs):
+    """Wrapper around :func:`load_axml_doc` which parses XML too.
+
+    Parameters:
+        adm (ADM): ADM structure to add to
+        axmlstr (str): ADM XML string
+        kwargs: see :func:`load_axml_doc`
+    """
     element = lxml.etree.fromstring(axmlstr)
     load_axml_doc(adm, element, **kwargs)
 
 
 def load_axml_file(adm, axmlfile, **kwargs):
+    """Wrapper around :func:`load_axml_doc` which loads XML from a file.
+
+    Parameters:
+        adm (ADM): ADM structure to add to
+        axmlfile (Union[str, File]): ADM XML file name or file object; see
+            :func:`lxml.etree.parse`.
+        kwargs: see :func:`load_axml_doc`
+    """
     element = lxml.etree.parse(axmlfile)
     load_axml_doc(adm, element, **kwargs)
 
 
 def parse_string(axmlstr, **kwargs):
+    """Parse an ADM XML string, including loading common definitions.
+
+    Parameters:
+        axmlstr (str): ADM XML string
+        kwargs: see :func:`load_axml_doc`
+    Returns:
+        ADM: ADM structure
+    """
     adm = ADM()
     from .common_definitions import load_common_definitions
     load_common_definitions(adm)
@@ -1216,6 +1250,15 @@ def parse_string(axmlstr, **kwargs):
 
 
 def parse_file(axmlfile, **kwargs):
+    """Parse an ADM XML file, including loading common definitions.
+
+    Parameters:
+        axmlfile (Union[str, File]): ADM XML file name or file object; see
+            :func:`lxml.etree.parse`.
+        kwargs: see :func:`load_axml_doc`
+    Returns:
+        ADM: ADM structure
+    """
     adm = ADM()
     from .common_definitions import load_common_definitions
     load_common_definitions(adm)
@@ -1247,7 +1290,11 @@ class AudioStreamFormatWrapper(object):
         return list(stream_formats.values())
 
 
-def adm_to_xml(adm):
+def adm_to_xml(adm: ADM) -> lxml.etree._Element:
+    """Generate an XML element corresponding to an ADM structure.
+
+    This skips elements marked with is_common_definition
+    """
     audioStreamFormats = AudioStreamFormatWrapper.wrapped_audioStreamFormats(adm)
 
     element_types = [
