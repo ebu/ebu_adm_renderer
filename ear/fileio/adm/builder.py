@@ -19,16 +19,21 @@ class ADMBuilder(object):
 
     Attributes:
         adm (ADM): ADM object to modify.
-        last_programme (AudioProgramme): The last programme created, to which
-            created audioContents will be linked.
-        last_content (AudioContent): The last content created, to which created
-            audioObjects will be linked by default.
-        last_object (AudioObject): The last object created, to which created
-            audioObjects or audioPackFormats will be linked by default.
-        last_pack_format (AudioPackFormat): The last pack_format created, to which
-            created audioChannelFormats will be linked by default.
-        last_stream_format (AudioStreamFormat): The last stream_format created, to
-            which created audioTrackFormats will be linked by default.
+        last_programme (Optional[AudioProgramme]): The last programme created,
+            to which created audioContents will be linked.
+        last_content (Optional[AudioContent]): The last content created, to
+            which created audioObjects will be linked by default.
+        last_object (Optional[AudioObject]): The last object created, to which
+            created audioObjects or audioPackFormats will be linked by default.
+        last_pack_format (Optional[AudioPackFormat]): The last pack_format
+            created, to which created audioChannelFormats will be linked by
+            default.
+        last_stream_format (Optional[AudioStreamFormat]): The last
+            stream_format created, to which created audioTrackFormats will be
+            linked by default.
+        item_parent (Optional[Union[AudioContent, AudioObject]]): The last
+            explicitly created audioContent or audioObject, used as the parent
+            for audioObjects created by create_item* functions.
     """
     adm = attrib(default=Factory(ADM))
     last_programme = attrib(default=None)
@@ -47,10 +52,10 @@ class ADMBuilder(object):
         """Create a new audioProgramme.
 
         Args:
-            kwargs: see AudioProgramme
+            kwargs: see :class:`AudioProgramme`
 
         Returns:
-            AudioProgramme: created programme
+            AudioProgramme: created audioProgramme
         """
         programme = AudioProgramme(**kwargs)
         self.adm.addAudioProgramme(programme)
@@ -64,10 +69,10 @@ class ADMBuilder(object):
 
         Args:
             parent (AudioProgramme): parent programme; defaults to the last one created
-            kwargs: see AudioContent
+            kwargs: see :class:`AudioContent`
 
         Returns:
-            AudioContent: created content
+            AudioContent: created audioContent
         """
         content = AudioContent(**kwargs)
         self.adm.addAudioContent(content)
@@ -86,12 +91,12 @@ class ADMBuilder(object):
         """Create a new audioObject.
 
         Args:
-            parent (AudioContent or AudioObject): parent content or object;
-                defaults to the last content created
-            kwargs: see AudioObject
+            parent (Union[AudioContent, AudioObject]): parent content or
+                object; defaults to the last content created
+            kwargs: see :class:`AudioObject`
 
         Returns:
-            AudioObject: created object
+            AudioObject: created audioObject
         """
         object = AudioObject(**kwargs)
         self.adm.addAudioObject(object)
@@ -112,10 +117,10 @@ class ADMBuilder(object):
         Args:
             parent (AudioObject or AudioPackFormat): parent object or packFormat;
                 defaults to the last object created
-            kwargs: see AudioPackFormat
+            kwargs: see :class:`AudioPackFormat`
 
         Returns:
-            AudioPackFormat: created pack_format
+            AudioPackFormat: created audioPackFormat
         """
         pack_format = AudioPackFormat(**kwargs)
         self.adm.addAudioPackFormat(pack_format)
@@ -135,10 +140,10 @@ class ADMBuilder(object):
         Args:
             parent (AudioPackFormat): parent packFormat;
                 defaults to the last packFormat created
-            kwargs: see AudioChannelFormat
+            kwargs: see :class:`AudioChannelFormat`
 
         Returns:
-            AudioChannelFormat: created channel_format
+            AudioChannelFormat: created audioChannelFormat
         """
         channel_format = AudioChannelFormat(**kwargs)
         self.adm.addAudioChannelFormat(channel_format)
@@ -157,7 +162,7 @@ class ADMBuilder(object):
             kwargs: see AudioChannelFormat
 
         Returns:
-            AudioStreamFormat: created stream_format
+            AudioStreamFormat: created audioStreamFormat
         """
         stream_format = AudioStreamFormat(**kwargs)
         self.adm.addAudioStreamFormat(stream_format)
@@ -175,7 +180,7 @@ class ADMBuilder(object):
             kwargs: see AudioTrackFormat
 
         Returns:
-            AudioTrackFormat: created track_format
+            AudioTrackFormat: created audioTrackFormat
         """
         track_format = AudioTrackFormat(**kwargs)
         self.adm.addAudioTrackFormat(track_format)
@@ -196,7 +201,7 @@ class ADMBuilder(object):
             kwargs: see AudioTrackUID
 
         Returns:
-            AudioTrackUID: created track_uid
+            AudioTrackUID: created audioTrackUID
         """
         track_uid = AudioTrackUID(**kwargs)
         self.adm.addAudioTrackUID(track_uid)
@@ -210,7 +215,18 @@ class ADMBuilder(object):
 
     @attrs
     class MonoItem(object):
-        """Structure referencing the ADM components created as part of a mono item."""
+        """Structure referencing the ADM components created as part of a mono item.
+
+        Attributes:
+            channel_format (AudioChannelFormat)
+            track_format (AudioTrackFormat)
+            pack_format (AudioPackFormat)
+            stream_format (AudioStreamFormat)
+            track_uid (AudioTrackUID)
+            audio_object (AudioObject)
+            parent (Union[AudioContent, AudioObject])
+        """
+
         channel_format = attrib()
         track_format = attrib()
         pack_format = attrib()
@@ -227,9 +243,9 @@ class ADMBuilder(object):
             type (TypeDefinition): type of channelFormat and packFormat
             track_index (int): zero-based index of the track in the BWF file.
             name (str): name used for all components
-            parent (AudioContent or AudioObject): parent of the created audioObject
+            parent (Union[AudioContent, AudioObject]): parent of the created audioObject
                 defaults to the last content or explicitly created object
-            block_formats (list of AudioBlockFormat): block formats to add to
+            block_formats (list[AudioBlockFormat]): block formats to add to
                 the channel format
 
         Returns:
@@ -298,13 +314,13 @@ class ADMBuilder(object):
     def create_item_objects(self, *args, **kwargs):
         """Create ADM components needed to represent an object channel.
 
-        Wraps create_item_mono with type=TypeDefinition.Objects.
+        Wraps :func:`create_item_mono` with ``type=TypeDefinition.Objects``.
         """
         return self.create_item_mono(TypeDefinition.Objects, *args, **kwargs)
 
     def create_item_direct_speakers(self, *args, **kwargs):
         """Create ADM components needed to represent a DirectSpeakers channel.
 
-        Wraps create_item_mono with type=TypeDefinition.DirectSpeakers.
+        Wraps :func:`create_item_mono` with ``type=TypeDefinition.DirectSpeakers``.
         """
         return self.create_item_mono(TypeDefinition.DirectSpeakers, *args, **kwargs)
