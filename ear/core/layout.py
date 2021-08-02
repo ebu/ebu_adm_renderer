@@ -290,7 +290,7 @@ def load_real_layout(fileobj):
         file: a file-like object to read yaml from
 
     Returns:
-        list of Speaker
+        RealLayout: real layout information
     """
     def parse_yaml_polar_position(position):
         if set(position.keys()) == set(["az", "el", "r"]):
