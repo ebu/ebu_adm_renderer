@@ -1,6 +1,7 @@
 from attr import attrib, attrs, Factory
 from attr.validators import instance_of, optional
 from fractions import Fraction
+from typing import Optional
 from ..common import list_of, default_screen
 from ..fileio.adm.elements import (AudioProgramme, AudioContent, AudioObject, AudioPackFormat,
                                    AudioChannelFormat, AudioBlockFormatObjects, AudioBlockFormatDirectSpeakers,
@@ -10,12 +11,8 @@ from ..fileio.adm.elements import (AudioProgramme, AudioContent, AudioObject, Au
 class MetadataSource(object):
     """A source of metadata for some input channels."""
 
-    def get_next_block(self):
-        """Get the next metadata block, if one is available.
-
-        Returns:
-            TypeMetadata
-        """
+    def get_next_block(self) -> Optional["TypeMetadata"]:
+        """Get the next metadata block, if one is available."""
         raise NotImplementedError()
 
 
@@ -35,7 +32,7 @@ class MetadataSourceIter(MetadataSource):
 
 @attrs(slots=True)
 class TypeMetadata(object):
-    """Base class for *TypeMetadata classes; these should represent all the
+    """Base class for \*TypeMetadata classes; these should represent all the
     parameters needed to render some set of audio channels within some time
     bounds.
     """
@@ -43,7 +40,7 @@ class TypeMetadata(object):
 
 @attrs(slots=True)
 class RenderingItem(object):
-    """Base class for *RenderingItem classes; these should represent an item to
+    """Base class for \*RenderingItem classes; these should represent an item to
     be rendered, combining a MetadataSource that produces a sequence of
     TypeMetadata objects, and some indices into the tracks that this metadata
     applies to.
@@ -55,8 +52,8 @@ class ExtraData(object):
     """Common metadata from outside the ADM block format.
 
     Attributes:
-        object_start (Fraction or None): Start time of audioObject.
-        object_duration (Fraction or None): Duration of audioObject.
+        object_start (fractions.Fraction or None): Start time of audioObject.
+        object_duration (fractions.Fraction or None): Duration of audioObject.
         reference_screen (CartesianScreen or PolarScreen): Reference screen from audioProgramme.
         channel_frequency (Frequency): Frequency information from audioChannel.
     """
@@ -68,7 +65,15 @@ class ExtraData(object):
 
 @attrs(slots=True)
 class ADMPath(object):
-    """Pointers to the ADM objects which a rendering item is derived from."""
+    """Pointers to the ADM objects which a rendering item is derived from.
+
+    Attributes:
+        audioProgramme (Optional[AudioProgramme])
+        audioContent (Optional[AudioContent])
+        audioObjects (Optional[list[AudioObject]])
+        audioPackFormats (Optional[list[AudioPackFormat]])
+        audioChannelFormat (Optional[list[AudioChannelFormat]])
+    """
     audioProgramme = attrib(validator=optional(instance_of(AudioProgramme)), default=None)
     audioContent = attrib(validator=optional(instance_of(AudioContent)), default=None)
     audioObjects = attrib(validator=optional(list_of(AudioObject)), default=None)
@@ -77,22 +82,26 @@ class ADMPath(object):
 
     @property
     def first_audioObject(self):
-        """The first audioObject of this track in the chain, or None"""
+        """Optional[AudioObject]: The first audioObject of this track in the
+        chain, or None"""
         return self.audioObjects[0] if self.audioObjects is not None else None
 
     @property
     def last_audioObject(self):
-        """The last audioObject of this track in the chain, or None"""
+        """Optional[AudioObject]: The last audioObject of this track in the
+        chain, or None"""
         return self.audioObjects[-1] if self.audioObjects is not None else None
 
     @property
     def first_audioPackFormat(self):
-        """The first audioPackFormat of this track in the chain, or None"""
+        """Optional[AudioPackFormat]: The first audioPackFormat of this track
+        in the chain, or None"""
         return self.audioPackFormats[0] if self.audioPackFormats is not None else None
 
     @property
     def last_audioPackFormat(self):
-        """The last audioPackFormat of this track in the chain, or None"""
+        """Optional[AudioPackFormat]: The last audioPackFormat of this track in
+        the chain, or None"""
         return self.audioPackFormats[-1] if self.audioPackFormats is not None else None
 
 
@@ -238,8 +247,8 @@ class HOATypeMetadata(TypeMetadata):
         normalization (str): Normalization for all channels.
         nfcRefDist (float or None): NFC Reference distance for all channels.
         screenRef (bool): Are these channels screen related?
-        rtime (Fraction or None): Start time of block.
-        duration (Fraction or None): Duration of block.
+        rtime (fractions.Fraction or None): Start time of block.
+        duration (fractions.Fraction or None): Duration of block.
         extra_data (ExtraData): Info from object and channels for all channels.
     """
     orders = attrib(validator=list_of(int))
@@ -258,11 +267,13 @@ class HOARenderingItem(RenderingItem):
     """RenderingItem for typeDefinition="HOA"
 
     Attributes:
-        track_specs (list of TrackSpec): Specification of n tracks of input samples.
+        track_specs (list[TrackSpec]): Specification of n tracks of input samples.
         metadata_source (MetadataSource): Source of HOATypeMetadata objects;
             will usually contain only one object.
-        importances (list of ImportanceData or None): Importance data for each track.
-        adm_paths (list of ADMPath or None): Pointers to the ADM objects which each track is derived from.
+        importances (Optional[list[ImportanceData]]): Importance data for each
+            track.
+        adm_paths (Optional[list[ADMPath]]): Pointers to the ADM objects which
+            each track is derived from.
     """
     track_specs = attrib(validator=list_of(TrackSpec))
     metadata_source = attrib(validator=instance_of(MetadataSource))
