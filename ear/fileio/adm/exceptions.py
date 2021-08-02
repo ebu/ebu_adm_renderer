@@ -20,7 +20,7 @@ class AdmFormatRefError(AdmError):
     reasons = attrib()
 
     def __str__(self):
-        fmt = "{message}. Possile reasons:\n{reasons}" if self.reasons else "{message}"
+        fmt = "{message}. Possible reasons:\n{reasons}" if self.reasons else "{message}"
 
         return fmt.format(
             message=self.message,
