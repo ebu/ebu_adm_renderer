@@ -51,10 +51,10 @@ def get_layout(name):
     """Get data for a layout specified in BS.2051.
 
     Parameters:
-        name: Full layout name, e.g. "4+5+0"
+        name (str): Full layout name, e.g. "4+5+0"
 
     Returns:
-        Layout object representing the layout; real speaker positions are set
+        Layout: object representing the layout; real speaker positions are set
         to the nominal positions.
     """
     if name not in layout_names:
