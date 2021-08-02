@@ -712,9 +712,12 @@ def select_rendering_items(adm,
 
     Parameters:
         adm (ADM): ADM to process
-        audio_programme (AudioProgramme): audioProgramme to select if there is
-            more than one in adm.
-        selected_complementary_objects (list): see _select_complementary_objects
+        audio_programme (Optional[AudioProgramme]): audioProgramme to select if
+            there is more than one in adm.
+        selected_complementary_objects (list[AudioObject]): Objects to select
+            from each complementary group. If there is no entry for an object
+            in a complementary object group, then the root is selected by
+            default.
 
     Returns:
         list[RenderingItem]: selected rendering items
