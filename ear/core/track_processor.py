@@ -38,7 +38,7 @@ def TrackProcessor(track_spec):
         track_spec (TrackSpec): Track spec to render.
 
     Returns:
-        TrackSpecProcessorBase: processor to obtain samples for track_spec
+        TrackProcessorBase: processor to obtain samples for track_spec
     """
     return _track_spec_processor(_simplify_track_spec(track_spec))
 
