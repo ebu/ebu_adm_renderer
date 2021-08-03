@@ -361,7 +361,8 @@ class AudioID(object):
     Attributes:
         trackIndex(int): 1-based index of the track in the sample data
         audioTrackUID(str): audioTrackUID of the track
-        audioTrackFormatIDRef(str): audioTrackFormatID of the track
+        audioTrackFormatIDRef(str): audioTrackFormatID or audioChannelFormatID
+            of the track (with no padding)
         audioPackFormatIDRef(str or None): optional audioPackFormatID of the
             track
     """
@@ -374,8 +375,15 @@ class AudioID(object):
         pack_format_bin = (self.audioPackFormatIDRef.encode('utf-8')
                            if self.audioPackFormatIDRef is not None
                            else b"\0\0\0\0\0\0\0\0\0\0\0")
+
+        if self.audioTrackFormatIDRef.startswith("AC_"):
+            tc_format_bin = self.audioTrackFormatIDRef.encode('utf-8') + b'_00'
+        else:
+            tc_format_bin = self.audioTrackFormatIDRef.encode('utf-8')
+        assert len(tc_format_bin) == 14
+
         return struct.pack('<H12s14s11sx',
                            self.trackIndex,
                            self.audioTrackUID.encode('utf-8'),
-                           self.audioTrackFormatIDRef.encode('utf-8'),
+                           tc_format_bin,
                            pack_format_bin)

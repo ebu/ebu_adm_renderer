@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division,
 from ... import openBw64
 from ..chunks import FormatInfoChunk, ChnaChunk, AudioID
 import numpy as np
+import pytest
 
 
 def test_rect_16bit(tmpdir):
@@ -230,6 +231,37 @@ def test_chna_2(tmpdir):
         assert infile.axml is None
         assert infile.bext is None
         assert np.allclose(infile.read(100), samples, atol=1e-04)
+
+
+def test_chna_acf(tmpdir):
+    samples = ((np.arange(100) % 100 < 50) - 0.5) * 2
+    samples = samples[None, :].T
+    filename = str(tmpdir / 'test_chna_2.wav')
+
+    chna = ChnaChunk()
+    audioID = AudioID(1, 'ATU_00000001', 'AC_00010001', 'AP_00010003')
+    chna.appendAudioID(audioID)
+
+    with openBw64(filename, 'w', chna=chna) as outfile:
+        outfile.write(samples)
+
+    with openBw64(filename) as infile:
+        assert infile.chna == chna
+
+    # check that padding is applied
+    with open(filename, 'rb') as infile:
+        contents = infile.read()
+        assert b'AC_00010001_00' in contents
+
+    # write bad padding and check we get a warning
+    contents = contents.replace(b'AC_00010001_00', b'AC_00010001   ')
+    with open(filename, 'wb') as outfile:
+        outfile.write(contents)
+
+    warning = "CHNA trackRef is expected to have format AC_xxxxxxxx_00, but is 'AC_00010001   '"
+    with pytest.warns(UserWarning, match=warning):
+        with openBw64(filename) as infile:
+            pass
 
 
 def test_bext_1(tmpdir):

@@ -279,6 +279,13 @@ class Bw64Reader(object):
         for audioID in range(numUIDs):
             trackIndex, trackUID, trackFormat, packFormat = struct.unpack('<H12s14s11sx', self._buffer.read(40))
 
+            # remove padding for audioChannelFormat reference
+            if trackFormat.startswith(b"AC_"):
+                if trackFormat[-3:] != b"_00":
+                    warnings.warn(f"CHNA trackRef is expected to have format AC_xxxxxxxx_00, "
+                                  f"but is {trackFormat.decode('utf8')!r}")
+                trackFormat = trackFormat[:-3]
+
             nullPackFormat = b"\0\0\0\0\0\0\0\0\0\0\0"
             audioIDs.append(AudioID(
                 trackIndex=trackIndex,
