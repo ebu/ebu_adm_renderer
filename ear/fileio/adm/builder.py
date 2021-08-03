@@ -259,6 +259,7 @@ class ADMBuilder(object):
         track_uid = AudioTrackUID(
             trackIndex=track_index + 1,
             audioTrackFormat=track_format,
+            audioChannelFormat=channel_format,
             audioPackFormat=pack_format,
         )
         self.adm.addAudioTrackUID(track_uid)

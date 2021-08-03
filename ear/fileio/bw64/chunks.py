@@ -365,15 +365,19 @@ class AudioID(object):
     """Class representation of a chna audioIDs list entry."""
     trackIndex = attrib(validator=instance_of(int))
     audioTrackUID = attrib(validator=instance_of(string_types))
-    audioTrackFormatIDRef = attrib(validator=instance_of(string_types))
+    audioTrackFormatIDRef = attrib(validator=optional(instance_of(string_types)))
+    audioChannelFormatIDRef = attrib(validator=optional(instance_of(string_types)))
     audioPackFormatIDRef = attrib(validator=optional(instance_of(string_types)))
-
+    
     def asByteArray(self):
         pack_format_bin = (self.audioPackFormatIDRef.encode('utf-8')
                            if self.audioPackFormatIDRef is not None
                            else b"\0\0\0\0\0\0\0\0\0\0\0")
+        tc_format_bin = (self.audioTrackFormatIDRef.encode('utf-8')
+                         if self.audioTrackFormatIDRef is not None
+                         else self.audioChannelFormatIDRef.encode('utf-8'))
         return struct.pack('<H12s14s11sx',
                            self.trackIndex,
                            self.audioTrackUID.encode('utf-8'),
-                           self.audioTrackFormatIDRef.encode('utf-8'),
+                           tc_format_bin,
                            pack_format_bin)

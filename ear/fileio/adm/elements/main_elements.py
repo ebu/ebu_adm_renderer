@@ -287,16 +287,22 @@ class AudioTrackUID(ADMElement):
     bitDepth = attrib(default=None)
     audioTrackFormat = attrib(default=None, repr=False,
                               validator=optional(instance_of(AudioTrackFormat)))
+    audioChannelFormat = attrib(default=None, repr=False,
+                             validator=optional(instance_of(AudioChannelFormat)))
     audioPackFormat = attrib(default=None, repr=False,
                              validator=optional(instance_of(AudioPackFormat)))
 
     audioTrackFormatIDRef = attrib(default=None)
+    audioChannelFormatIDRef = attrib(default=None)
     audioPackFormatIDRef = attrib(default=None)
 
     def lazy_lookup_references(self, adm):
         if self.audioTrackFormatIDRef is not None:
             self.audioTrackFormat = adm.lookup_element(self.audioTrackFormatIDRef)
             self.audioTrackFormatIDRef = None
+        if self.audioChannelFormatIDRef is not None:
+            self.audioChannelFormat = adm.lookup_element(self.audioChannelFormatIDRef)
+            self.audioChannelFormatIDRef = None
         if self.audioPackFormatIDRef is not None:
             self.audioPackFormat = adm.lookup_element(self.audioPackFormatIDRef)
             self.audioPackFormatIDRef = None

@@ -11,12 +11,20 @@ def test_load():
     load_common_definitions(adm)
     chna = ChnaChunk()
 
-    # normal use
+    # normal use with track ref
     chna.audioIDs = [AudioID(1, "ATU_00000001", "AT_00010001_01", "AP_00010002")]
     load_chna_chunk(adm, chna)
     assert adm.audioTrackUIDs[0].trackIndex == 1
     assert adm.audioTrackUIDs[0].id == "ATU_00000001"
     assert adm.audioTrackUIDs[0].audioTrackFormat is adm["AT_00010001_01"]
+    assert adm.audioTrackUIDs[0].audioPackFormat is adm["AP_00010002"]
+
+    # normal use with channel ref
+    chna.audioIDs = [AudioID(1, "ATU_00000001", "AC_00010001", "AP_00010002")]
+    load_chna_chunk(adm, chna)
+    assert adm.audioTrackUIDs[0].trackIndex == 1
+    assert adm.audioTrackUIDs[0].id == "ATU_00000001"
+    assert adm.audioTrackUIDs[0].audioChannelFormat is adm["AC_00010001"]
     assert adm.audioTrackUIDs[0].audioPackFormat is adm["AP_00010002"]
 
     # missing pack ref
@@ -51,7 +59,7 @@ def test_populate():
     load_common_definitions(adm)
     chna = ChnaChunk()
 
-    # normal use
+    # normal use with track format
     adm.addAudioTrackUID(AudioTrackUID(
         id="ATU_00000001",
         trackIndex=1,
@@ -64,6 +72,13 @@ def test_populate():
         trackIndex=2,
         audioTrackFormat=adm["AT_00010002_01"]))
 
+    # normal use with channel format
+    adm.addAudioTrackUID(AudioTrackUID(
+        id="ATU_00000003",
+        trackIndex=1,
+        audioChannelFormat=adm["AC_00010001"],
+        audioPackFormat=adm["AP_00010002"]))
+    
     populate_chna_chunk(chna, adm)
     assert chna.audioIDs == [AudioID(audioTrackUID="ATU_00000001",
                                      trackIndex=1,
@@ -72,4 +87,8 @@ def test_populate():
                              AudioID(audioTrackUID="ATU_00000002",
                                      trackIndex=2,
                                      audioTrackFormatIDRef="AT_00010002_01",
-                                     audioPackFormatIDRef=None)]
+                                     audioPackFormatIDRef=None),
+                             AudioID(audioTrackUID="ATU_00000003",
+                                     trackIndex=3,
+                                     audioChannelFormatIDRef="AC_00010001",
+                                     audioPackFormatIDRef="AP_00010002")]

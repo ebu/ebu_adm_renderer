@@ -31,13 +31,21 @@ def load_chna_chunk(adm, chna):
         else:
             assert track.trackIndex == chna_entry.trackIndex
 
-        if track.audioTrackFormat is None:
-            track.audioTrackFormatIDRef = chna_entry.audioTrackFormatIDRef
-        elif track.audioTrackFormat.id.upper() != chna_entry.audioTrackFormatIDRef.upper():
-            raise Exception("Error in track UID {track.id}: audioTrackFormatIDRef in CHNA, '{chna_entry.audioTrackFormatIDRef}' "
-                            "does not match value in AXML, '{track.audioTrackFormat.id}'.".format(
-                                track=track, chna_entry=chna_entry))
+        if (chna_entry.audioTrackFormatIDRef is not None) or (chna_entry.audioChannelFormatIDRef is not None):
+            if track.audioTrackFormat is None:
+                track.audioTrackFormatIDRef = chna_entry.audioTrackFormatIDRef
+            elif track.audioTrackFormat.id.upper() != chna_entry.audioTrackFormatIDRef.upper():
+                raise Exception("Error in track UID {track.id}: audioTrackFormatIDRef in CHNA, '{chna_entry.audioTrackFormatIDRef}' "
+                                "does not match value in AXML, '{track.audioTrackFormat.id}'.".format(
+                                    track=track, chna_entry=chna_entry))
 
+            if track.audioChannelFormat is None:
+                track.audioChannelFormatIDRef = chna_entry.audioChannelFormatIDRef
+            elif track.audioChannelFormat.id.upper() != chna_entry.audioChannelFormatIDRef.upper():
+                raise Exception("Error in track UID {track.id}: audioChannelFormatIDRef in CHNA, '{chna_entry.audioChannelFormatIDRef}' "
+                                "does not match value in AXML, '{track.audioChannelFormat.id}'.".format(
+                                    track=track, chna_entry=chna_entry))
+            
         if chna_entry.audioPackFormatIDRef is not None:
             if track.audioPackFormat is None:
                 track.audioPackFormatIDRef = chna_entry.audioPackFormatIDRef
@@ -58,17 +66,23 @@ def _get_chna_entries(adm):
     for track_uid in adm.audioTrackUIDs:
         if track_uid.trackIndex is None:
             raise Exception("Track UID {track_uid.id} has no track number.".format(track_uid=track_uid))
-        if track_uid.audioTrackFormat is None:
-            raise Exception("Track UID {track_uid.id} has no track format.".format(track_uid=track_uid))
-
+        if (track_uid.audioTrackFormat is None) and (track_uid.audioChannelFormat is None):
+            raise Exception("Track UID {track_uid.id} has no track or channel format.".format(track_uid=track_uid))
+            
         assert track_uid.id is not None, "ids have not been generated"
-        assert track_uid.audioTrackFormat.id is not None, "ids have not been generated"
+        assert track_uid.audioTrackFormat is None or track_uid.audioTrackFormat.id is not None, "ids have not been generated"
+        assert track_uid.audioChannelFormat is None or track_uid.audioChannelFormat.id is not None, "ids have not been generated"
         assert track_uid.audioPackFormat is None or track_uid.audioPackFormat.id is not None, "ids have not been generated"
 
         yield AudioID(
             trackIndex=track_uid.trackIndex,
             audioTrackUID=track_uid.id,
-            audioTrackFormatIDRef=track_uid.audioTrackFormat.id,
+            audioTrackFormatIDRef=(track_uid.audioTrackFormat.id
+                                   if track_uid.audioTrackFormat is not None
+                                   else None),
+            audioChannelFormatIDRef=(track_uid.audioChannelFormat.id
+                                     if track_uid.audioChannelFormat is not None
+                                     else None),
             audioPackFormatIDRef=(track_uid.audioPackFormat.id
                                   if track_uid.audioPackFormat is not None
                                   else None))

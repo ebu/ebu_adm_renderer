@@ -1105,6 +1105,7 @@ track_uid_handler = ElementParser(AudioTrackUID, "audioTrackUID", [
     Attribute(adm_name="sampleRate", arg_name="sampleRate", type=IntType),
     Attribute(adm_name="bitDepth", arg_name="bitDepth", type=IntType),
     RefElement("audioTrackFormat"),
+    RefElement("audioChannelFormat"),
     RefElement("audioPackFormat"),
 ])
 

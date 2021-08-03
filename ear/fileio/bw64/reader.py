@@ -204,13 +204,23 @@ class Bw64Reader(object):
         numTracks, numUIDs = struct.unpack('<HH', self._buffer.read(4))
         audioIDs = []
         for audioID in range(numUIDs):
-            trackIndex, trackUID, trackFormat, packFormat = struct.unpack('<H12s14s11sx', self._buffer.read(40))
+            trackIndex, trackUID, tcFormat, packFormat = struct.unpack('<H12s14s11sx', self._buffer.read(40))
 
+            # Either audioTrackFormatIDRef or audioChannelFormatIDRef, so inspect ID to find out
+            trackFormatIDRef = None
+            channelFormatIDRef = None
+            tcFormatIDRef = tcFormat.decode("utf-8")
+            if tcFormatIDRef[1] == 'T':  # For "AT_....."
+                trackFormatIDRef = tcFormatIDRef
+            else:
+                channelFormatIDRef = tcFormatIDRef
+            
             nullPackFormat = b"\0\0\0\0\0\0\0\0\0\0\0"
             audioIDs.append(AudioID(
                 trackIndex=trackIndex,
                 audioTrackUID=trackUID.decode("utf-8"),
-                audioTrackFormatIDRef=trackFormat.decode("utf-8"),
+                audioTrackFormatIDRef=trackFormatIDRef,
+                audioChannelFormatIDRef=channelFormatIDRef,
                 audioPackFormatIDRef=(None if packFormat == nullPackFormat
                                       else packFormat.decode("utf-8")),
             ))
