@@ -31,7 +31,7 @@ def load_chna_chunk(adm, chna):
         else:
             assert track.trackIndex == chna_entry.trackIndex
 
-        if (chna_entry.audioTrackFormatIDRef is not None) or (chna_entry.audioChannelFormatIDRef is not None):
+        if chna_entry.audioTrackFormatIDRef is not None:
             if track.audioTrackFormat is None:
                 track.audioTrackFormatIDRef = chna_entry.audioTrackFormatIDRef
             elif track.audioTrackFormat.id.upper() != chna_entry.audioTrackFormatIDRef.upper():
@@ -39,6 +39,7 @@ def load_chna_chunk(adm, chna):
                                 "does not match value in AXML, '{track.audioTrackFormat.id}'.".format(
                                     track=track, chna_entry=chna_entry))
 
+        if chna_entry.audioChannelFormatIDRef is not None:
             if track.audioChannelFormat is None:
                 track.audioChannelFormatIDRef = chna_entry.audioChannelFormatIDRef
             elif track.audioChannelFormat.id.upper() != chna_entry.audioChannelFormatIDRef.upper():

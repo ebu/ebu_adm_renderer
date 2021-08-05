@@ -12,7 +12,7 @@ def test_load():
     chna = ChnaChunk()
 
     # normal use with track ref
-    chna.audioIDs = [AudioID(1, "ATU_00000001", "AT_00010001_01", "AP_00010002")]
+    chna.audioIDs = [AudioID(1, "ATU_00000001", "AT_00010001_01", None, "AP_00010002")]
     load_chna_chunk(adm, chna)
     assert adm.audioTrackUIDs[0].trackIndex == 1
     assert adm.audioTrackUIDs[0].id == "ATU_00000001"
@@ -20,7 +20,7 @@ def test_load():
     assert adm.audioTrackUIDs[0].audioPackFormat is adm["AP_00010002"]
 
     # normal use with channel ref
-    chna.audioIDs = [AudioID(1, "ATU_00000001", "AC_00010001", "AP_00010002")]
+    chna.audioIDs = [AudioID(1, "ATU_00000001", None, "AC_00010001", "AP_00010002")]
     load_chna_chunk(adm, chna)
     assert adm.audioTrackUIDs[0].trackIndex == 1
     assert adm.audioTrackUIDs[0].id == "ATU_00000001"
@@ -28,26 +28,26 @@ def test_load():
     assert adm.audioTrackUIDs[0].audioPackFormat is adm["AP_00010002"]
 
     # missing pack ref
-    chna.audioIDs = [AudioID(2, "ATU_00000002", "AT_00010002_01", None)]
+    chna.audioIDs = [AudioID(2, "ATU_00000002", "AT_00010002_01", None, None)]
     load_chna_chunk(adm, chna)
     assert adm.audioTrackUIDs[1].audioPackFormat is None
 
     # inconsistent pack ref
-    chna.audioIDs = [AudioID(1, "ATU_00000001", "AT_00010002_01", "AP_00010002")]
+    chna.audioIDs = [AudioID(1, "ATU_00000001", "AT_00010002_01", None, "AP_00010002")]
     with pytest.raises(Exception) as excinfo:
         load_chna_chunk(adm, chna)
     assert str(excinfo.value) == ("Error in track UID ATU_00000001: audioTrackFormatIDRef in CHNA, "
                                   "'AT_00010002_01' does not match value in AXML, 'AT_00010001_01'.")
 
     # inconsistent track ref
-    chna.audioIDs = [AudioID(1, "ATU_00000001", "AT_00010001_01", "AP_00010003")]
+    chna.audioIDs = [AudioID(1, "ATU_00000001", "AT_00010001_01", None, "AP_00010003")]
     with pytest.raises(Exception) as excinfo:
         load_chna_chunk(adm, chna)
     assert str(excinfo.value) == ("Error in track UID ATU_00000001: audioPackFormatIDRef in CHNA, "
                                   "'AP_00010003' does not match value in AXML, 'AP_00010002'.")
 
     # zero track uid
-    chna.audioIDs = [AudioID(1, "ATU_00000000", "AT_00010001_01", "AP_00010002")]
+    chna.audioIDs = [AudioID(1, "ATU_00000000", "AT_00010001_01", None, "AP_00010002")]
     expected = ("audioTrackUID element or CHNA row found with UID "
                 "ATU_00000000, which is reserved for silent tracks.")
     with pytest.raises(Exception, match=expected):
@@ -75,7 +75,7 @@ def test_populate():
     # normal use with channel format
     adm.addAudioTrackUID(AudioTrackUID(
         id="ATU_00000003",
-        trackIndex=1,
+        trackIndex=3,
         audioChannelFormat=adm["AC_00010001"],
         audioPackFormat=adm["AP_00010002"]))
     
@@ -83,12 +83,15 @@ def test_populate():
     assert chna.audioIDs == [AudioID(audioTrackUID="ATU_00000001",
                                      trackIndex=1,
                                      audioTrackFormatIDRef="AT_00010001_01",
+                                     audioChannelFormatIDRef=None,
                                      audioPackFormatIDRef="AP_00010002"),
                              AudioID(audioTrackUID="ATU_00000002",
                                      trackIndex=2,
                                      audioTrackFormatIDRef="AT_00010002_01",
+                                     audioChannelFormatIDRef=None,
                                      audioPackFormatIDRef=None),
                              AudioID(audioTrackUID="ATU_00000003",
                                      trackIndex=3,
+                                     audioTrackFormatIDRef=None,
                                      audioChannelFormatIDRef="AC_00010001",
                                      audioPackFormatIDRef="AP_00010002")]

@@ -22,7 +22,7 @@ def test_dump_chna(tmpdir):
     from ...fileio.bw64.chunks import ChnaChunk, AudioID
 
     chna = ChnaChunk()
-    audioID = AudioID(1, u'ATU_00000001', u'AT_00010001_01', u'AP_00010003')
+    audioID = AudioID(1, u'ATU_00000001', u'AT_00010001_01', None, u'AP_00010003')
     chna.appendAudioID(audioID)
 
     with openBw64(filename, 'w', chna=chna) as outfile:

@@ -154,7 +154,7 @@ def test_chna_1(tmpdir):
     filename = str(tmpdir / 'test_chna_1.wav')
 
     chna = ChnaChunk()
-    audioID = AudioID(1, 'ATU_00000001', 'AT_00010001_01', 'AP_00010003')
+    audioID = AudioID(1, 'ATU_00000001', 'AT_00010001_01', None, 'AP_00010003')
     chna.appendAudioID(audioID)
 
     with openBw64(filename, 'w') as outfile:
@@ -181,7 +181,7 @@ def test_chna_2(tmpdir):
     filename = str(tmpdir / 'test_chna_2.wav')
 
     chna = ChnaChunk()
-    audioID = AudioID(1, 'ATU_00000001', 'AT_00010001_01', 'AP_00010003')
+    audioID = AudioID(1, 'ATU_00000001', 'AT_00010001_01', None, 'AP_00010003')
     chna.appendAudioID(audioID)
 
     with openBw64(filename, 'w', chna=chna) as outfile:
