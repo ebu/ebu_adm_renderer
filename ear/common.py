@@ -45,28 +45,25 @@ def cart(az, el, dist, axis=-1):
         az: Azimuths in degrees, angle measured anticlockwise from front.
         el: Elevations in degrees, angle measured up from equator.
         r: Radii.
-        axis: Index of the new axis in the result; see `np.stack`. -1 (default)
-            adds a new axis at the end.
+        axis: Index of the new axis in the result; see :func:`numpy.stack`. -1
+            (default) adds a new axis at the end.
 
     Returns:
         ndarray: Same shape as broadcasting az, el and r together, with a new
-            axis at `axis` containing the X, Y and Z coordinates.
+        axis at `axis` containing the X, Y and Z coordinates.
 
     Examples:
-
         >>> cart(0, 0, 1)
         array([0., 1., 0.])
         >>> cart(90, 0, 1).round(6)
         array([-1.,  0.,  0.])
         >>> cart(0, 90, 1).round(6)
         array([0., 0., 1.])
-
-        # inputs are broadcast together...
+        >>> # inputs are broadcast together...
         >>> cart([0, 90], 0, 1).round(6)
         array([[ 0.,  1.,  0.],
                [-1.,  0.,  0.]])
-
-        # ... along the given axis
+        >>> # ... along the given axis
         >>> cart([0, 90], 0, 1, axis=0).round(6)
         array([[ 0., -1.],
                [ 1.,  0.],
@@ -100,10 +97,8 @@ def azimuth(positions, axis=-1):
 
         >>> azimuth([0, 1, 0]).round(0).astype(int)
         0
-
         >>> azimuth([[1, 0, 0], [0, 1, 0]]).round(0).astype(int)
         array([-90,   0])
-
         >>> azimuth([[1, 0], [0, 1], [0, 0]], axis=0).round(0).astype(int)
         array([-90,   0])
     """
@@ -114,7 +109,7 @@ def azimuth(positions, axis=-1):
 def elevation(positions, axis=-1):
     """Get the elevation in degrees from ADM-format Cartesian positions.
 
-    See `azimuth`.
+    See :func:`azimuth`.
     """
     x, y, z = np.moveaxis(positions, axis, 0)
     radius = np.hypot(x, y)
@@ -124,7 +119,7 @@ def elevation(positions, axis=-1):
 def distance(positions, axis=-1):
     """Get the distance from ADM-format Cartesian positions.
 
-    See `azimuth`.
+    See :func:`azimuth`.
     """
     return np.linalg.norm(positions, axis=axis)
 
