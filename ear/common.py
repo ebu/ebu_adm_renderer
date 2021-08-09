@@ -112,7 +112,7 @@ def azimuth(positions, axis=-1):
 
 
 def elevation(positions, axis=-1):
-    """Get the azimuth in degrees from ADM-format Cartesian positions.
+    """Get the elevation in degrees from ADM-format Cartesian positions.
 
     See `azimuth`.
     """
