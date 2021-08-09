@@ -178,7 +178,17 @@ class Position(object):
 
 @attrs(slots=True)
 class PolarPosition(Position, PolarPositionMixin):
-    """A 3D position represented in ADM-format polar coordinates."""
+    """A 3D position represented in ADM-format polar coordinates.
+
+    Attributes:
+        azimuth (float): anti-clockwise azimuth in degrees, measured from the
+            front
+        elevation (float): elevation in degrees, measured upwards from the
+            equator
+        distance (float): distance relative to the audioPackFormat
+            absoluteDistance parameter
+    """
+
     azimuth = attrib(converter=float, validator=validate_range(-180, 180))
     elevation = attrib(converter=float, validator=validate_range(-90, 90))
     distance = attrib(converter=float, validator=validate_range(0, float('inf')),
@@ -187,7 +197,14 @@ class PolarPosition(Position, PolarPositionMixin):
 
 @attrs(slots=True)
 class CartesianPosition(Position, CartesianPositionMixin):
-    """A 3D position represented in ADM-format Cartesian coordinates."""
+    """A 3D position represented in ADM-format Cartesian coordinates.
+
+    Attributes:
+        X (float): left-to-right position, from -1 to 1
+        Y (float): back-to-front position, from -1 to 1
+        Z (float): bottom-to-top position, from -1 to 1
+    """
+
     X = attrib(converter=float)
     Y = attrib(converter=float)
     Z = attrib(converter=float)
