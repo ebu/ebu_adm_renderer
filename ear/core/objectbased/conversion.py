@@ -1,10 +1,22 @@
 from attr import evolve, attrib, attrs
-from ...fileio.adm.elements import ObjectPolarPosition, ObjectCartesianPosition
+from ...fileio.adm.elements import (
+    AudioBlockFormatObjects,
+    ObjectPolarPosition,
+    ObjectCartesianPosition,
+)
 from ..geom import azimuth, inside_angle_range, local_coordinate_system, relative_angle
 import numpy as np
 
 
-def to_polar(block_format):
+def to_polar(block_format: AudioBlockFormatObjects) -> AudioBlockFormatObjects:
+    """Convert a block format to use polar coordinates according to ITU-R
+    BS.2127-0 section 10.
+
+    The cartesian flag will be set to match the coordinates used.
+
+    The position, width, height and depth will be converted; the rest of the
+    parameters will be unmodified.
+    """
     block_format = _fix_cartesian_flag(block_format)
     if not block_format.cartesian:
         return block_format
@@ -25,7 +37,15 @@ def to_polar(block_format):
                       )
 
 
-def to_cartesian(block_format):
+def to_cartesian(block_format: AudioBlockFormatObjects) -> AudioBlockFormatObjects:
+    """Convert a block format to use Cartesian coordinates according to ITU-R
+    BS.2127-0 section 10.
+
+    The cartesian flag will be set to match the coordinates used.
+
+    The position, width, height and depth will be converted; the rest of the
+    parameters will be unmodified.
+    """
     block_format = _fix_cartesian_flag(block_format)
     if block_format.cartesian:
         return block_format
@@ -110,6 +130,17 @@ class Conversion(object):
         assert False
 
     def point_polar_to_cart(self, az, el, d):
+        """Convert a position from polar to Cartesian according to ITU-R
+        BS.2127-0 section 10.
+
+        Parameters:
+            az (float): azimuth
+            el (float): elevation
+            d (float): distance
+
+        Returns:
+            np.ndarray of shape (3,): converted Cartesian position
+        """
         if np.abs(el) > self.el_top:
             el_tilde = self.el_top_tilde + (90.0 - self.el_top_tilde) * (np.abs(el) - self.el_top) / (90 - self.el_top)
             z = d * np.sign(el)
@@ -139,6 +170,17 @@ class Conversion(object):
         assert False
 
     def point_cart_to_polar(self, x, y, z):
+        """Convert a position from Cartesian to polar according to ITU-R
+        BS.2127-0 section 10.
+
+        Parameters:
+            x (float): X coordinate
+            y (float): Y coordinate
+            z (float): Z coordinate
+
+        Returns:
+            (float, float, float): converted azimuth, elevation and distance
+        """
         eps = 1e-10
         if np.abs(x) < eps and np.abs(y) < eps:
             if np.abs(z) < eps:
@@ -168,6 +210,21 @@ class Conversion(object):
         return az, el, d
 
     def extent_polar_to_cart(self, az, el, dist, width, height, depth):
+        """Convert a position and extent parameters from polar to Cartesian
+        according to ITU-R BS.2127-0 section 10.
+
+        Parameters:
+            az (float): azimuth
+            el (float): elevation
+            dist (float): distance
+            width (float): width parameter
+            height (float): height parameter
+            depth (float): depth parameter
+
+        Returns:
+            (float, float, float, float, float, float): converted X, Y, Z,
+            width (X size), depth (Y size) and height (Z size)
+        """
         x, y, z = self.point_polar_to_cart(az, el, dist)
 
         front_xs, front_ys, front_zs = self._whd2xyz(width, height, depth)
@@ -177,6 +234,21 @@ class Conversion(object):
         return x, y, z, xs, ys, zs
 
     def extent_cart_to_polar(self, x, y, z, xs, ys, zs):
+        """Convert a position and extent parameters from Cartesian to polar
+        according to ITU-R BS.2127-0 section 10.
+
+        Parameters:
+            x (float): X coordinate
+            y (float): Y coordinate
+            z (float): Z coordinate
+            xs (float): width (X size)
+            ys (float): depth (Y size)
+            zs (float): height (Z size)
+
+        Returns:
+            (float, float, float, float, float, float): converted azimuth,
+            elevation, distance, width, height and depth
+        """
         az, el, dist = self.point_cart_to_polar(x, y, z)
 
         M = local_coordinate_system(az, el).T * np.array([[xs], [ys], [zs]])
