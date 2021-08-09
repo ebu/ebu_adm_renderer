@@ -135,9 +135,15 @@ class PolarPositionMixin(object):
     __slots__ = ()
 
     def as_cartesian_array(self):
+        """Get the position as a Cartesian array.
+
+        Returns:
+            np.array of shape (3,): equivalent X, Y and Z coordinates
+        """
         return cart(self.azimuth, self.elevation, self.distance)
 
-    def as_cartesian_position(self):
+    def as_cartesian_position(self) -> "CartesianPosition":
+        """Get the equivalent cartesian position."""
         x, y, z = self.as_cartesian_array()
         return CartesianPosition(x, y, z)
 
@@ -152,9 +158,15 @@ class CartesianPositionMixin(object):
     __slots__ = ()
 
     def as_cartesian_array(self):
+        """Get the position as a Cartesian array.
+
+        Returns:
+            np.array of shape (3,): equivalent X, Y and Z coordinates
+        """
         return np.array([self.X, self.Y, self.Z])
 
-    def as_polar_position(self):
+    def as_polar_position(self) -> "PolarPosition":
+        """Get the equivalent cartesian position."""
         cart_array = self.as_cartesian_array()
         return PolarPosition(azimuth(cart_array), elevation(cart_array), distance(cart_array))
 
