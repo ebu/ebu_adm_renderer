@@ -212,6 +212,16 @@ class CartesianPosition(Position, CartesianPositionMixin):
 
 @attrs(slots=True, frozen=True)
 class CartesianScreen(object):
+    """ADM screen representation using Cartesian coordinates.
+
+    This is used to represent the audioProgrammeReferenceScreen, as well as the
+    screen position in the reproduction room.
+
+    Attributes:
+        aspectRatio (float): aspect ratio
+        centrePosition (CartesianPosition): screenCentrePosition element
+        widthX (float): screenWidth X attribute
+    """
     aspectRatio = attrib(validator=instance_of(float))
     centrePosition = attrib(validator=instance_of(CartesianPosition))
     widthX = attrib(validator=instance_of(float))
@@ -219,6 +229,16 @@ class CartesianScreen(object):
 
 @attrs(slots=True, frozen=True)
 class PolarScreen(object):
+    """ADM screen representation using Cartesian coordinates.
+
+    This is used to represent the audioProgrammeReferenceScreen, as well as the
+    screen position in the reproduction room.
+
+    Attributes:
+        aspectRatio (float): aspect ratio
+        centrePosition (PolarPosition): screenCentrePosition element
+        widthX (float): screenWidth azimuth attribute
+    """
     aspectRatio = attrib(validator=instance_of(float))
     centrePosition = attrib(validator=instance_of(PolarPosition))
     widthAzimuth = attrib(validator=instance_of(float))
@@ -230,3 +250,4 @@ default_screen = PolarScreen(aspectRatio=1.78,
                                  elevation=0.0,
                                  distance=1.0),
                              widthAzimuth=58.0)
+"""The default screen position, size and shape."""
