@@ -59,7 +59,7 @@ def dump_chna_command(args):
                 print(entry)  # noqa
 
 
-def parse_command_line():
+def make_parser():
     parser = argparse.ArgumentParser(description='EBU ADM renderer utilities')
     subparsers = parser.add_subparsers(title='available subcommands')
 
@@ -88,6 +88,11 @@ def parse_command_line():
     add_dump_chna_command()
     ambix_to_bwf.add_args(subparsers)
 
+    return parser
+
+
+def parse_command_line():
+    parser = make_parser()
     args = parser.parse_args()
     if 'command' not in args:
         parser.error('No command specified')

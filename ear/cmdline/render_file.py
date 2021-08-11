@@ -210,7 +210,7 @@ class OfflineRenderDriver(object):
             sys.exit("error: output overloaded")
 
 
-def parse_command_line():
+def make_parser():
     parser = argparse.ArgumentParser(description="EBU ADM renderer")
 
     parser.add_argument("-d", "--debug",
@@ -226,6 +226,11 @@ def parse_command_line():
                         help="treat unknown ADM attributes as errors",
                         action="store_true")
 
+    return parser
+
+
+def parse_command_line():
+    parser = make_parser()
     args = parser.parse_args()
     return args
 
