@@ -287,7 +287,7 @@ def load_real_layout(fileobj):
     specified but null, then screen-related processing will not be applied.
 
     Parameters:
-        file: a file-like object to read yaml from
+        fileobj: a file-like object to read yaml from
 
     Returns:
         RealLayout: real layout information
