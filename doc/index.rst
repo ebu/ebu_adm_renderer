@@ -26,6 +26,7 @@ From version 2.0, this is also the reference implementation of `ITU-R BS.2127
    :caption: Contents:
 
    install
+   usage
    dev_docs
 
 
