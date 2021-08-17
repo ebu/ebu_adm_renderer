@@ -219,8 +219,8 @@ def make_parser():
 
     OfflineRenderDriver.add_args(parser)
 
-    parser.add_argument("input_file")
-    parser.add_argument("output_file")
+    parser.add_argument("input_file", help="BW64 file with CHNA and AXML (optional) chunks")
+    parser.add_argument("output_file", help="BW64 output file")
 
     parser.add_argument("--strict",
                         help="treat unknown ADM attributes as errors",
