@@ -3,7 +3,7 @@ from .main_elements import (AudioChannelFormat, AudioPackFormat, AudioTrackForma
                             AudioStreamFormat, AudioProgramme, AudioContent,
                             AudioObject, AudioTrackUID, FormatDefinition, TypeDefinition,
                             Frequency, LoudnessMetadata)
-from .block_formats import (AudioBlockFormatObjects, ChannelLock, ObjectDivergence,
+from .block_formats import (AudioBlockFormat, AudioBlockFormatObjects, ChannelLock, ObjectDivergence,
                             JumpPosition, AudioBlockFormatDirectSpeakers, AudioBlockFormatBinaural, AudioBlockFormatHoa,
                             AudioBlockFormatMatrix, MatrixCoefficient,
                             CartesianZone, PolarZone)
