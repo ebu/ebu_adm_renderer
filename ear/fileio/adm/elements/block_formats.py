@@ -7,7 +7,7 @@ from .main_elements import AudioChannelFormat, TypeDefinition
 
 
 @attrs(slots=True)
-class BlockFormat(object):
+class AudioBlockFormat(object):
     id = attrib(default=None)
     rtime = attrib(validator=optional(instance_of(Fraction)), default=None)
     duration = attrib(validator=optional(instance_of(Fraction)), default=None)
@@ -17,6 +17,10 @@ class BlockFormat(object):
 
     def validate(self):
         validate(self)
+
+
+BlockFormat = AudioBlockFormat
+"""Compatibility alias for AudioBlockFormat"""
 
 
 @attrs(slots=True)
@@ -44,7 +48,7 @@ class MatrixCoefficient(object):
 
 
 @attrs(slots=True)
-class AudioBlockFormatMatrix(BlockFormat):
+class AudioBlockFormatMatrix(AudioBlockFormat):
     outputChannelFormat = attrib(default=None, validator=optional(instance_of(AudioChannelFormat)))
     matrix = attrib(default=Factory(list), validator=list_of(MatrixCoefficient))
 
@@ -101,7 +105,7 @@ class PolarZone(object):
 
 
 @attrs(slots=True)
-class AudioBlockFormatObjects(BlockFormat):
+class AudioBlockFormatObjects(AudioBlockFormat):
     position = attrib(default=None, validator=instance_of(ObjectPosition), converter=convert_object_position)
     cartesian = attrib(converter=bool, default=False)
     width = attrib(converter=float, default=0.)
@@ -118,13 +122,13 @@ class AudioBlockFormatObjects(BlockFormat):
 
 
 @attrs(slots=True)
-class AudioBlockFormatDirectSpeakers(BlockFormat):
+class AudioBlockFormatDirectSpeakers(AudioBlockFormat):
     position = attrib(default=None, validator=instance_of(DirectSpeakerPosition))
     speakerLabel = attrib(default=Factory(list))
 
 
 @attrs(slots=True)
-class AudioBlockFormatHoa(BlockFormat):
+class AudioBlockFormatHoa(AudioBlockFormat):
     equation = attrib(default=None, validator=optional(instance_of(str)))
     order = attrib(default=None, validator=optional(instance_of(int)))
     degree = attrib(default=None, validator=optional(instance_of(int)))
@@ -134,7 +138,7 @@ class AudioBlockFormatHoa(BlockFormat):
 
 
 @attrs(slots=True)
-class AudioBlockFormatBinaural(BlockFormat):
+class AudioBlockFormatBinaural(AudioBlockFormat):
     pass
 
 
