@@ -5,7 +5,17 @@
 ### Fixed
 - Depth and height parameters were switched in metadata conversion. See [#26].
 - Bug in channel lock priority order, which controls the loudspeaker selection when the object position is the same distance from multiple loudspeakers. See [#28].
+- Screen scaling now fails explicitly in cases where it was not well-defined before, generally with extreme positions and sizes. See [#22].
+- Errors with gaps at the start of metadata. See [#13].
+- Rounding of times in XML writer. See [#12].
+- `audioStreamFormat` referencing error messages. See [34b738a] and [04533fc].
 
+### Changed
+- `DirectSpeakers` panner uses allocentric panning for Cartesian positions. See [222374a].
+- Removed python 2.7 support.
+
+### Added
+- `loudnessMetadata` data structures, parsing and generation. See [#25].
 
 ## [2.0.0] - 2019-05-22
 
@@ -111,8 +121,15 @@ Changes for ITU ADM renderer reference code.
 
 Initial release.
 
+[#12]: https://github.com/ebu/ebu_adm_renderer/pull/12
+[#13]: https://github.com/ebu/ebu_adm_renderer/pull/13
+[#22]: https://github.com/ebu/ebu_adm_renderer/pull/22
+[#25]: https://github.com/ebu/ebu_adm_renderer/pull/25
 [#26]: https://github.com/ebu/ebu_adm_renderer/pull/26
 [#28]: https://github.com/ebu/ebu_adm_renderer/pull/28
+[34b738a]: https://github.com/ebu/ebu_adm_renderer/commit/34b738a
+[04533fc]: https://github.com/ebu/ebu_adm_renderer/commit/04533fc
+[222374a]: https://github.com/ebu/ebu_adm_renderer/commit/222374a
 [2.0.0]: https://github.com/ebu/ebu_adm_renderer/compare/1.2.0...2.0.0
 [1.2.0]: https://github.com/ebu/ebu_adm_renderer/compare/1.1.2...1.2.0
 [1.1.2]: https://github.com/ebu/ebu_adm_renderer/compare/1.1.1...1.1.2
