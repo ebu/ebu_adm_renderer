@@ -4,6 +4,8 @@
 
 ### Fixed
 - Depth and height parameters were switched in metadata conversion. See [#26].
+- Bug in channel lock priority order, which controls the loudspeaker selection when the object position is the same distance from multiple loudspeakers. See [#28].
+
 
 ## [2.0.0] - 2019-05-22
 
@@ -110,6 +112,7 @@ Changes for ITU ADM renderer reference code.
 Initial release.
 
 [#26]: https://github.com/ebu/ebu_adm_renderer/pull/26
+[#28]: https://github.com/ebu/ebu_adm_renderer/pull/28
 [2.0.0]: https://github.com/ebu/ebu_adm_renderer/compare/1.2.0...2.0.0
 [1.2.0]: https://github.com/ebu/ebu_adm_renderer/compare/1.1.2...1.2.0
 [1.1.2]: https://github.com/ebu/ebu_adm_renderer/compare/1.1.1...1.1.2
