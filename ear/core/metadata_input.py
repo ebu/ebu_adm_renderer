@@ -32,7 +32,7 @@ class MetadataSourceIter(MetadataSource):
 
 @attrs(slots=True)
 class TypeMetadata(object):
-    """Base class for \*TypeMetadata classes; these should represent all the
+    """Base class for \\*TypeMetadata classes; these should represent all the
     parameters needed to render some set of audio channels within some time
     bounds.
     """
@@ -40,8 +40,8 @@ class TypeMetadata(object):
 
 @attrs(slots=True)
 class RenderingItem(object):
-    """Base class for \*RenderingItem classes; these should represent an item to
-    be rendered, combining a MetadataSource that produces a sequence of
+    """Base class for \\*RenderingItem classes; these should represent an item
+    to be rendered, combining a MetadataSource that produces a sequence of
     TypeMetadata objects, and some indices into the tracks that this metadata
     applies to.
     """
