@@ -18,6 +18,7 @@
     - `audioBlockFormats` where the `rtime` plus the `duration` of one `audioBlockFormat` does not match the `rtime` of the next.
     - `interpolationTime` parameter larger than `duration`.
     - `audioBlockFormat` `rtime` plus `duration` extending past the end of the containing `audioObject`.
+- Issue a warning for `DirectSpeakers` blocks with a `speakerLabel` containing `LFE` which is not detected as an LFE channel. See [#9].
 
 ### Added
 - `loudnessMetadata` data structures, parsing and generation. See [#25].
@@ -128,6 +129,7 @@ Changes for ITU ADM renderer reference code.
 Initial release.
 
 [#8]: https://github.com/ebu/ebu_adm_renderer/pull/8
+[#9]: https://github.com/ebu/ebu_adm_renderer/pull/9
 [#12]: https://github.com/ebu/ebu_adm_renderer/pull/12
 [#13]: https://github.com/ebu/ebu_adm_renderer/pull/13
 [#22]: https://github.com/ebu/ebu_adm_renderer/pull/22
