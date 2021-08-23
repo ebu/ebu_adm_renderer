@@ -13,9 +13,15 @@
 ### Changed
 - `DirectSpeakers` panner uses allocentric panning for Cartesian positions. See [222374a].
 - Removed python 2.7 support.
+- `fix_block_format_durations` parameter is deprecated, and the ADM XML parser no longer issues warnings for timing issues -- use `ear.fileio.adm.timing_fixes` for this functionality instead. See [#8].
+- `--enable-block-duration-fix` performs more extensive fixes; this now fixes the following issues:
+    - `audioBlockFormats` where the `rtime` plus the `duration` of one `audioBlockFormat` does not match the `rtime` of the next.
+    - `interpolationTime` parameter larger than `duration`.
+    - `audioBlockFormat` `rtime` plus `duration` extending past the end of the containing `audioObject`.
 
 ### Added
 - `loudnessMetadata` data structures, parsing and generation. See [#25].
+- `ear-utils regenerate` command to re-generate AXML and CHNA chunks. See [#8].
 
 ## [2.0.0] - 2019-05-22
 
@@ -121,6 +127,7 @@ Changes for ITU ADM renderer reference code.
 
 Initial release.
 
+[#8]: https://github.com/ebu/ebu_adm_renderer/pull/8
 [#12]: https://github.com/ebu/ebu_adm_renderer/pull/12
 [#13]: https://github.com/ebu/ebu_adm_renderer/pull/13
 [#22]: https://github.com/ebu/ebu_adm_renderer/pull/22
