@@ -1,6 +1,5 @@
 from __future__ import print_function
 import argparse
-import sys
 from attr import attrs, attrib, Factory
 import scipy.sparse
 from itertools import chain
@@ -11,14 +10,13 @@ from ..core.select_items import select_rendering_items
 from ..fileio import openBw64, openBw64Adm
 from ..fileio.adm.elements import AudioProgramme, AudioObject
 from ..fileio.bw64.chunks import FormatInfoChunk
-import warnings
-from ..fileio.adm.exceptions import AdmUnknownAttribute
 from ..fileio.adm import timing_fixes
+import logging
+from .error_handler import error_handler
 
 
-def handle_strict(args):
-    if args.strict:
-        warnings.filterwarnings("error", category=AdmUnknownAttribute)
+logging.basicConfig()
+logger = logging.getLogger("ear")
 
 
 @attrs
@@ -213,7 +211,7 @@ class OfflineRenderDriver(object):
 
         output_monitor.warn_overloaded()
         if self.fail_on_overload and output_monitor.has_overloaded():
-            sys.exit("error: output overloaded")
+            raise Exception("error: output overloaded")
 
 
 def make_parser():
@@ -244,16 +242,8 @@ def parse_command_line():
 def main():
     args = parse_command_line()
 
-    handle_strict(args)
-
-    try:
+    with error_handler(logger, debug=args.debug, strict=args.strict):
         OfflineRenderDriver.from_args(args).run(args.input_file, args.output_file)
-    except Exception as error:
-        if args.debug:
-            raise
-        else:
-            sys.exit(str(error))
-
 
 if __name__ == "__main__":
     main()
