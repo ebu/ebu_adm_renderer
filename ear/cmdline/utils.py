@@ -1,5 +1,6 @@
 from __future__ import print_function
 import argparse
+import logging
 import sys
 from ..compatibility import write_bytes_to_stdout
 from ..fileio import openBw64, openBw64Adm
@@ -7,6 +8,11 @@ from ..fileio.bw64.chunks import FormatInfoChunk, ChnaChunk
 import warnings
 from . import ambix_to_bwf
 from . import generate_test_file
+from .error_handler import error_handler
+
+
+logging.basicConfig()
+logger = logging.getLogger("ear")
 
 
 def replace_axml_command(args):
@@ -90,6 +96,10 @@ def make_parser():
     parser = argparse.ArgumentParser(description='EBU ADM renderer utilities')
     subparsers = parser.add_subparsers(title='available subcommands')
 
+    parser.add_argument("-d", "--debug",
+                        help="print debug information when an error occurs",
+                        action="store_true")
+
     def add_replace_axml_command():
         subparser = subparsers.add_parser("replace_axml", help="replace the axml chunk in an existing ADM BWF file")
         subparser.add_argument("input", help="input bwf file")
@@ -139,7 +149,8 @@ def parse_command_line():
 def main():
     args = parse_command_line()
 
-    args.command(args)
+    with error_handler(logger, debug=args.debug):
+        args.command(args)
 
 
 if __name__ == '__main__':
