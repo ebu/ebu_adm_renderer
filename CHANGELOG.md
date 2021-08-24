@@ -19,6 +19,7 @@
     - `interpolationTime` parameter larger than `duration`.
     - `audioBlockFormat` `rtime` plus `duration` extending past the end of the containing `audioObject`.
 - Issue a warning for `DirectSpeakers` blocks with a `speakerLabel` containing `LFE` which is not detected as an LFE channel. See [#9].
+- Improved warning and error output: tidier formatting, and repeated warnings are suppressed by default. See [#37].
 
 ### Added
 - `loudnessMetadata` data structures, parsing and generation. See [#25].
@@ -136,6 +137,7 @@ Initial release.
 [#25]: https://github.com/ebu/ebu_adm_renderer/pull/25
 [#26]: https://github.com/ebu/ebu_adm_renderer/pull/26
 [#28]: https://github.com/ebu/ebu_adm_renderer/pull/28
+[#37]: https://github.com/ebu/ebu_adm_renderer/pull/37
 [34b738a]: https://github.com/ebu/ebu_adm_renderer/commit/34b738a
 [04533fc]: https://github.com/ebu/ebu_adm_renderer/commit/04533fc
 [222374a]: https://github.com/ebu/ebu_adm_renderer/commit/222374a
