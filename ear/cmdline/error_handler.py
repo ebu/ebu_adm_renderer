@@ -1,8 +1,31 @@
+from collections import defaultdict
 import contextlib
 import logging
 import sys
 import warnings
 from ..fileio.adm.exceptions import AdmUnknownAttribute
+
+
+class LimitedWarningPrint:
+    """Utility to print a given number of warnings per line; to use, replace
+    warnings.showwarning with self.showwarning.
+    """
+
+    def __init__(self, logger: logging.Logger, max_per_line=5):
+        self.logger = logger
+        self.max_per_line = max_per_line
+        self.counts = defaultdict(lambda: 0)
+
+    def showwarning(self, message, category, filename, lineno, file=None, line=None):
+        self.counts[(filename, lineno)] += 1
+        count = self.counts[(filename, lineno)]
+
+        if count <= self.max_per_line:
+            self.logger.warning(message)
+        if count == self.max_per_line:
+            self.logger.warning(
+                "suppressing further messages like the above; use --debug to show more"
+            )
 
 
 @contextlib.contextmanager
@@ -15,6 +38,8 @@ def error_handler(logger: logging.Logger, debug: bool = False, strict: bool = Fa
         debug: should we be more verbose, printing full exceptions
         strict: turn unknown attribute warnings into errors
     """
+    # debug: print every warning in full
+    # no debug: just print message, stop after n
     if debug:
 
         def showwarning(message, category, filename, lineno, file=None, line=None):
@@ -23,9 +48,7 @@ def error_handler(logger: logging.Logger, debug: bool = False, strict: bool = Fa
             logger.warning(msg)
 
     else:
-
-        def showwarning(message, category, filename, lineno, file=None, line=None):
-            logger.warning(message)
+        showwarning = LimitedWarningPrint(logger).showwarning
 
     try:
         with warnings.catch_warnings():
