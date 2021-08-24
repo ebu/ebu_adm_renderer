@@ -15,8 +15,21 @@ def error_handler(logger: logging.Logger, debug: bool = False, strict: bool = Fa
         debug: should we be more verbose, printing full exceptions
         strict: turn unknown attribute warnings into errors
     """
+    if debug:
+
+        def showwarning(message, category, filename, lineno, file=None, line=None):
+            category = category.__name__
+            msg = f"{filename}:{lineno}: {category}: {message}"
+            logger.warning(msg)
+
+    else:
+
+        def showwarning(message, category, filename, lineno, file=None, line=None):
+            logger.warning(message)
+
     try:
         with warnings.catch_warnings():
+            warnings.showwarning = showwarning  # documentation says this is allowed
             if strict:
                 warnings.filterwarnings("error", category=AdmUnknownAttribute)
             yield
