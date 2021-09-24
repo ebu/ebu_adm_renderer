@@ -2,7 +2,13 @@ from attr import attrs, attrib, Factory
 from .adm import ADM
 from .elements import AudioProgramme, AudioContent, AudioObject
 from .elements import TypeDefinition, FormatDefinition
-from .elements import AudioChannelFormat, AudioPackFormat, AudioTrackFormat, AudioTrackUID, AudioStreamFormat
+from .elements import (
+    AudioChannelFormat,
+    AudioPackFormat,
+    AudioTrackFormat,
+    AudioTrackUID,
+    AudioStreamFormat,
+)
 
 
 class _Default(object):
@@ -35,6 +41,7 @@ class ADMBuilder(object):
             explicitly created audioContent or audioObject, used as the parent
             for audioObjects created by create_item* functions.
     """
+
     adm = attrib(default=Factory(ADM))
     last_programme = attrib(default=None)
     last_content = attrib(default=None)
@@ -46,6 +53,7 @@ class ADMBuilder(object):
     def load_common_definitions(self):
         """Load common definitions into adm."""
         from .common_definitions import load_common_definitions
+
         load_common_definitions(self.adm)
 
     def create_programme(self, **kwargs):
@@ -235,7 +243,9 @@ class ADMBuilder(object):
         audio_object = attrib()
         parent = attrib()
 
-    def create_item_mono(self, type, track_index, name, parent=DEFAULT, block_formats=[]):
+    def create_item_mono(
+        self, type, track_index, name, parent=DEFAULT, block_formats=[]
+    ):
         """Create ADM components needed to represent a mono channel, either
         DirectSpeakers or Objects.
 
@@ -252,9 +262,8 @@ class ADMBuilder(object):
             MonoItem: the created components
         """
         channel_format = AudioChannelFormat(
-            audioChannelFormatName=name,
-            type=type,
-            audioBlockFormats=block_formats)
+            audioChannelFormatName=name, type=type, audioBlockFormats=block_formats
+        )
         self.adm.addAudioChannelFormat(channel_format)
 
         pack_format = AudioPackFormat(
