@@ -2,19 +2,8 @@ import numpy as np
 import lxml.etree
 from ..core.hoa import from_acn
 from ..fileio.adm.adm import ADM
-from ..fileio.adm.elements import (
-    AudioBlockFormatHoa,
-    AudioChannelFormat,
-    TypeDefinition,
-    FormatDefinition,
-)
-from ..fileio.adm.elements import (
-    AudioStreamFormat,
-    AudioTrackFormat,
-    AudioPackFormat,
-    AudioObject,
-    AudioTrackUID,
-)
+from ..fileio.adm.builder import ADMBuilder
+from ..fileio.adm.elements import AudioTrackUID
 from ..fileio.adm.chna import populate_chna_chunk
 from ..fileio.adm.generate_ids import generate_ids
 from ..fileio.adm.xml import adm_to_xml
@@ -47,66 +36,21 @@ def get_acn(n_channels, args):
 
 
 def build_adm(acn, norm, nfcDist, screenRef):
-    adm = ADM()
-
-    track_uids = []
-
-    pack_format = AudioPackFormat(
-        audioPackFormatName="HOA",
-        type=TypeDefinition.HOA,
-        audioChannelFormats=[],
-    )
-    adm.addAudioPackFormat(pack_format)
+    builder = ADMBuilder()
 
     order, degree = from_acn(acn)
-    for channel_no, (order, degree) in enumerate(zip(order, degree), 1):
-        block_format = AudioBlockFormatHoa(
-            order=int(order),
-            degree=int(degree),
-            normalization=norm,
-            nfcRefDist=nfcDist,
-            screenRef=screenRef,
-        )
 
-        name = "channel_{}".format(channel_no)
-        channel_format = AudioChannelFormat(
-            audioChannelFormatName=name,
-            type=TypeDefinition.HOA,
-            audioBlockFormats=[block_format],
-        )
-        adm.addAudioChannelFormat(channel_format)
-        pack_format.audioChannelFormats.append(channel_format)
-
-        stream_format = AudioStreamFormat(
-            audioStreamFormatName=name,
-            format=FormatDefinition.PCM,
-            audioChannelFormat=channel_format,
-        )
-        adm.addAudioStreamFormat(stream_format)
-
-        track_format = AudioTrackFormat(
-            audioTrackFormatName=name,
-            format=FormatDefinition.PCM,
-            audioStreamFormat=stream_format,
-        )
-        adm.addAudioTrackFormat(track_format)
-
-        track_uid = AudioTrackUID(
-            trackIndex=channel_no,
-            audioTrackFormat=track_format,
-            audioPackFormat=pack_format,
-        )
-        adm.addAudioTrackUID(track_uid)
-        track_uids.append(track_uid)
-
-    audio_object = AudioObject(
-        audioObjectName="HOA",
-        audioPackFormats=[pack_format],
-        audioTrackUIDs=track_uids,
+    builder.create_item_hoa(
+        track_indices=acn.tolist(),
+        orders=order.tolist(),
+        degrees=degree.tolist(),
+        name="HOA",
+        normalization=norm,
+        nfcRefDist=nfcDist,
+        screenRef=screenRef,
     )
-    adm.addAudioObject(audio_object)
 
-    return adm
+    return builder.adm
 
 
 def build_adm_common_defs(acns, norm):
