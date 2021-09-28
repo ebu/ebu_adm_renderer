@@ -89,7 +89,7 @@ class ADMBuilder(object):
         """Create a new audioProgramme.
 
         Args:
-            kwargs: see :class:`AudioProgramme`
+            kwargs: see :class:`.AudioProgramme`
 
         Returns:
             AudioProgramme: created audioProgramme
@@ -106,7 +106,7 @@ class ADMBuilder(object):
 
         Args:
             parent (AudioProgramme): parent programme; defaults to the last one created
-            kwargs: see :class:`AudioContent`
+            kwargs: see :class:`.AudioContent`
 
         Returns:
             AudioContent: created audioContent
@@ -130,7 +130,7 @@ class ADMBuilder(object):
         Args:
             parent (Union[AudioContent, AudioObject]): parent content or
                 object; defaults to the last content created
-            kwargs: see :class:`AudioObject`
+            kwargs: see :class:`.AudioObject`
 
         Returns:
             AudioObject: created audioObject
@@ -154,7 +154,7 @@ class ADMBuilder(object):
         Args:
             parent (AudioObject or AudioPackFormat): parent object or packFormat;
                 defaults to the last object created
-            kwargs: see :class:`AudioPackFormat`
+            kwargs: see :class:`.AudioPackFormat`
 
         Returns:
             AudioPackFormat: created audioPackFormat
@@ -177,7 +177,7 @@ class ADMBuilder(object):
         Args:
             parent (AudioPackFormat): parent packFormat;
                 defaults to the last packFormat created
-            kwargs: see :class:`AudioChannelFormat`
+            kwargs: see :class:`.AudioChannelFormat`
 
         Returns:
             AudioChannelFormat: created audioChannelFormat
