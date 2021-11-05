@@ -55,7 +55,7 @@ class ExtraData(object):
         object_start (fractions.Fraction or None): Start time of audioObject.
         object_duration (fractions.Fraction or None): Duration of audioObject.
         reference_screen (CartesianScreen or PolarScreen): Reference screen from audioProgramme.
-        channel_frequency (Frequency): Frequency information from audioChannel.
+        channel_frequency (Frequency): Frequency information from audioChannelFormat.
     """
     object_start = attrib(validator=optional(instance_of(Fraction)), default=None)
     object_duration = attrib(validator=optional(instance_of(Fraction)), default=None)
