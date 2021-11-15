@@ -588,9 +588,28 @@ def _get_adm_path(state):
     )
 
 
-def _get_extra_data(state):
+def _get_extra_data(state, pack_paths_channels=None):
     """Get an ExtraData object for this track/channel with extra information
-    from the programme/object/channel needed for rendering."""
+    from the programme/object/channel needed for rendering.
+
+    This can be used in a single or multi-channel context:
+
+    - For single channels, pack_paths_channels is None and
+      state.audioPackFormat_path and state.audioChannelFormat are used.
+
+    - For multiple channels, pack_paths_channels is a list containing one tuple
+      per channel, each containing a list of audioPackFormats on the path
+      between the root audioPackFormat and the audioChannelFormat, and the
+      audioChannelFormat.
+    """
+    if pack_paths_channels is None:
+        assert state.audioPackFormat_path is not None
+        assert state.audioChannelFormat is not None
+        pack_paths_channels = [(state.audioPackFormat_path, state.audioChannelFormat)]
+
+    def get_absoluteDistance(audioPackFormat_path, audioChannelFormat):
+        return get_path_param(audioPackFormat_path, "absoluteDistance")
+
     return ExtraData(
         object_start=(state.audioObject.start
                       if state.audioObject is not None
@@ -604,6 +623,9 @@ def _get_extra_data(state):
         channel_frequency=(state.audioChannelFormat.frequency
                            if state.audioChannelFormat is not None
                            else Frequency()),
+        pack_absoluteDistance=get_single_param(pack_paths_channels,
+                                               "absoluteDistance",
+                                               get_absoluteDistance),
     )
 
 
@@ -682,7 +704,7 @@ def _get_RenderingItems_HOA(state):
         normalization=get_single_param(pack_paths_channels, "normalization", get_normalization),
         nfcRefDist=get_single_param(pack_paths_channels, "nfcRefDist", get_nfcRefDist),
         screenRef=get_single_param(pack_paths_channels, "screenRef", get_screenRef),
-        extra_data=_get_extra_data(state),
+        extra_data=_get_extra_data(state, pack_paths_channels),
     )
 
     metadata_source = MetadataSourceIter([type_metadata])

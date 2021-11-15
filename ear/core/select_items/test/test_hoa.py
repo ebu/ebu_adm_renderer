@@ -127,6 +127,7 @@ def test_hoa_pack_params():
         pack.normalization = "N3D"
         pack.nfcRefDist = 1.0
         pack.screenRef = True
+        pack.absoluteDistance = 2.0
 
     for i, track in enumerate(builder.first_tracks, 1):
         builder.create_track_uid(audioPackFormat=builder.first_pack, audioTrackFormat=track,
@@ -139,3 +140,4 @@ def test_hoa_pack_params():
     assert meta.normalization == "N3D"
     assert meta.nfcRefDist == 1.0
     assert meta.screenRef is True
+    assert meta.extra_data.pack_absoluteDistance == 2.0

@@ -384,6 +384,25 @@ def test_hoa_channel_format_mismatch():
         acf_b=builder.first_pack.audioChannelFormats[1])
 
 
+def test_hoa_pack_format_mismatch():
+    builder = HOABuilder()
+
+    builder.first_pack.absoluteDistance = 2.0
+
+    for i, track in enumerate(builder.first_tracks + builder.second_tracks):
+        builder.create_track_uid(
+            audioPackFormat=builder.second_pack, audioTrackFormat=track, trackIndex=i
+        )
+
+    check_select_items_raises(
+        builder,
+        "All audioChannelFormats in a single audioPackFormat must "
+        "share the same absoluteDistance value, but {acf_a.id} and {acf_b.id} differ.",
+        acf_a=builder.second_pack.audioChannelFormats[-1],
+        acf_b=builder.first_pack.audioChannelFormats[0],
+    )
+
+
 def test_matrix_one_block_format():
     builder = EncodeDecodeBuilder()
     del builder.encode_mid.audioBlockFormats[0]
