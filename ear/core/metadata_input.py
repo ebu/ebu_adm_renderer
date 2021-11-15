@@ -56,11 +56,13 @@ class ExtraData(object):
         object_duration (fractions.Fraction or None): Duration of audioObject.
         reference_screen (CartesianScreen or PolarScreen): Reference screen from audioProgramme.
         channel_frequency (Frequency): Frequency information from audioChannelFormat.
+        pack_absoluteDistance (float or None): absoluteDistance parameter from audioPackFormat.
     """
     object_start = attrib(validator=optional(instance_of(Fraction)), default=None)
     object_duration = attrib(validator=optional(instance_of(Fraction)), default=None)
     reference_screen = attrib(default=default_screen)
     channel_frequency = attrib(validator=instance_of(Frequency), default=Factory(Frequency))
+    pack_absoluteDistance = attrib(validator=optional(instance_of(float)), default=None)
 
 
 @attrs(slots=True)
