@@ -365,8 +365,8 @@ def test_hoa_pack_channel_mismatch():
 
     check_select_items_raises(
         builder,
-        "Conflicting normalization values in path from {apf.id} to {acf.id}",
-        apf=builder.first_pack, acf=channel_format)
+        "Conflicting normalization values in path from {apf.id} to {abf.id}",
+        apf=builder.first_pack, abf=block_format)
 
 
 def test_hoa_channel_format_mismatch():
@@ -378,7 +378,7 @@ def test_hoa_channel_format_mismatch():
 
     check_select_items_raises(
         builder,
-        "All HOA audioChannelFormats in a single audioPackFormat must "
+        "All audioChannelFormats in a single audioPackFormat must "
         "share the same normalization value, but {acf_a.id} and {acf_b.id} differ.",
         acf_a=builder.first_pack.audioChannelFormats[0],
         acf_b=builder.first_pack.audioChannelFormats[1])

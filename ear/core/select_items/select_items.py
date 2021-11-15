@@ -11,7 +11,8 @@ from ...fileio.adm.elements import (AudioProgramme, AudioContent, AudioObject,
                                     Frequency, TypeDefinition,
                                     )
 from .pack_allocation import allocate_packs, AllocationPack, AllocationChannel, AllocationTrack
-from .utils import in_by_id, object_paths_from, pack_format_paths_from
+from .utils import (get_path_param, get_per_channel_param, get_single_param,
+                    in_by_id, object_paths_from, pack_format_packs, pack_format_paths_from)
 from .validate import (validate_structure, validate_selected_audioTrackUID,
                        possible_reference_errors,
                        )
@@ -665,8 +666,7 @@ def _get_RenderingItems_DirectSpeakers(state):
 
 def _get_RenderingItems_HOA(state):
     """Get a HOARenderingItem given an _ItemSelectionState."""
-    from .hoa import (get_single_param, get_per_channel_param,
-                      get_nfcRefDist, get_screenRef, get_normalization,
+    from .hoa import (get_nfcRefDist, get_screenRef, get_normalization,
                       get_order, get_degree, get_rtime, get_duration)
 
     states = list(_select_single_channel(state))

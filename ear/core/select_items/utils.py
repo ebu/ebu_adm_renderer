@@ -1,3 +1,6 @@
+from ...fileio.adm.exceptions import AdmError
+
+
 def in_by_id(element, collection):
     """Check if element is in collection, by comparing identity rather than equality."""
     return any(element is item for item in collection)
@@ -72,3 +75,65 @@ def pack_format_packs(root_audioPackFormat):
     for sub_pack in root_audioPackFormat.audioPackFormats:
         for sub_sub_pack in pack_format_packs(sub_pack):
             yield sub_sub_pack
+
+
+def get_path_param(path, name, default=None):
+    """Get a parameter which can be defined in any of the objects in path. Any
+    specified parameters must be consistent. If none were specified then the
+    default is returned.
+    """
+    all_values = [getattr(obj, name) for obj in path]
+
+    not_none = [value for value in all_values if value is not None]
+
+    if not_none:
+        if any(value != not_none[0] for value in not_none):
+            raise AdmError(
+                "Conflicting {name} values in path from {start.id} to {end.id}".format(
+                    name=name,
+                    start=path[0],
+                    end=path[-1],
+                )
+            )
+
+        return not_none[0]
+    else:
+        return default
+
+
+def get_single_param(pack_paths_channels, name, get_param):
+    """Get one parameter which must be consistent in all channels.
+
+    Parameters:
+        pack_paths_channels (list): list of tuples of (audioPackFormat_path,
+            audioChannelFormat), one for each audioChannelFormat in the root
+            audioPackFormat.
+        name (str): name of parameter to be used in exceptions
+        get_param (callable): function from (audioPackFormat_path,
+            audioChannelFormat) to the value of the parameter.
+    """
+    for pack_path_channel_a, pack_path_channel_b in zip(
+        pack_paths_channels[:-1], pack_paths_channels[1:]
+    ):
+        pack_format_path_a, channel_a = pack_path_channel_a
+        pack_format_path_b, channel_b = pack_path_channel_b
+        if get_param(pack_format_path_a, channel_a) != get_param(
+            pack_format_path_b, channel_b
+        ):
+            raise AdmError(
+                "All audioChannelFormats in a single audioPackFormat must "
+                "share the same {name} value, but {acf_a.id} and {acf_b.id} differ.".format(
+                    name=name,
+                    acf_a=channel_a,
+                    acf_b=channel_b,
+                )
+            )
+
+    pack_path, channel = pack_paths_channels[0]
+    return get_param(pack_path, channel)
+
+
+def get_per_channel_param(pack_paths_channels, get_param):
+    """Get One value of a parameter per channel in pack_paths_channels.
+    See get_single_param."""
+    return [get_param(pack_path, channel) for pack_path, channel in pack_paths_channels]
