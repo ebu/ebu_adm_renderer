@@ -122,7 +122,10 @@ class FormatInfoChunk(object):
 
     @property
     def formatTag(self):
-        if(self.extraData):
+        if (
+            self.extraData is not None
+            and self._formatTag == Format.WAVE_FORMAT_EXTENSIBLE
+        ):
             return self.extraData.subFormat
         else:
             return self._formatTag
