@@ -74,18 +74,10 @@ class FormatInfoChunk(object):
                     str(self.cbSize)
                 )
 
-        if(self.formatTag == Format.WAVE_FORMAT_EXTENSIBLE):
+        if(formatTag == Format.WAVE_FORMAT_EXTENSIBLE):
             if not self.extraData:
                 raise RuntimeError(
                     'missing extra data for WAVE_FORMAT_EXTENSIBLE')
-            if self.extraData.subFormat not in list(Format):
-                raise ValueError(
-                    'subformat not supported: ' + str(self.formatTag))
-            if formatTag != self.extraData.subFormat:
-                raise ValueError(
-                    'sanity check failed. \'formatTag\' and'
-                    '\'extraData.subFormat\' do not match.'
-                )
 
         if(self.channelCount < 1):
             raise ValueError('channelCount < 1')
