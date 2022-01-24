@@ -200,16 +200,34 @@ class Bw64Reader(object):
     def _read_fmt_chunk(self):
         last_position = self._buffer.tell()
         self._buffer.seek(self._chunks[b'fmt '].position.data)
-        if(self._chunks[b'fmt '].size == 16):
-            formatInfo = struct.unpack('<HHIIHH', self._buffer.read(16))
-        elif(self._chunks[b'fmt '].size == 18):
-            formatInfo = struct.unpack('<HHIIHHH', self._buffer.read(18))
-        elif(self._chunks[b'fmt '].size == 40):
-            formatInfo = list(struct.unpack('<HHIIHHH', self._buffer.read(18)))
-            formatInfo += [struct.unpack('<HIH14s', self._buffer.read(22))]
-        else:
+        bytes_left = self._chunks[b'fmt '].size
+        base_size = 16
+
+        if bytes_left < base_size:
             raise ValueError('illegal format chunk size')
-        self._formatInfo = FormatInfoChunk(*formatInfo)
+
+        fields = struct.unpack('<HHIIHH', self._buffer.read(base_size))
+        bytes_left -= base_size
+
+        if bytes_left > 2:
+            cbSize = struct.unpack('<H', self._buffer.read(2))[0]
+            bytes_left -= 2
+            fields += (cbSize,)
+        else:
+            cbSize = 0
+
+        if cbSize > bytes_left:
+            raise ValueError('fmt chunk not big enough for cbSize')
+
+        if cbSize == 0:
+            pass
+        elif cbSize == 22:
+            fields += (struct.unpack('<HIH14s', self._buffer.read(22)),)
+            bytes_left -= 22
+        else:
+            raise ValueError(f'invalid cbSize, expected 0 or 22, got {cbSize}')
+
+        self._formatInfo = FormatInfoChunk(*fields)
         self._buffer.seek(last_position)
 
     def get_chunk_data(self, chunk_name):

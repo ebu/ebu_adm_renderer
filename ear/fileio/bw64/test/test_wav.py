@@ -117,6 +117,20 @@ def test_pcm_extradata(datafiles):
 
 
 @pytest.mark.datafiles(
+    os.path.join(FIXTURE_DIR, 'fmt_padding.wav'),
+)
+def test_pcm_extradata(datafiles):
+    wav = os.path.join(str(datafiles), 'fmt_padding.wav')
+    with openBw64(wav) as infile:
+        assert infile.sampleRate == 48000
+        assert infile.channels == 1
+        assert infile.bitdepth == 16
+        assert infile.chna is None
+        assert infile.axml is None
+        assert infile.bext is None
+
+
+@pytest.mark.datafiles(
     os.path.join(FIXTURE_DIR, 'rect_24bit_noriff.wav'),
 )
 def test_rect_24bit_noriff(datafiles):
