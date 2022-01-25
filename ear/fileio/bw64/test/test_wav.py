@@ -165,4 +165,4 @@ def test_rect_24bit_wrong_fmt_size(datafiles):
     with pytest.raises(ValueError) as excinfo:
         with openBw64(rect_24bit_wrong_fmt_size_path):
             pass
-    assert str(excinfo.value) == 'illegal format chunk size'
+    assert str(excinfo.value) == 'required chunk "data" not found'

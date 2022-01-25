@@ -21,6 +21,7 @@ class Bw64Reader(object):
         if(self.fileFormat in [b'RF64', b'BW64']):
             self._read_ds64_chunk()
         self._read_chunks()
+        self._check_chunks()
         self._read_fmt_chunk()
         self._read_chna_chunk()
         self.seek(0)
@@ -188,6 +189,13 @@ class Bw64Reader(object):
                 chunkSize, self._buffer.tell() - 8)
             # always skip an even number of bytes
             self._buffer.seek(chunkSize + (chunkSize & 1), 1)
+
+    def _check_chunks(self):
+        required_chunks = [b'fmt ', b'data']
+
+        for chunk in required_chunks:
+            if chunk not in self._chunks:
+                raise ValueError(f'required chunk "{chunk.decode("ascii")}" not found')
 
     def _read_fmt_chunk(self):
         last_position = self._buffer.tell()
