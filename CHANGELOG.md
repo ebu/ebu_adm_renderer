@@ -9,6 +9,7 @@
 - Errors with gaps at the start of metadata. See [#13].
 - Rounding of times in XML writer. See [#12].
 - `audioStreamFormat` referencing error messages. See [34b738a] and [04533fc].
+- Improved extraData handling in BW64 reader; see [#48]
 
 ### Changed
 - `DirectSpeakers` panner uses allocentric panning for Cartesian positions. See [222374a].
@@ -24,6 +25,8 @@
 ### Added
 - `loudnessMetadata` data structures, parsing and generation. See [#25].
 - `ear-utils regenerate` command to re-generate AXML and CHNA chunks. See [#8].
+- The `absoluteDistance` parameter is now extracted from AXML and added to the `ExtraData` structure; see [#45].
+- Lots of documentation, see https://ear.readthedocs.io/
 
 ## [2.0.0] - 2019-05-22
 
@@ -138,6 +141,8 @@ Initial release.
 [#26]: https://github.com/ebu/ebu_adm_renderer/pull/26
 [#28]: https://github.com/ebu/ebu_adm_renderer/pull/28
 [#37]: https://github.com/ebu/ebu_adm_renderer/pull/37
+[#45]: https://github.com/ebu/ebu_adm_renderer/pull/45
+[#48]: https://github.com/ebu/ebu_adm_renderer/pull/48
 [34b738a]: https://github.com/ebu/ebu_adm_renderer/commit/34b738a
 [04533fc]: https://github.com/ebu/ebu_adm_renderer/commit/04533fc
 [222374a]: https://github.com/ebu/ebu_adm_renderer/commit/222374a
