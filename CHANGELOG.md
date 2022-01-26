@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased Changes
+## [2.1.0] - 2022-01-26
 
 ### Fixed
 - Depth and height parameters were switched in metadata conversion. See [#26].
@@ -146,6 +146,7 @@ Initial release.
 [34b738a]: https://github.com/ebu/ebu_adm_renderer/commit/34b738a
 [04533fc]: https://github.com/ebu/ebu_adm_renderer/commit/04533fc
 [222374a]: https://github.com/ebu/ebu_adm_renderer/commit/222374a
+[2.1.0]: https://github.com/ebu/ebu_adm_renderer/compare/2.0.0...2.1.0
 [2.0.0]: https://github.com/ebu/ebu_adm_renderer/compare/1.2.0...2.0.0
 [1.2.0]: https://github.com/ebu/ebu_adm_renderer/compare/1.1.2...1.2.0
 [1.1.2]: https://github.com/ebu/ebu_adm_renderer/compare/1.1.1...1.1.2
