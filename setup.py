@@ -17,7 +17,7 @@ setup(
     install_requires=[
         'numpy~=1.14',
         'scipy~=1.0',
-        'attrs~=19.3',
+        'attrs>=19.3,<22',
         'ruamel.yaml~=0.15',
         'lxml~=4.4',
         'six~=1.11',
