@@ -84,7 +84,14 @@ class Channel(object):
 
 @attrs(frozen=True, slots=True)
 class Layout(object):
-    """Representation of a loudspeaker layout, with a name and a list of channels."""
+    """Representation of a loudspeaker layout, with a name and a list of channels.
+
+    Attributes:
+        name (str): layout name
+        channels (list[Channel]): list of channels in the layout
+        screen (Optional[Union[CartesianScreen, PolarScreen]]): screen
+            information to use for screen-related content
+    """
     name = attrib()
     channels = attrib()
     screen = attrib(validator=optional(instance_of((CartesianScreen, PolarScreen))),
@@ -107,7 +114,7 @@ class Layout(object):
 
     @property
     def without_lfe(self):
-        """The same layout, without LFE channels."""
+        """Layout: The same layout, without LFE channels."""
         return evolve(self, channels=[channel for channel in self.channels if not channel.is_lfe])
 
     @property
@@ -117,7 +124,7 @@ class Layout(object):
 
     @property
     def channel_names(self):
-        """The channel names for each channel."""
+        """list[str]: The channel names for each channel."""
         return [channel.name for channel in self.channels]
 
     @property
@@ -136,7 +143,7 @@ class Layout(object):
         speaker list.
 
         Parameters:
-            speakers (list of Speaker): list of speakers to map to.
+            speakers (list[Speaker]): list of speakers to map to.
 
         Returns:
             - A new Layout object with the same channels but with positions
@@ -221,10 +228,10 @@ class Speaker(object):
     data required to use the renderer in a given listening room.
 
     Attributes:
-        channel: 0-based channel number
-        names: list of BS.2051 channel names this speaker should handle.
-        polar_position: a PolarPosition object, or None
-        gain_linear: linear gain to apply to this output channel
+        channel (int): 0-based channel number
+        names (list[str]): list of BS.2051 channel names this speaker should handle.
+        polar_position (Optional[PolarPosition]): real loudspeaker position, if known
+        gain_linear (float): linear gain to apply to this output channel
     """
     channel = attrib()
     names = attrib()
@@ -238,8 +245,9 @@ class RealLayout(object):
     standard layout will be mapped.
 
     Attributes:
-        speakers: all speakers that could be used
-        screen: screen information to use for screen-related content
+        speakers (Optional[list[Speaker]]): all speakers that could be used
+        screen (Optional[Union[CartesianScreen, PolarScreen]]): screen
+            information to use for screen-related content
     """
     speakers = attrib(default=None, validator=optional(list_of(Speaker)))
     screen = attrib(validator=optional(instance_of((CartesianScreen, PolarScreen))),
@@ -250,47 +258,67 @@ def load_real_layout(fileobj):
     """Load a real layout from a yaml file.
 
     The format is either a list of objects representing speakers, or an object
-    with optional keys "speakers" (which contains a list of objects
-    representing speakers) and "screen" (which contains an object representing
+    with optional keys ``speakers`` (which contains a list of objects
+    representing speakers) and ``screen`` (which contains an object representing
     the screen).
 
     Objects representing speakers may have the following keys:
 
-        channel: 0-based channel number, required
-        names: list (or a single string) of BS.2051 channel names that this
-            speaker should handle, i.e. like "M+000" or ["U+180", "UH+180"]
-        position: optional associative array containing the real loudspeaker position, with keys:
-            az: anti-clockwise azimuth in degrees
-            el: elevation in degrees
-            r: radius in metres
-        gain_linear: optional linear gain to be applied to this channel
+    channel
+      0-based channel number, required
+    names
+      list (or a single string) of BS.2051 channel names that this speaker
+      should handle, i.e. like ``"M+000"`` or ``["U+180", "UH+180"]``
+    position
+      optional associative array containing the real loudspeaker position, with keys:
+
+      az
+        anti-clockwise azimuth in degrees
+      el
+        elevation in degrees
+      r
+        radius in metres
+    gain_linear
+      optional linear gain to be applied to this channel
 
     A polar screen may be represented with the following keys:
 
-        type: "polar", required
-        aspectRatio: aspect ratio of the screen
-        centrePosition: object representing the centre position of the screen:
-            az: anti-clockwise azimuth in degrees
-            el: elevation in degrees
-            r: radius in metres
-        widthAzimuth: width of the screen in degrees
+    type
+      ``"polar"``, required
+    aspectRatio
+      aspect ratio of the screen
+    centrePosition
+      object representing the centre position of the screen:
+
+      az
+        anti-clockwise azimuth in degrees
+      el
+        elevation in degrees
+      r
+        radius in metres
+    widthAzimuth
+      width of the screen in degrees
 
     A Cartesian screen may be represented with the following keys:
 
-        type: "cart", required
-        aspectRatio: aspect ratio of the screen
-        centrePosition: object representing the centre position of the screen
-            containing X, Y and Z coordinates
-        widthX: width of the screen along the Cartesian X axis
+    type
+      ``"cart"``, required
+    aspectRatio
+      aspect ratio of the screen
+    centrePosition
+      object representing the centre position of the screen containing X, Y and
+      Z coordinates
+    widthX
+      width of the screen along the Cartesian X axis
 
     If the screen is omitted, the default screen is used; if the screen is
     specified but null, then screen-related processing will not be applied.
 
     Parameters:
-        file: a file-like object to read yaml from
+        fileobj: a file-like object to read yaml from
 
     Returns:
-        list of Speaker
+        RealLayout: real layout information
     """
     def parse_yaml_polar_position(position):
         if set(position.keys()) == set(["az", "el", "r"]):

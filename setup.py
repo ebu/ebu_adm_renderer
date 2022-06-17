@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name='ear',
     description='EBU ADM Renderer',
-    version='2.0.0',
+    version='2.1.0',
 
     url='https://github.com/ebu/ebu_adm_renderer',
 
@@ -17,7 +17,7 @@ setup(
     install_requires=[
         'numpy~=1.14',
         'scipy~=1.0',
-        'attrs~=19.3',
+        'attrs>=19.3,<22',
         'ruamel.yaml~=0.15',
         'lxml~=4.4',
         'six~=1.11',
@@ -26,9 +26,9 @@ setup(
 
     extras_require={
         'test': [
-            'pytest>=3.5.1, < 6.0.0',
+            'pytest~=6.2',
             'pytest-datafiles~=2.0',
-            'pytest-cov~=2.5',
+            'pytest-cov~=3.0',
             'soundfile~=0.10',
         ],
         'dev': [

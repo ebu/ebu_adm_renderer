@@ -11,7 +11,7 @@ from ... import bs2051
 from ...geom import cart
 
 
-def tm_with_labels(labels, lfe_freq=False):
+def tm_with_labels(labels, lfe_freq=False, **kwargs):
     """Get a DirectSpeakersTypeMetadata with the given speakerLabels and
     default position."""
     return DirectSpeakersTypeMetadata(
@@ -21,7 +21,8 @@ def tm_with_labels(labels, lfe_freq=False):
                 bounded_elevation=BoundCoordinate(0.0),
                 bounded_distance=BoundCoordinate(1.0),
             ),
-            speakerLabel=labels),
+            speakerLabel=labels,
+            **kwargs),
         extra_data=ExtraData(
             channel_frequency=Frequency(
                 lowPass=120.0 if lfe_freq else None))
@@ -116,6 +117,22 @@ def test_lfe():
 
     assert len(record) == 6 and all(str(w.message) == "LFE indication from frequency element does not match speakerLabel."
                                     for w in record)
+
+
+def test_incorrect_lfe_label_warning():
+    layout = bs2051.get_layout("4+5+0")
+    p = DirectSpeakersPanner(layout)
+
+    bf_id = "AB_00010004_00000001"
+    msg = (
+        "block {bf_id} not being treated as LFE, but has 'LFE' in a speakerLabel; "
+        "use an ITU speakerLabel or audioChannelFormat frequency element instead".format(
+            bf_id=bf_id
+        )
+    )
+    with pytest.warns(UserWarning, match=msg):
+        npt.assert_allclose(p.handle(tm_with_labels(["some other Lfe"], id=bf_id)),
+                            direct_pv(layout, "M+000"))
 
 
 def test_mapping():

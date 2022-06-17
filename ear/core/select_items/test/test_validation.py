@@ -365,8 +365,8 @@ def test_hoa_pack_channel_mismatch():
 
     check_select_items_raises(
         builder,
-        "Conflicting normalization values in path from {apf.id} to {acf.id}",
-        apf=builder.first_pack, acf=channel_format)
+        "Conflicting normalization values in path from {apf.id} to {abf.id}",
+        apf=builder.first_pack, abf=block_format)
 
 
 def test_hoa_channel_format_mismatch():
@@ -378,10 +378,29 @@ def test_hoa_channel_format_mismatch():
 
     check_select_items_raises(
         builder,
-        "All HOA audioChannelFormats in a single audioPackFormat must "
+        "All audioChannelFormats in a single audioPackFormat must "
         "share the same normalization value, but {acf_a.id} and {acf_b.id} differ.",
         acf_a=builder.first_pack.audioChannelFormats[0],
         acf_b=builder.first_pack.audioChannelFormats[1])
+
+
+def test_hoa_pack_format_mismatch():
+    builder = HOABuilder()
+
+    builder.first_pack.absoluteDistance = 2.0
+
+    for i, track in enumerate(builder.first_tracks + builder.second_tracks):
+        builder.create_track_uid(
+            audioPackFormat=builder.second_pack, audioTrackFormat=track, trackIndex=i
+        )
+
+    check_select_items_raises(
+        builder,
+        "All audioChannelFormats in a single audioPackFormat must "
+        "share the same absoluteDistance value, but {acf_a.id} and {acf_b.id} differ.",
+        acf_a=builder.second_pack.audioChannelFormats[-1],
+        acf_b=builder.first_pack.audioChannelFormats[0],
+    )
 
 
 def test_matrix_one_block_format():
@@ -394,16 +413,15 @@ def test_matrix_one_block_format():
         acf=builder.encode_mid)
 
 
-@pytest.mark.parametrize("name", ["rtime", "duration"])
-def test_matrix_timing(name):
+def test_matrix_timing():
     builder = EncodeDecodeBuilder()
-    setattr(builder.encode_mid.audioBlockFormats[0], name, Fraction(0))
+    builder.encode_mid.audioBlockFormats[0].rtime = Fraction(0)
+    builder.encode_mid.audioBlockFormats[0].duration = Fraction(1)
 
     check_select_items_raises(
         builder,
-        "matrix audioBlockFormat {block_format.id} has an? {name} attribute",
-        block_format=builder.encode_mid.audioBlockFormats[0],
-        name=name)
+        "matrix audioBlockFormat {block_format.id} has rtime or duration attributes",
+        block_format=builder.encode_mid.audioBlockFormats[0])
 
 
 @pytest.mark.parametrize("name,value", [("gainVar", "gain"),

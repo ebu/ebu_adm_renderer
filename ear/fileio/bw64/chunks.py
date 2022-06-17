@@ -78,14 +78,6 @@ class FormatInfoChunk(object):
             if not self.extraData:
                 raise RuntimeError(
                     'missing extra data for WAVE_FORMAT_EXTENSIBLE')
-            if self.extraData.subFormat not in list(Format):
-                raise ValueError(
-                    'subformat not supported: ' + str(self.formatTag))
-            if formatTag != self.extraData.subFormat:
-                raise ValueError(
-                    'sanity check failed. \'formatTag\' and'
-                    '\'extraData.subFormat\' do not match.'
-                )
 
         if(self.channelCount < 1):
             raise ValueError('channelCount < 1')
@@ -122,7 +114,10 @@ class FormatInfoChunk(object):
 
     @property
     def formatTag(self):
-        if(self.extraData):
+        if (
+            self.extraData is not None
+            and self._formatTag == Format.WAVE_FORMAT_EXTENSIBLE
+        ):
             return self.extraData.subFormat
         else:
             return self._formatTag
@@ -325,12 +320,10 @@ class DataSize64Chunk(object):
 
 @attrs
 class ChnaChunk(object):
-    """ Class representation of the ChannelAllocationChunk
+    """Class representation of the ChannelAllocationChunk
 
-    To simplify the writing of files the ChnaChunk (like every chunk class in
-    this module) has a asByteArray method. This method returns the correct byte
-    array representation of the chnaChunk, which can be directly written to a
-    file.
+    Attributes:
+        audioIDs (list of AudioID): CHNA entries
     """
     audioIDs = attrib(validator=instance_of(list), default=Factory(list))
 
@@ -362,7 +355,16 @@ class ChnaChunk(object):
 
 @attrs
 class AudioID(object):
-    """Class representation of a chna audioIDs list entry."""
+    """Class representation of a chna audioIDs list entry.
+
+    Attributes:
+        trackIndex(int): 1-based index of the track in the sample data
+        audioTrackUID(str): audioTrackUID of the track
+        audioTrackFormatIDRef(str): optional audioTrackFormatID of the track
+        audioChannelFormatIDRef(str): optional audioChannelFormatID of the track
+        audioPackFormatIDRef(str or None): optional audioPackFormatID of the
+            track
+    """
     trackIndex = attrib(validator=instance_of(int))
     audioTrackUID = attrib(validator=instance_of(string_types))
     audioTrackFormatIDRef = attrib(validator=optional(instance_of(string_types)))

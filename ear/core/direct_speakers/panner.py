@@ -403,6 +403,14 @@ class DirectSpeakersPanner(object):
 
         is_lfe_channel = self.is_lfe_channel(type_metadata)
 
+        if not is_lfe_channel and any("LFE" in l.upper() for l in block_format.speakerLabel):
+            warnings.warn(
+                "block {bf.id} not being treated as LFE, but has 'LFE' in a speakerLabel; "
+                "use an ITU speakerLabel or audioChannelFormat frequency element instead".format(
+                    bf=block_format
+                )
+            )
+
         if type_metadata.audioPackFormats is not None:
             pack = type_metadata.audioPackFormats[-1]
             if pack.is_common_definition and pack.id in itu_packs:

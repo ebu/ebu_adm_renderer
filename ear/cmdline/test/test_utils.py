@@ -1,5 +1,7 @@
 import numpy as np
+import pytest
 import subprocess
+import sys
 from ...test.test_integrate import bwf_file
 
 
@@ -22,7 +24,7 @@ def test_dump_chna(tmpdir):
     from ...fileio.bw64.chunks import ChnaChunk, AudioID
 
     chna = ChnaChunk()
-    audioID = AudioID(1, u'ATU_00000001', u'AT_00010001_01', None, u'AP_00010003')
+    audioID = AudioID(1, u'ATU_00000001', u'AT_00010001_01', u'AP_00010003')
     chna.appendAudioID(audioID)
 
     with openBw64(filename, 'w', chna=chna) as outfile:
@@ -80,3 +82,22 @@ def test_replace_axml_regenerate(tmpdir):
     with openBw64(filename_out, 'r') as f:
         assert f.axml == axml_out
         assert f.chna.audioIDs[-1].trackIndex == 6
+
+
+@pytest.mark.xfail(
+    sys.version_info < (3, 6),
+    reason="output may vary on platforms where dictionaries are not ordered",
+)
+def test_regenerate(tmpdir):
+    bwf_out = str(tmpdir / "test_regenerate_out.wav")
+
+    args = [
+        "ear-utils",
+        "regenerate",
+        "--enable-block-duration-fix",
+        bwf_file,
+        bwf_out,
+    ]
+    assert subprocess.check_call(args) == 0
+
+    assert open(bwf_out, "rb").read() == open(bwf_file, "rb").read()

@@ -21,6 +21,7 @@ class Bw64Reader(object):
         if(self.fileFormat in [b'RF64', b'BW64']):
             self._read_ds64_chunk()
         self._read_chunks()
+        self._check_chunks()
         self._read_fmt_chunk()
         self._read_chna_chunk()
         self.seek(0)
@@ -33,6 +34,7 @@ class Bw64Reader(object):
 
     @property
     def axml(self):
+        """bytes or None: data contained in axml chunk"""
         if(b'axml' in self._chunks):
             last_position = self._buffer.tell()
             self._buffer.seek(self._chunks[b'axml'].position.data)
@@ -44,6 +46,7 @@ class Bw64Reader(object):
 
     @property
     def bext(self):
+        """bytes or None: data contained in bext chunk"""
         if(b'bext' in self._chunks):
             last_position = self._buffer.tell()
             self._buffer.seek(self._chunks[b'bext'].position.data)
@@ -55,18 +58,22 @@ class Bw64Reader(object):
 
     @property
     def chna(self):
+        """chunks.ChnaChunk or None: CHNA data"""
         return self._chna
 
     @property
     def sampleRate(self):
+        """sample rate in Hz"""
         return self._formatInfo.sampleRate
 
     @property
     def channels(self):
+        """number of channels"""
         return self._formatInfo.channelCount
 
     @property
     def bitdepth(self):
+        """number of bits per sample"""
         return self._formatInfo.bitsPerSample
 
     def seek(self, offset, whence=0):
@@ -89,6 +96,13 @@ class Bw64Reader(object):
             self._buffer.seek(dataChunkOffset + frameOffset)
 
     def read(self, numberOfFrames):
+        """read up to numberOfFrames samples
+
+        Returns:
+            np.ndarray of float: sample blocks of shape (nsamples, nchannels),
+            where nsamples is <= numberOfFrames, and nchannels is the number of
+            channels
+        """
         if(self.tell() + numberOfFrames > len(self)):
             numberOfFrames = len(self) - self.tell()
         rawData = self._buffer.read(
@@ -97,6 +111,7 @@ class Bw64Reader(object):
         return deinterleave(samplesDecoded, self.channels)
 
     def tell(self):
+        """Get the sample number of the next sample returned by read."""
         return ((self._buffer.tell() - self._chunks[b'data'].position.data) //
                 self._formatInfo.blockAlignment)
 
@@ -175,19 +190,44 @@ class Bw64Reader(object):
             # always skip an even number of bytes
             self._buffer.seek(chunkSize + (chunkSize & 1), 1)
 
+    def _check_chunks(self):
+        required_chunks = [b'fmt ', b'data']
+
+        for chunk in required_chunks:
+            if chunk not in self._chunks:
+                raise ValueError(f'required chunk "{chunk.decode("ascii")}" not found')
+
     def _read_fmt_chunk(self):
         last_position = self._buffer.tell()
         self._buffer.seek(self._chunks[b'fmt '].position.data)
-        if(self._chunks[b'fmt '].size == 16):
-            formatInfo = struct.unpack('<HHIIHH', self._buffer.read(16))
-        elif(self._chunks[b'fmt '].size == 18):
-            formatInfo = struct.unpack('<HHIIHHH', self._buffer.read(18))
-        elif(self._chunks[b'fmt '].size == 40):
-            formatInfo = list(struct.unpack('<HHIIHHH', self._buffer.read(18)))
-            formatInfo += [struct.unpack('<HIH14s', self._buffer.read(22))]
-        else:
+        bytes_left = self._chunks[b'fmt '].size
+        base_size = 16
+
+        if bytes_left < base_size:
             raise ValueError('illegal format chunk size')
-        self._formatInfo = FormatInfoChunk(*formatInfo)
+
+        fields = struct.unpack('<HHIIHH', self._buffer.read(base_size))
+        bytes_left -= base_size
+
+        if bytes_left > 2:
+            cbSize = struct.unpack('<H', self._buffer.read(2))[0]
+            bytes_left -= 2
+            fields += (cbSize,)
+        else:
+            cbSize = 0
+
+        if cbSize > bytes_left:
+            raise ValueError('fmt chunk not big enough for cbSize')
+
+        if cbSize == 0:
+            pass
+        elif cbSize == 22:
+            fields += (struct.unpack('<HIH14s', self._buffer.read(22)),)
+            bytes_left -= 22
+        else:
+            raise ValueError(f'invalid cbSize, expected 0 or 22, got {cbSize}')
+
+        self._formatInfo = FormatInfoChunk(*fields)
         self._buffer.seek(last_position)
 
     def get_chunk_data(self, chunk_name):

@@ -177,8 +177,8 @@ def test_changes_random(layout, gain_calc):
         loaded_diffuses = loaded["diffuse"]
 
         for input, pv, loaded_direct, loaded_diffuse in zip(inputs, pvs, loaded_directs, loaded_diffuses):
-            npt.assert_allclose(pv.direct, loaded_direct, err_msg=repr(input))
-            npt.assert_allclose(pv.diffuse, loaded_diffuse, err_msg=repr(input))
+            npt.assert_allclose(pv.direct, loaded_direct, atol=1e-10, err_msg=repr(input))
+            npt.assert_allclose(pv.diffuse, loaded_diffuse, atol=1e-10, err_msg=repr(input))
     else:
         outputs_f.dirpath().ensure_dir()
         np.savez_compressed(str(outputs_f), direct=direct, diffuse=diffuse)

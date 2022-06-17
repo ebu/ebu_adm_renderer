@@ -10,7 +10,7 @@ def fact(n):
 
 
 def Alegendre(n, m, x):
-    """Associated Legendre function P_n^m(x), ommitting the the (-1)^m
+    """Associated Legendre function P_n^m(x), ommitting the (-1)^m
     Condon-Shortley phase term."""
     return (-1.0)**m * scipy.special.lpmv(m, n, x)
 

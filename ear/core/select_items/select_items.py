@@ -11,15 +11,17 @@ from ...fileio.adm.elements import (AudioProgramme, AudioContent, AudioObject,
                                     Frequency, TypeDefinition,
                                     )
 from .pack_allocation import allocate_packs, AllocationPack, AllocationChannel, AllocationTrack
-from .utils import in_by_id, object_paths_from, pack_format_paths_from
+from .utils import (get_path_param, get_per_channel_param, get_single_param,
+                    in_by_id, object_paths_from, pack_format_packs, pack_format_paths_from)
 from .validate import (validate_structure, validate_selected_audioTrackUID,
                        possible_reference_errors,
                        )
 from ..metadata_input import (ExtraData, ADMPath, MetadataSourceIter,
-                              ObjectTypeMetadata, ObjectRenderingItem,
-                              DirectSpeakersTypeMetadata, DirectSpeakersRenderingItem,
-                              HOATypeMetadata, HOARenderingItem, ImportanceData,
-                              TrackSpec, DirectTrackSpec, SilentTrackSpec,
+                              RenderingItem, ObjectTypeMetadata,
+                              ObjectRenderingItem, DirectSpeakersTypeMetadata,
+                              DirectSpeakersRenderingItem, HOATypeMetadata,
+                              HOARenderingItem, ImportanceData, TrackSpec,
+                              DirectTrackSpec, SilentTrackSpec,
                               MatrixCoefficientTrackSpec, MixTrackSpec
                               )
 
@@ -295,14 +297,15 @@ class _PackAllocator(object):
     audioObject) and audioTrackUIDs (in either an audioObject or CHNA-only ADM)
     by pack_allocation.allocate_packs.
 
-    Once an allocation has been found it needs to the real audioPackFormat and
-    track/channel allocation for rendering. For most types this corresponds to
-    the pattern, but for matrix types the mapping is more complex.
+    Once an allocation has been found it determines the real audioPackFormat
+    and track/channel allocation to be used for rendering. For most types this
+    is the same as the matched pattern, but for matrix types the mapping is
+    more complex.
 
-    To achieve this, the pack_allocation.Allocaion* classes which are used to
+    To achieve this, the pack_allocation.Allocation* classes which are used to
     specify the patterns are subclassed to allow them to store information
     about this mapping. The 'input' allocation being the result of the pattern
-    patch, and the 'output' pack/allocation being the pack and track/channel
+    match, and the 'output' pack/allocation being the pack and track/channel
     allocation for the renderer.
 
     In RegularAllocationPack (used for normal types) this is a direct mapping,
@@ -585,9 +588,28 @@ def _get_adm_path(state):
     )
 
 
-def _get_extra_data(state):
+def _get_extra_data(state, pack_paths_channels=None):
     """Get an ExtraData object for this track/channel with extra information
-    from the programme/object/channel needed for rendering."""
+    from the programme/object/channel needed for rendering.
+
+    This can be used in a single or multi-channel context:
+
+    - For single channels, pack_paths_channels is None and
+      state.audioPackFormat_path and state.audioChannelFormat are used.
+
+    - For multiple channels, pack_paths_channels is a list containing one tuple
+      per channel, each containing a list of audioPackFormats on the path
+      between the root audioPackFormat and the audioChannelFormat, and the
+      audioChannelFormat.
+    """
+    if pack_paths_channels is None:
+        assert state.audioPackFormat_path is not None
+        assert state.audioChannelFormat is not None
+        pack_paths_channels = [(state.audioPackFormat_path, state.audioChannelFormat)]
+
+    def get_absoluteDistance(audioPackFormat_path, audioChannelFormat):
+        return get_path_param(audioPackFormat_path, "absoluteDistance")
+
     return ExtraData(
         object_start=(state.audioObject.start
                       if state.audioObject is not None
@@ -601,6 +623,9 @@ def _get_extra_data(state):
         channel_frequency=(state.audioChannelFormat.frequency
                            if state.audioChannelFormat is not None
                            else Frequency()),
+        pack_absoluteDistance=get_single_param(pack_paths_channels,
+                                               "absoluteDistance",
+                                               get_absoluteDistance),
     )
 
 
@@ -663,8 +688,7 @@ def _get_RenderingItems_DirectSpeakers(state):
 
 def _get_RenderingItems_HOA(state):
     """Get a HOARenderingItem given an _ItemSelectionState."""
-    from .hoa import (get_single_param, get_per_channel_param,
-                      get_nfcRefDist, get_screenRef, get_normalization,
+    from .hoa import (get_nfcRefDist, get_screenRef, get_normalization,
                       get_order, get_degree, get_rtime, get_duration)
 
     states = list(_select_single_channel(state))
@@ -680,7 +704,7 @@ def _get_RenderingItems_HOA(state):
         normalization=get_single_param(pack_paths_channels, "normalization", get_normalization),
         nfcRefDist=get_single_param(pack_paths_channels, "nfcRefDist", get_nfcRefDist),
         screenRef=get_single_param(pack_paths_channels, "screenRef", get_screenRef),
-        extra_data=_get_extra_data(state),
+        extra_data=_get_extra_data(state, pack_paths_channels),
     )
 
     metadata_source = MetadataSourceIter([type_metadata])
@@ -711,12 +735,15 @@ def select_rendering_items(adm,
 
     Parameters:
         adm (ADM): ADM to process
-        audio_programme (AudioProgramme): audioProgramme to select if there is
-            more than one in adm.
-        selected_complementary_objects (list): see _select_complementary_objects
+        audio_programme (Optional[AudioProgramme]): audioProgramme to select if
+            there is more than one in adm.
+        selected_complementary_objects (list[AudioObject]): Objects to select
+            from each complementary group. If there is no entry for an object
+            in a complementary object group, then the root is selected by
+            default.
 
-    Yields:
-        RenderingItem: selected rendering items
+    Returns:
+        list[RenderingItem]: selected rendering items
     """
     validate_structure(adm)
 
@@ -734,3 +761,22 @@ def select_rendering_items(adm,
                     rendering_items.append(rendering_item)
 
     return rendering_items
+
+
+class ObjectChannelMatcher(object):
+    """Interface for using the _PackAllocator to find the audioChannelFormats
+    referenced by audioObjects.
+
+    This doesn't do anything special or interesting, but keeps the details of
+    item selection inside this module.
+    """
+
+    def __init__(self, adm):
+        self._adm = adm
+        self._pack_allocator = _PackAllocator(adm)
+
+    def get_channel_formats_for_object(self, audioObject):
+        state = _ItemSelectionState(adm=self._adm, audioObjects=[audioObject])
+        for state in self._pack_allocator.select_pack_mapping(state):
+            for channelFormat, _track_spec in state.channel_allocation:
+                yield channelFormat

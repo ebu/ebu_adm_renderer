@@ -3,9 +3,11 @@ import warnings
 from collections import OrderedDict
 from six import iteritems
 from .exceptions import AdmIDError, AdmIDWarning
+from . import elements
 
 
 class ADM(object):
+    """An ADM document."""
 
     def __init__(self):
         self._ap = []
@@ -69,41 +71,57 @@ class ADM(object):
             element.lazy_lookup_references(self)
 
     def validate(self):
+        """Validate all elements, raising an exception if an error is found.
+
+        Note:
+            This is not extensive.
+        """
         for element in self.elements:
             element.validate()
 
-    def addAudioProgramme(self, programme):
+    def addAudioProgramme(self, programme: elements.AudioProgramme):
+        """Add an audioProgramme."""
         self._ap.append(programme)
 
-    def addAudioContent(self, content):
+    def addAudioContent(self, content: elements.AudioContent):
+        """Add an audioContent."""
         self._ac.append(content)
 
-    def addAudioObject(self, audioobject):
+    def addAudioObject(self, audioobject: elements.AudioObject):
+        """Add an audioObject."""
         self._ao.append(audioobject)
 
-    def addAudioPackFormat(self, packformat):
+    def addAudioPackFormat(self, packformat: elements.AudioPackFormat):
+        """Add an audioPackFormat."""
         self._apf.append(packformat)
 
-    def addAudioChannelFormat(self, channelformat):
+    def addAudioChannelFormat(self, channelformat: elements.AudioChannelFormat):
+        """Add an audioChannelFormat."""
         self._acf.append(channelformat)
 
-    def addAudioStreamFormat(self, streamformat):
+    def addAudioStreamFormat(self, streamformat: elements.AudioStreamFormat):
+        """Add an audioStreamFormat."""
         self._asf.append(streamformat)
 
-    def addAudioTrackFormat(self, trackformat):
+    def addAudioTrackFormat(self, trackformat: elements.AudioTrackFormat):
+        """Add an audioTrackFormat."""
         self._atf.append(trackformat)
 
-    def addAudioTrackUID(self, trackUID):
+    def addAudioTrackUID(self, trackUID: elements.AudioTrackUID):
+        """Add an audioTrackUID."""
         self._atu.append(trackUID)
 
     @property
     def elements(self):
+        """Iterator over all elements."""
         return chain(*self._object_lists)
 
     def __getitem__(self, key):
+        """Get an element by ID."""
         return self.lookup_element(key)
 
     def lookup_element(self, key):
+        """Get an element by ID."""
         key_upper = key.upper()
         for element in self.elements:
             if element.id is not None and element.id.upper() == key_upper:
@@ -112,32 +130,40 @@ class ADM(object):
 
     @property
     def audioProgrammes(self):
+        """list[AudioProgramme]: Get all audioProgramme elements."""
         return self._ap
 
     @property
     def audioContents(self):
+        """list[AudioContent]: Get all audioContent elements."""
         return self._ac
 
     @property
     def audioObjects(self):
+        """list[AudioObject]: Get all audioObject elements."""
         return self._ao
 
     @property
     def audioPackFormats(self):
+        """list[AudioPackFormat]: Get all audioPackFormat elements."""
         return self._apf
 
     @property
     def audioChannelFormats(self):
+        """list[AudioChannelFormat]: Get all audioChannelFormat elements."""
         return self._acf
 
     @property
     def audioStreamFormats(self):
+        """list[AudioStreamFormat]: Get all audioStreamFormat elements."""
         return self._asf
 
     @property
     def audioTrackFormats(self):
+        """list[AudioTrackFormat]: Get all audioTrackFormat elements."""
         return self._atf
 
     @property
     def audioTrackUIDs(self):
+        """list[AudioTrackUID]: Get all audioTrackUID elements."""
         return self._atu

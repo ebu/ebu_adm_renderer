@@ -11,7 +11,11 @@ def _stream_track_formats(adm, stream_format):
 
 
 def generate_ids(adm):
-    """regenerate ids for all elements in adm"""
+    """regenerate ids for all elements in adm
+
+    Parameters:
+        adm (ADM): ADM structure to modify
+    """
     # clear track format ids so that we can check these have all been allocated
     for element in non_common(adm.audioTrackFormats):
         element.id = None

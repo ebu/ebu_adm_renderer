@@ -11,6 +11,8 @@ class TrackProcessorBase(object):
     """Base class for processors which can be used to obtain samples for a
     single track spec given multi-track input samples (from a WAV file for
     example).
+
+    Use :func:`TrackProcessor` to create these.
     """
     def __init__(self, track_spec):
         """
@@ -38,7 +40,7 @@ def TrackProcessor(track_spec):
         track_spec (TrackSpec): Track spec to render.
 
     Returns:
-        TrackSpecProcessorBase: processor to obtain samples for track_spec
+        TrackProcessorBase: processor to obtain samples for track_spec
     """
     return _track_spec_processor(_simplify_track_spec(track_spec))
 

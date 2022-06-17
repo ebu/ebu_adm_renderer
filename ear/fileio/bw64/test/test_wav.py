@@ -89,6 +89,48 @@ def test_rect_24bit_rf64(datafiles):
 
 
 @pytest.mark.datafiles(
+    os.path.join(FIXTURE_DIR, 'empty_extradata.wav'),
+)
+def test_empty_extradata(datafiles):
+    wav = os.path.join(str(datafiles), 'empty_extradata.wav')
+    with openBw64(wav) as infile:
+        assert infile.sampleRate == 48000
+        assert infile.channels == 1
+        assert infile.bitdepth == 16
+        assert infile.chna is None
+        assert infile.axml is None
+        assert infile.bext is None
+
+
+@pytest.mark.datafiles(
+    os.path.join(FIXTURE_DIR, 'pcm_extradata.wav'),
+)
+def test_pcm_extradata(datafiles):
+    wav = os.path.join(str(datafiles), 'pcm_extradata.wav')
+    with openBw64(wav) as infile:
+        assert infile.sampleRate == 48000
+        assert infile.channels == 1
+        assert infile.bitdepth == 16
+        assert infile.chna is None
+        assert infile.axml is None
+        assert infile.bext is None
+
+
+@pytest.mark.datafiles(
+    os.path.join(FIXTURE_DIR, 'fmt_padding.wav'),
+)
+def test_pcm_extradata(datafiles):
+    wav = os.path.join(str(datafiles), 'fmt_padding.wav')
+    with openBw64(wav) as infile:
+        assert infile.sampleRate == 48000
+        assert infile.channels == 1
+        assert infile.bitdepth == 16
+        assert infile.chna is None
+        assert infile.axml is None
+        assert infile.bext is None
+
+
+@pytest.mark.datafiles(
     os.path.join(FIXTURE_DIR, 'rect_24bit_noriff.wav'),
 )
 def test_rect_24bit_noriff(datafiles):
@@ -137,4 +179,4 @@ def test_rect_24bit_wrong_fmt_size(datafiles):
     with pytest.raises(ValueError) as excinfo:
         with openBw64(rect_24bit_wrong_fmt_size_path):
             pass
-    assert str(excinfo.value) == 'illegal format chunk size'
+    assert str(excinfo.value) == 'required chunk "data" not found'

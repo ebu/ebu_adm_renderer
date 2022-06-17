@@ -1,12 +1,18 @@
 from __future__ import print_function
 import argparse
+import logging
 import sys
 from ..compatibility import write_bytes_to_stdout
-from ..fileio import openBw64
+from ..fileio import openBw64, openBw64Adm
 from ..fileio.bw64.chunks import FormatInfoChunk, ChnaChunk
 import warnings
 from . import ambix_to_bwf
 from . import generate_test_file
+from .error_handler import error_handler
+
+
+logging.basicConfig()
+logger = logging.getLogger("ear")
 
 
 def replace_axml_command(args):
@@ -42,6 +48,33 @@ def replace_axml_command(args):
                     outfile.write(samples)
 
 
+def regenerate_command(args):
+    from ..fileio.adm import xml as adm_xml
+    from ..fileio.adm import chna as adm_chna
+    from ..fileio.adm import timing_fixes
+    import lxml.etree
+
+    with openBw64Adm(args.input) as infile:
+        formatInfo = FormatInfoChunk(channelCount=infile.channels,
+                                     sampleRate=infile.sampleRate,
+                                     bitsPerSample=infile.bitdepth)
+        infile.adm.validate()
+
+        if args.enable_block_duration_fix:
+            timing_fixes.fix_blockFormat_timings(infile.adm)
+
+        xml = adm_xml.adm_to_xml(infile.adm)
+        axml = lxml.etree.tostring(xml, pretty_print=True)
+
+        chna = ChnaChunk()
+        adm_chna.populate_chna_chunk(chna, infile.adm)
+
+        with openBw64(args.output, 'w', formatInfo=formatInfo,
+                      axml=axml, chna=infile.chna) as outfile:
+            for samples in infile.iter_sample_blocks(2048):
+                outfile.write(samples)
+
+
 def dump_axml_command(args):
     with openBw64(args.input) as infile:
         write_bytes_to_stdout(infile.axml)
@@ -59,9 +92,13 @@ def dump_chna_command(args):
                 print(entry)  # noqa
 
 
-def parse_command_line():
+def make_parser():
     parser = argparse.ArgumentParser(description='EBU ADM renderer utilities')
     subparsers = parser.add_subparsers(title='available subcommands')
+
+    parser.add_argument("-d", "--debug",
+                        help="print debug information when an error occurs",
+                        action="store_true")
 
     def add_replace_axml_command():
         subparser = subparsers.add_parser("replace_axml", help="replace the axml chunk in an existing ADM BWF file")
@@ -70,6 +107,14 @@ def parse_command_line():
         subparser.add_argument("-a", "--axml", help="new axml chunk file", required=True, metavar="file")
         subparser.add_argument("-g", "--gen-chna", help="generate the CHNA information from the track UIDs", action="store_true")
         subparser.set_defaults(command=replace_axml_command)
+
+    def add_regenerate_command():
+        subparser = subparsers.add_parser("regenerate", help="read and write an ADM BWF file, regnerating the ADM and CHNA")
+        subparser.add_argument("input", help="input bwf file")
+        subparser.add_argument("output", help="output bwf file")
+        subparser.add_argument("--enable-block-duration-fix", action="store_true",
+                               help="automatically try to fix faulty block format durations")
+        subparser.set_defaults(command=regenerate_command)
 
     def add_dump_axml_command():
         subparser = subparsers.add_parser("dump_axml", help="dump the axml chunk of an ADM BWF file to stdout")
@@ -86,8 +131,14 @@ def parse_command_line():
     add_replace_axml_command()
     add_dump_axml_command()
     add_dump_chna_command()
+    add_regenerate_command()
     ambix_to_bwf.add_args(subparsers)
 
+    return parser
+
+
+def parse_command_line():
+    parser = make_parser()
     args = parser.parse_args()
     if 'command' not in args:
         parser.error('No command specified')
@@ -98,7 +149,8 @@ def parse_command_line():
 def main():
     args = parse_command_line()
 
-    args.command(args)
+    with error_handler(logger, debug=args.debug):
+        args.command(args)
 
 
 if __name__ == '__main__':

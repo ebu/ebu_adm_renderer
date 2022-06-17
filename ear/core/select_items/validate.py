@@ -1,7 +1,8 @@
 from ...fileio.adm.elements import AudioPackFormat, AudioChannelFormat, TypeDefinition, ObjectCartesianPosition
 from ...fileio.adm.exceptions import AdmError
 from . import matrix
-from .utils import in_by_id, pack_format_channels, pack_format_packs, pack_format_paths_from
+from .utils import (get_single_param, in_by_id, pack_format_channels,
+                    pack_format_packs, pack_format_paths_from)
 
 
 def _validate_loops(type_name, nodes, get_children):
@@ -189,8 +190,8 @@ def _hoa_pack_format_paths_channels(adm):
 
 
 def _validate_hoa_parameters_consistent(adm):
-    from .hoa import (get_single_param, get_nfcRefDist, get_screenRef,
-                      get_normalization, get_rtime, get_duration)
+    from .hoa import (get_nfcRefDist, get_screenRef, get_normalization,
+                      get_rtime, get_duration)
 
     for pack_paths_channels in _hoa_pack_format_paths_channels(adm):
         get_single_param(pack_paths_channels, "rtime", get_rtime)
@@ -359,13 +360,8 @@ def _validate_matrix_channel(acf):
 
     [block_format] = acf.audioBlockFormats
 
-    if block_format.rtime is not None:
-        raise AdmError("matrix audioBlockFormat {block_format.id} has an rtime attribute".format(
-            block_format=block_format,
-        ))
-
-    if block_format.duration is not None:
-        raise AdmError("matrix audioBlockFormat {block_format.id} has a duration attribute".format(
+    if block_format.rtime is not None or block_format.duration is not None:
+        raise AdmError("matrix audioBlockFormat {block_format.id} has rtime or duration attributes".format(
             block_format=block_format,
         ))
 

@@ -1,6 +1,5 @@
 from __future__ import print_function
 import argparse
-import sys
 from attr import attrs, attrib, Factory
 import scipy.sparse
 from itertools import chain
@@ -11,13 +10,13 @@ from ..core.select_items import select_rendering_items
 from ..fileio import openBw64, openBw64Adm
 from ..fileio.adm.elements import AudioProgramme, AudioObject
 from ..fileio.bw64.chunks import FormatInfoChunk
-import warnings
-from ..fileio.adm.exceptions import AdmUnknownAttribute
+from ..fileio.adm import timing_fixes
+import logging
+from .error_handler import error_handler
 
 
-def handle_strict(args):
-    if args.strict:
-        warnings.filterwarnings("error", category=AdmUnknownAttribute)
+logging.basicConfig()
+logger = logging.getLogger("ear")
 
 
 @attrs
@@ -195,7 +194,12 @@ class OfflineRenderDriver(object):
 
         output_monitor = PeakMonitor(n_channels)
 
-        with openBw64Adm(input_file, self.enable_block_duration_fix) as infile:
+        with openBw64Adm(input_file) as infile:
+            infile.adm.validate()
+            timing_fixes.check_blockFormat_timings(
+                infile.adm, fix=self.enable_block_duration_fix
+            )
+
             formatInfo = FormatInfoChunk(formatTag=1,
                                          channelCount=n_channels,
                                          sampleRate=infile.sampleRate,
@@ -207,10 +211,10 @@ class OfflineRenderDriver(object):
 
         output_monitor.warn_overloaded()
         if self.fail_on_overload and output_monitor.has_overloaded():
-            sys.exit("error: output overloaded")
+            raise Exception("error: output overloaded")
 
 
-def parse_command_line():
+def make_parser():
     parser = argparse.ArgumentParser(description="EBU ADM renderer")
 
     parser.add_argument("-d", "--debug",
@@ -219,13 +223,18 @@ def parse_command_line():
 
     OfflineRenderDriver.add_args(parser)
 
-    parser.add_argument("input_file")
-    parser.add_argument("output_file")
+    parser.add_argument("input_file", help="BW64 file with CHNA and AXML (optional) chunks")
+    parser.add_argument("output_file", help="BW64 output file")
 
     parser.add_argument("--strict",
                         help="treat unknown ADM attributes as errors",
                         action="store_true")
 
+    return parser
+
+
+def parse_command_line():
+    parser = make_parser()
     args = parser.parse_args()
     return args
 
@@ -233,16 +242,8 @@ def parse_command_line():
 def main():
     args = parse_command_line()
 
-    handle_strict(args)
-
-    try:
+    with error_handler(logger, debug=args.debug, strict=args.strict):
         OfflineRenderDriver.from_args(args).run(args.input_file, args.output_file)
-    except Exception as error:
-        if args.debug:
-            raise
-        else:
-            sys.exit(str(error))
-
 
 if __name__ == "__main__":
     main()

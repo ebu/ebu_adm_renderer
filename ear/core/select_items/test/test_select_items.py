@@ -2,7 +2,7 @@ import pytest
 from ....fileio.adm.builder import ADMBuilder
 from ....fileio.adm.generate_ids import generate_ids
 from .. import select_rendering_items
-from ....fileio.adm.elements import TypeDefinition
+from ....fileio.adm.elements import AudioBlockFormatObjects, ObjectPolarPosition, TypeDefinition
 from ....fileio.adm.exceptions import AdmError
 from ...metadata_input import DirectTrackSpec, SilentTrackSpec
 
@@ -403,3 +403,64 @@ def test_silent_track_stereo():
     assert item_l.adm_path.audioChannelFormat is builder.adm["AC_00010001"]
     assert item_r.track_spec == SilentTrackSpec()
     assert item_r.adm_path.audioChannelFormat is builder.adm["AC_00010002"]
+
+
+def test_absoluteDisance_objects():
+    builder = ADMBuilder()
+    builder.load_common_definitions()
+    builder.create_programme(audioProgrammeName="MyProgramme")
+    builder.create_content(audioContentName="MyContent")
+
+    obj = builder.create_item_objects(
+        0,
+        "obj",
+        block_formats=[
+            AudioBlockFormatObjects(position=ObjectPolarPosition(0.0, 0.0, 1.0)),
+        ],
+    )
+
+    # replace pack formats with two nested formats
+    pack_1 = builder.create_pack(
+        audioPackFormatName="pack_1", type=TypeDefinition.Objects, parent=None
+    )
+    pack_2 = builder.create_pack(
+        audioPackFormatName="pack_2",
+        type=TypeDefinition.Objects,
+        parent=pack_1,
+        audioChannelFormats=[obj.channel_format],
+    )
+
+    obj.audio_object.audioPackFormats = [pack_1]
+    obj.track_uid.audioPackFormat = pack_1
+
+    # selection should work
+    generate_ids(builder.adm)
+    [item] = select_rendering_items(builder.adm)
+
+    def extra_data(item):
+        return item.metadata_source.get_next_block().extra_data
+
+    # absoluteDistance should be picked up from either pack
+    for pack in pack_1, pack_2:
+        pack_1.absoluteDistance = None
+        pack_2.absoluteDistance = None
+        pack.absoluteDistance = 5.0
+
+        [item] = select_rendering_items(builder.adm)
+        assert extra_data(item).pack_absoluteDistance == 5.0
+
+    # if they are both specified but the same that's ok too
+    pack_1.absoluteDistance = 5.0
+    pack_2.absoluteDistance = 5.0
+    [item] = select_rendering_items(builder.adm)
+    assert extra_data(item).pack_absoluteDistance == 5.0
+
+    # if they are different you get an error
+    pack_1.absoluteDistance = 5.0
+    pack_2.absoluteDistance = 2.0
+
+    expected = (
+        f"Conflicting absoluteDistance values in path from {pack_1.id} to {pack_2.id}"
+    )
+    with pytest.raises(AdmError, match=expected):
+        select_rendering_items(builder.adm)
