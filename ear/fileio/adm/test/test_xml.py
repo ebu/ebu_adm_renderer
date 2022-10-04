@@ -732,6 +732,21 @@ def test_track_stream_ref(base):
                                              formatDefinition="PCM", formatLabel="0001")))
 
 
+def test_set_default_rtimes(base):
+    """Check that the audioBlockFormats with a duration but no rtime are given an rtime,
+    and a warning is issued.
+    """
+    with pytest.warns(
+        UserWarning,
+        match=(
+            "added missing rtime to AB_00031001_00000001; BS.2127-0 states "
+            "that rtime and duration should both be present or absent"
+        ),
+    ):
+        bf = base.bf_after_mods(del_attrs(bf_path, "rtime"))
+        assert bf.rtime == Fraction(0)
+
+
 def as_dict(inst):
     """Turn an adm element into a dict to be used for comparison.
 
