@@ -1157,6 +1157,10 @@ def _set_default_rtimes(channelFormats):
         for bf in channelFormat.audioBlockFormats:
             if bf.rtime is None and bf.duration is not None:
                 bf.rtime = Fraction(0)
+                warnings.warn(
+                    f"added missing rtime to {bf.id}; BS.2127-0 states that "
+                    "rtime and duration should both be present or absent"
+                )
 
 
 def load_axml_doc(adm, element, lookup_references=True, fix_block_format_durations=False):

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased Changes
+
+### Changed
+- Added a warning for audioBlockFormats which have a duration but no rtime; previously these were fixed silently. See [#54].
+
 ## [2.1.0] - 2022-01-26
 
 ### Fixed
@@ -143,6 +148,7 @@ Initial release.
 [#37]: https://github.com/ebu/ebu_adm_renderer/pull/37
 [#45]: https://github.com/ebu/ebu_adm_renderer/pull/45
 [#48]: https://github.com/ebu/ebu_adm_renderer/pull/48
+[#54]: https://github.com/ebu/ebu_adm_renderer/pull/54
 [34b738a]: https://github.com/ebu/ebu_adm_renderer/commit/34b738a
 [04533fc]: https://github.com/ebu/ebu_adm_renderer/commit/04533fc
 [222374a]: https://github.com/ebu/ebu_adm_renderer/commit/222374a
