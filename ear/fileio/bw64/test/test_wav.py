@@ -119,7 +119,7 @@ def test_pcm_extradata(datafiles):
 @pytest.mark.datafiles(
     os.path.join(FIXTURE_DIR, 'fmt_padding.wav'),
 )
-def test_pcm_extradata(datafiles):
+def test_fmt_padding(datafiles):
     wav = os.path.join(str(datafiles), 'fmt_padding.wav')
     with openBw64(wav) as infile:
         assert infile.sampleRate == 48000
