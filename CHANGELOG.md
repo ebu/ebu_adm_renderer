@@ -2,6 +2,9 @@
 
 ## Unreleased Changes
 
+### Fixed
+- Padding after data chunks in bw64 files was not written, and this error was silently ignored in the reader. This can be fixed with the new `ear-utils rewrite` command.
+
 ### Changed
 - Added a warning for audioBlockFormats which have a duration but no rtime; previously these were fixed silently. See [#54].
 
