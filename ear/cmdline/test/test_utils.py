@@ -101,3 +101,21 @@ def test_regenerate(tmpdir):
     assert subprocess.check_call(args) == 0
 
     assert open(bwf_out, "rb").read() == open(bwf_file, "rb").read()
+
+
+@pytest.mark.xfail(
+    sys.version_info < (3, 6),
+    reason="output may vary on platforms where dictionaries are not ordered",
+)
+def test_rewrite(tmpdir):
+    bwf_out = str(tmpdir / "test_rewrite_out.wav")
+
+    args = [
+        "ear-utils",
+        "rewrite",
+        bwf_file,
+        bwf_out,
+    ]
+    assert subprocess.check_call(args) == 0
+
+    assert open(bwf_out, "rb").read() == open(bwf_file, "rb").read()

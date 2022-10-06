@@ -75,6 +75,21 @@ def regenerate_command(args):
                 outfile.write(samples)
 
 
+def rewrite_command(args):
+    with openBw64(args.input) as infile:
+        formatInfo = FormatInfoChunk(channelCount=infile.channels,
+                                     sampleRate=infile.sampleRate,
+                                     bitsPerSample=infile.bitdepth)
+
+        with openBw64(args.output, 'w', formatInfo=formatInfo,
+                      axml=infile.axml, chna=infile.chna) as outfile:
+            while True:
+                samples = infile.read(2048)
+                if not len(samples):
+                    break
+                outfile.write(samples)
+
+
 def dump_axml_command(args):
     with openBw64(args.input) as infile:
         write_bytes_to_stdout(infile.axml)
@@ -116,6 +131,12 @@ def make_parser():
                                help="automatically try to fix faulty block format durations")
         subparser.set_defaults(command=regenerate_command)
 
+    def add_rewrite_command():
+        subparser = subparsers.add_parser("rewrite", help="read and write a BWF file to fix BWF format warnings")
+        subparser.add_argument("input", help="input bwf file")
+        subparser.add_argument("output", help="output bwf file")
+        subparser.set_defaults(command=rewrite_command)
+
     def add_dump_axml_command():
         subparser = subparsers.add_parser("dump_axml", help="dump the axml chunk of an ADM BWF file to stdout")
         subparser.add_argument("input", help="input bwf file")
@@ -132,6 +153,7 @@ def make_parser():
     add_dump_axml_command()
     add_dump_chna_command()
     add_regenerate_command()
+    add_rewrite_command()
     ambix_to_bwf.add_args(subparsers)
 
     return parser
