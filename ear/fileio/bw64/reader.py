@@ -1,6 +1,22 @@
+import io
+import re
 import struct
+import warnings
 from .chunks import ChunkIndex, FormatInfoChunk, DataSize64Chunk, ChnaChunk, AudioID
 from .utils import deinterleave, decode_pcm_samples
+
+
+# the original RIFF spec[0] says:
+#
+#   A FOURCC is represented as a sequence of one to four ASCII alphanumeric
+#   characters, padded on the right with blank characters (ASCII character
+#   value 32) as required, with no embedded blanks.
+#
+# these are checked because a bad ID is usually the first indication of
+# misalignment
+#
+# [0]: Multimedia Programming Interface and Data Specifications 1.0, 1991
+CHUNK_ID_RE = re.compile(b"[a-zA-Z0-9]+ *")
 
 
 class Bw64Reader(object):
@@ -15,7 +31,11 @@ class Bw64Reader(object):
     def __init__(self, buffer):
         self._buffer = buffer
         self._chunks = {}
+
+        self._buffer.seek(0, io.SEEK_END)
+        self._file_len = self._buffer.tell()
         self._buffer.seek(0)
+
         self._read_riff_chunk()
         self._ds64 = None
         if(self.fileFormat in [b'RF64', b'BW64']):
@@ -170,6 +190,10 @@ class Bw64Reader(object):
         if len(data) != 8:  # EOF
             return None
         chunkId, chunkSize = struct.unpack('<4sI', data)
+
+        if CHUNK_ID_RE.fullmatch(chunkId) is None:
+            raise ValueError(f"found chunk header with invalid ID {chunkId}")
+
         # correct chunkSize for rf64 and bw64 files
         if self.fileFormat in [b'RF64', b'BW64']:
             if chunkId == b'data':
@@ -189,6 +213,15 @@ class Bw64Reader(object):
                 chunkSize, self._buffer.tell() - 8)
             # always skip an even number of bytes
             self._buffer.seek(chunkSize + (chunkSize & 1), 1)
+
+            chunk_end = self._buffer.tell()
+            if chunk_end > self._file_len:
+                if (chunkSize & 1) and chunkId == b'data' and chunk_end == self._file_len + 1:
+                    warnings.warn("data chunk is missing padding byte")
+                else:
+                    raise ValueError(
+                        f"{chunkId} chunk ends after the end of the file: "
+                        f"header says {chunk_end} but file ends at {self._file_len}")
 
     def _check_chunks(self):
         required_chunks = [b'fmt ', b'data']

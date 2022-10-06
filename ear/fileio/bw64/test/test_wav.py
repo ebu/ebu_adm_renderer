@@ -179,4 +179,16 @@ def test_rect_24bit_wrong_fmt_size(datafiles):
     with pytest.raises(ValueError) as excinfo:
         with openBw64(rect_24bit_wrong_fmt_size_path):
             pass
-    assert str(excinfo.value) == 'required chunk "data" not found'
+    assert str(excinfo.value) == r"found chunk header with invalid ID b'ta\xcc\x04'"
+
+
+@pytest.mark.datafiles(
+    os.path.join(FIXTURE_DIR, '24bit_missing_padding.wav'),
+)
+def test_24bit_missing_padding(datafiles):
+    path = os.path.join(
+        str(datafiles), '24bit_missing_padding.wav')
+
+    with pytest.warns(UserWarning, match="data chunk is missing padding byte"):
+        with openBw64(path):
+            pass
