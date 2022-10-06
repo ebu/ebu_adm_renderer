@@ -126,6 +126,10 @@ class Bw64Writer(object):
         corrupted. Thus, it might be a good idea to use this with a
         contextmanager.
         """
+        # write data chunk padding
+        if self._dataBytesWritten & 1:
+            self._buffer.write(b'\0')
+
         if not self._chnaChunkWritten and self._chna:
             self._write_chna_chunk()
         if not self._axmlChunkWritten and self._axml:

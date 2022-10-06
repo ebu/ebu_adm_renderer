@@ -103,6 +103,37 @@ def test_force_bw64(tmpdir):
         assert np.allclose(infile.read(100), samples, atol=1e-04)
 
 
+def test_padding(tmpdir):
+    samples = np.ones((1, 1))
+    fmtInfo = FormatInfoChunk(formatTag=1,
+                              channelCount=1,
+                              sampleRate=48000,
+                              bitsPerSample=24)
+
+    filename = str(tmpdir / 'test_padding.wav')
+
+    with openBw64(filename, 'w', formatInfo=fmtInfo) as outfile:
+        assert outfile.channels == 1
+        assert outfile.sampleRate == 48000
+        assert outfile.bitdepth == 24
+        outfile.write(samples)
+
+    # check that the data was padded to an even number of bytes with a zero
+    with open(filename, 'rb') as f:
+        contents = f.read()
+        assert len(contents) % 2 == 0
+        assert contents[-1] == 0
+
+    with openBw64(filename) as infile:
+        assert infile.channels == 1
+        assert infile.sampleRate == 48000
+        assert infile.bitdepth == 24
+        assert infile.chna is None
+        assert infile.axml is None
+        assert infile.bext is None
+        assert np.allclose(infile.read(100), samples, atol=1e-04)
+
+
 def test_axml_1(tmpdir):
     samples = ((np.arange(100) % 100 < 50) - 0.5) * 2
     samples = samples[None, :].T
