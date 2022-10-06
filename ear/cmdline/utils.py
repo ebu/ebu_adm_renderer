@@ -70,7 +70,7 @@ def regenerate_command(args):
         adm_chna.populate_chna_chunk(chna, infile.adm)
 
         with openBw64(args.output, 'w', formatInfo=formatInfo,
-                      axml=axml, chna=infile.chna) as outfile:
+                      axml=axml, chna=chna) as outfile:
             for samples in infile.iter_sample_blocks(2048):
                 outfile.write(samples)
 
