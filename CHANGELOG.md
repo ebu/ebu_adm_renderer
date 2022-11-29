@@ -4,6 +4,7 @@
 
 ### Fixed
 - Padding after data chunks in bw64 files was not written, and this error was silently ignored in the reader. This can be fixed with the new `ear-utils rewrite` command.
+- Mutable default parameters in ADMBuilder could cause unexpected extra blocks to be added when this was used from other programs.
 
 ### Changed
 - Added a warning for audioBlockFormats which have a duration but no rtime; previously these were fixed silently. See [#54].

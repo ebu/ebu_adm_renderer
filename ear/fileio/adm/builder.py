@@ -311,7 +311,7 @@ class ADMBuilder(object):
         self,
         type,
         name,
-        block_formats=[],
+        block_formats=None,
     ):
         """Create ADM components needed to represent a mono format.
 
@@ -331,6 +331,9 @@ class ADMBuilder(object):
         Returns:
             Format: the created components
         """
+        if block_formats is None:
+            block_formats = []
+
         format = self.create_format_multichannel(
             type=type,
             name=name,
@@ -381,7 +384,7 @@ class ADMBuilder(object):
         return item
 
     def create_item_mono(
-        self, type, track_index, name, parent=DEFAULT, block_formats=[]
+        self, type, track_index, name, parent=DEFAULT, block_formats=None,
     ):
         """Create ADM components needed to represent a mono channel, either
         DirectSpeakers or Objects.
@@ -407,6 +410,9 @@ class ADMBuilder(object):
         Returns:
             Item: the created components
         """
+        if block_formats is None:
+            block_formats = []
+
         item = self.create_item_multichannel(
             type=type,
             track_indices=[track_index],
