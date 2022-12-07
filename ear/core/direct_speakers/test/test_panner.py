@@ -105,7 +105,7 @@ def test_lfe():
     npt.assert_allclose(p.handle(tm_with_labels([], lfe_freq=True)), direct_pv(layout, "LFE1"))
 
     # check warnings with mismatch between label and frequency elements
-    with pytest.warns(None) as record:
+    with pytest.warns(UserWarning) as record:
         # using just labels
         for lfe_option in ["LFE", "LFE1", "LFEL"]:
             npt.assert_allclose(p.handle(tm_with_labels([lfe_option])), direct_pv(layout, "LFE1"))

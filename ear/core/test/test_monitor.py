@@ -27,6 +27,6 @@ def test_peak_monitor():
     assert mon.has_overloaded()
 
     import pytest
-    with pytest.warns(None) as record:
+    with pytest.warns(UserWarning) as record:
         mon.warn_overloaded()
     assert len(record) == 1 and str(record[0].message) == "overload in channel 1; peak level was 20.0dBFS"
