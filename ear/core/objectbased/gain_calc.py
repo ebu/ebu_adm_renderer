@@ -131,9 +131,10 @@ class AlloChannelLockHandler(ChannelLockHandlerBase):
     def __init__(self, layout):
         super(AlloChannelLockHandler, self).__init__(layout)
 
-        self.channel_positions = allocentric.positions_for_layout(layout)
+        self.channel_positions = allocentric.positions_for_layout_if_defined(layout)
 
     def get_weighted_distances(self, channel_positions, position):
+        assert self.channel_positions is not None
         w = np.array([1.0 / 16, 4, 32])
         return np.sqrt(np.sum(w * (position - channel_positions) ** 2, axis=1))
 
@@ -358,7 +359,7 @@ class GainCalc(object):
 
         self.is_lfe = layout.is_lfe
 
-        self.allo_channel_positions = allocentric.positions_for_layout(layout.without_lfe)
+        self.allo_channel_positions = allocentric.positions_for_layout_if_defined(layout.without_lfe)
 
     def render(self, object_meta):
         block_format = object_meta.block_format
@@ -374,6 +375,10 @@ class GainCalc(object):
                                                                block_format.cartesian)
 
         if block_format.cartesian:
+            if self.allo_channel_positions is None:
+                raise RuntimeError("allocentric rendering is not defined for this layout; "
+                                   "perhaps use conversion or another layout")
+
             excluded = allocentric.get_excluded(
                 self.allo_channel_positions,
                 self.zone_exclusion_handler.get_excluded(block_format.zoneExclusion))

@@ -1,7 +1,7 @@
 import pkg_resources
 from ..compatibility import load_yaml
 from .geom import PolarPosition
-from .layout import Channel, Layout
+from .layout import Channel, Layout, LayoutStyle
 
 
 def _dict_to_channel(d):
@@ -23,6 +23,7 @@ def _dict_to_layout(d):
     return Layout(
         name=d["name"],
         channels=list(map(_dict_to_channel, d["channels"])),
+        style=LayoutStyle.__members__[d.get("style", "ITU")],
     )
 
 

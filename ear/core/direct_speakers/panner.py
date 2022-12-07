@@ -245,8 +245,8 @@ class DirectSpeakersPanner(object):
         self.positions = layout.nominal_positions
         self.is_lfe = layout.is_lfe
 
-        self.allo_positions = allocentric.positions_for_layout(layout)
-        self.allo_psp = point_source.configure_allocentric(layout.without_lfe)
+        self.allo_positions = allocentric.positions_for_layout_if_defined(layout)
+        self.allo_psp = point_source.configure_allocentric_if_defined(layout.without_lfe)
 
         self._screen_edge_lock_handler = ScreenEdgeLockHandler(self.layout.screen, layout)
 
@@ -396,6 +396,10 @@ class DirectSpeakersPanner(object):
             psp = self.psp
             positions = self.positions
         elif isinstance(block_format.position, DirectSpeakerCartesianPosition):
+            if self.allo_psp is None:
+                raise RuntimeError("allocentric rendering is not defined for this layout; "
+                                   "perhaps use conversion or another layout")
+
             psp = self.allo_psp
             positions = self.allo_positions
         else:

@@ -1,6 +1,7 @@
 from __future__ import print_function
 from attr import attrs, attrib, evolve, Factory
 from attr.validators import instance_of, optional
+import enum
 import numpy as np
 import sys
 from .geom import CartesianPosition, PolarPosition, inside_angle_range
@@ -82,6 +83,13 @@ class Channel(object):
                                                                                      el_range=self.el_range))
 
 
+class LayoutStyle(enum.Enum):
+    # a layout defined in BS.2051, or with a similar structure
+    ITU = enum.auto()
+    # a regular layout for which plain VBAP rendering is appropriate
+    REGULAR = enum.auto()
+
+
 @attrs(frozen=True, slots=True)
 class Layout(object):
     """Representation of a loudspeaker layout, with a name and a list of channels.
@@ -91,11 +99,13 @@ class Layout(object):
         channels (list[Channel]): list of channels in the layout
         screen (Optional[Union[CartesianScreen, PolarScreen]]): screen
             information to use for screen-related content
+        style (LayoutStyle): indicates the style of layout (default: ITU)
     """
     name = attrib()
     channels = attrib()
     screen = attrib(validator=optional(instance_of((CartesianScreen, PolarScreen))),
                     default=default_screen)
+    style = attrib(validator=instance_of(LayoutStyle), default=LayoutStyle.ITU)
 
     @property
     def positions(self):
