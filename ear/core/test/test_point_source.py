@@ -3,7 +3,7 @@ import numpy.testing as npt
 from .. import bs2051
 from ..point_source import Triplet, VirtualNgon, StereoPanDownmix, PointSourcePanner, configure, AllocentricPanner
 from ..geom import cart, azimuth, PolarPosition
-from ..layout import Speaker
+from ..layout import LayoutStyle, Speaker
 import pytest
 
 
@@ -394,6 +394,9 @@ def test_allocentric_point_source():
 def test_all_layouts_allo(layout):
     """Basic tests of the allocentric panner on all layouts"""
     from ..allocentric import positions_for_layout
+    if layout.style != LayoutStyle.ITU:
+        pytest.skip("non-ITU layout")
+
     spks = positions_for_layout(layout)
     a = AllocentricPanner(spks)
 
