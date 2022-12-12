@@ -8,6 +8,7 @@
 
 ### Changed
 - Added a warning for audioBlockFormats which have a duration but no rtime; previously these were fixed silently. See [#54].
+- Removed the development config file mechanism, as it is no longer required and was not used.
 
 ## [2.1.0] - 2022-01-26
 

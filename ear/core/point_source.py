@@ -4,7 +4,6 @@ from attr import attrs, attrib, evolve
 from .util import as_array, has_shape
 from .geom import ngon_vertex_order, PolarPosition
 from .layout import Channel, LayoutStyle
-from ..options import OptionsHandler
 from . import bs2051
 
 
@@ -738,9 +737,6 @@ def configure_allocentric_if_defined(layout):
     from . import allocentric
     if allocentric.positions_defined(layout):
         return configure_allocentric(layout)
-
-
-configure_options = OptionsHandler()
 
 
 def configure(layout):

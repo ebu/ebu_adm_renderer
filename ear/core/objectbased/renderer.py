@@ -3,7 +3,6 @@ import math
 from fractions import Fraction
 from ..convolver import OverlapSaveConvolver, VariableBlockSizeAdapter
 from ..delay import Delay
-from ...options import Option, SubOptions, OptionsHandler
 from .gain_calc import GainCalc
 from . import decorrelate
 from ..renderer_common import BlockProcessingChannel, InterpretTimingMetadata, InterpGains, FixedGains
@@ -77,24 +76,16 @@ class InterpretObjectMetadata(InterpretTimingMetadata):
 
 
 class ObjectRenderer(object):
+    """renderer for Objects content
 
-    options = OptionsHandler(
-        block_size=Option(
-            default=512,
-            description="block size for decorrelator convolution",
-        ),
-        gain_calc_opts=SubOptions(
-            handler=GainCalc.options,
-            description="options for gain calculator",
-        ),
-        decorrelator_opts=SubOptions(
-            handler=decorrelate.design_options,
-            description="options for decorrelation filter design",
-        ),
-    )
+    Args:
+        layout (Layout): layout to render to
+        gain_calc_opts (dict): options for gain calculator
+        decorrelator_opts (dict): options for decorrelation filter design
+        block_size (int): block size for decorrelator convolution
+    """
 
-    @options.with_defaults
-    def __init__(self, layout, gain_calc_opts, decorrelator_opts, block_size):
+    def __init__(self, layout, gain_calc_opts={}, decorrelator_opts={}, block_size=512):
         self._gain_calc = GainCalc(layout, **gain_calc_opts)
         self._nchannels = len(layout.channels)
 

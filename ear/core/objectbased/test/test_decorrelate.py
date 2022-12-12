@@ -35,6 +35,13 @@ def test_design_decorrelators(method_name, method_f):
     npt.assert_allclose(right_filter, method_f(1))
 
 
+def test_design_decorrelators_options():
+    # check that options are correctly passed to methods
+    layout = bs2051.get_layout("4+5+0").without_lfe
+    filters = design_decorrelators(layout, method="basic", basic_opts=dict(size=42))
+    assert filters.shape == (42, 9)
+
+
 def correlation_coefficient(a, b):
     cross_corr = np.fft.irfft(np.fft.rfft(a) * np.fft.rfft(b[::-1]))
     return cross_corr[np.argmax(np.abs(cross_corr))]

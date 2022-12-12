@@ -36,10 +36,13 @@ class InterpretDirectSpeakersMetadata(InterpretTimingMetadata):
 
 
 class DirectSpeakersRenderer(object):
+    """renderer for DirectSpeakers content
 
-    options = DirectSpeakersPanner.options
+    Args:
+        layout (Layout): layout to render to
+        **options: options for DirectSpeakersPanner
+    """
 
-    @options.with_defaults
     def __init__(self, layout, **options):
         self._panner = DirectSpeakersPanner(layout, **options)
         self._nchannels = len(layout.channels)

@@ -7,7 +7,6 @@ from ..geom import inside_angle_range
 from .. import point_source
 from .. import allocentric
 from ..renderer_common import is_lfe
-from ...options import OptionsHandler, SubOptions, Option
 from ..screen_edge_lock import ScreenEdgeLockHandler
 from ...fileio.adm.elements import DirectSpeakerCartesianPosition, DirectSpeakerPolarPosition
 
@@ -219,18 +218,6 @@ itu_packs = {
 
 class DirectSpeakersPanner(object):
 
-    options = OptionsHandler(
-        point_source_opts=SubOptions(
-            handler=point_source.configure_options,
-            description="options for point source panner",
-        ),
-        additional_substitutions=Option(
-            default={},
-            description="dictionary of additional speaker label substitutions",
-        ),
-    )
-
-    @options.with_defaults
     def __init__(self, layout, point_source_opts={}, additional_substitutions={}):
         self.layout = layout
         self.psp = point_source.configure(layout.without_lfe, **point_source_opts)
