@@ -1,6 +1,9 @@
+from ..fileio.adm.elements import DirectSpeakerCartesianPosition, DirectSpeakerPolarPosition
 from .geom import azimuth, elevation, cart
 from .screen_common import PolarEdges, compensate_position
 from .objectbased.conversion import point_cart_to_polar, point_polar_to_cart
+from attr import evolve
+from functools import singledispatchmethod
 import numpy as np
 
 
@@ -48,3 +51,29 @@ class ScreenEdgeLockHandler(object):
             return self.lock_to_screen_edge(az, el, screen_edge_lock)
         else:
             return az, el
+
+    @singledispatchmethod
+    def handle_ds_position(self, position):
+        """apply screen edge lock to a DirectSpeakerPosition"""
+        raise NotImplementedError(f"cannot apply screen edge lock to {position}")
+
+    @handle_ds_position.register(DirectSpeakerPolarPosition)
+    def _(self, position):
+        az, el = self.handle_az_el(position.azimuth,
+                                   position.elevation,
+                                   position.screenEdgeLock)
+
+        return evolve(position,
+                      bounded_azimuth=evolve(position.bounded_azimuth, value=az),
+                      bounded_elevation=evolve(position.bounded_elevation, value=el))
+
+    @handle_ds_position.register(DirectSpeakerCartesianPosition)
+    def _(self, position):
+        X, Y, Z = self.handle_vector(position.as_cartesian_array(),
+                                     position.screenEdgeLock,
+                                     cartesian=True)
+
+        return evolve(position,
+                      bounded_X=evolve(position.bounded_X, value=X),
+                      bounded_Y=evolve(position.bounded_Y, value=Y),
+                      bounded_Z=evolve(position.bounded_Z, value=Z))

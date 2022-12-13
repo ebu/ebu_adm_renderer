@@ -353,27 +353,6 @@ class DirectSpeakersPanner(object):
 
         return has_lfe_freq or has_lfe_name
 
-    @dispatch(DirectSpeakerPolarPosition)  # noqa: F811
-    def apply_screen_edge_lock(self, position):
-        az, el = self._screen_edge_lock_handler.handle_az_el(position.azimuth,
-                                                             position.elevation,
-                                                             position.screenEdgeLock)
-
-        return evolve(position,
-                      bounded_azimuth=evolve(position.bounded_azimuth, value=az),
-                      bounded_elevation=evolve(position.bounded_elevation, value=el))
-
-    @dispatch(DirectSpeakerCartesianPosition)  # noqa: F811
-    def apply_screen_edge_lock(self, position):
-        X, Y, Z = self._screen_edge_lock_handler.handle_vector(position.as_cartesian_array(),
-                                                               position.screenEdgeLock,
-                                                               cartesian=True)
-
-        return evolve(position,
-                      bounded_X=evolve(position.bounded_X, value=X),
-                      bounded_Y=evolve(position.bounded_Y, value=Y),
-                      bounded_Z=evolve(position.bounded_Z, value=Z))
-
     def handle(self, type_metadata):
         tol = 1e-5
 
@@ -429,7 +408,7 @@ class DirectSpeakersPanner(object):
                     return self.pvs[idx]
 
         # shift the nominal speaker position to the screen edges if specified
-        shifted_position = self.apply_screen_edge_lock(block_format.position)
+        shifted_position = self._screen_edge_lock_handler.handle_ds_position(block_format.position)
 
         # otherwise, find the closest speaker with the correct type within the given bounds
 
