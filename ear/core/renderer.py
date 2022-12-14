@@ -18,7 +18,7 @@ class Renderer(object):
     """
 
     def __init__(self, layout, object_renderer_opts={}, direct_speakers_opts={}, hoa_renderer_opts={}):
-        self.block_aligner = BlockAligner(len(layout.channels))
+        self.block_aligner = BlockAligner(layout.num_channels)
 
         self._object_renderer = ObjectRenderer(layout, **object_renderer_opts)
         self._direct_speakers_renderer = DirectSpeakersRenderer(layout, **direct_speakers_opts)

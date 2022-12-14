@@ -45,7 +45,7 @@ class DirectSpeakersRenderer(object):
 
     def __init__(self, layout, **options):
         self._panner = DirectSpeakersPanner(layout, **options)
-        self._nchannels = len(layout.channels)
+        self._nchannels = layout.num_channels
 
         # tuples of a track spec processor and a BlockProcessingChannel to
         # apply to the samples it produces.
