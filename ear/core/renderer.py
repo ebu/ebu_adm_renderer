@@ -1,5 +1,5 @@
 import numpy as np
-from .objectbased.renderer import ObjectRenderer
+from .objectbased.renderer import build_objects_renderer
 from .direct_speakers.renderer import DirectSpeakersRenderer
 from .scenebased.renderer import HOARenderer
 from .metadata_input import ObjectRenderingItem, DirectSpeakersRenderingItem, HOARenderingItem
@@ -20,7 +20,7 @@ class Renderer(object):
     def __init__(self, layout, object_renderer_opts={}, direct_speakers_opts={}, hoa_renderer_opts={}):
         self.block_aligner = BlockAligner(layout.num_channels)
 
-        self._object_renderer = ObjectRenderer(layout, **object_renderer_opts)
+        self._object_renderer = build_objects_renderer(layout, **object_renderer_opts)
         self._direct_speakers_renderer = DirectSpeakersRenderer(layout, **direct_speakers_opts)
         self._hoa_renderer = HOARenderer(layout, **hoa_renderer_opts)
 

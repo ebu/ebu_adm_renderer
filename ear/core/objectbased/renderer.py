@@ -1,10 +1,12 @@
 import numpy as np
 import math
 from fractions import Fraction
+from functools import singledispatch
 from ..convolver import OverlapSaveConvolver, VariableBlockSizeAdapter
 from ..delay import Delay
 from .gain_calc import GainCalc
 from . import decorrelate
+from ..layout import Layout
 from ..renderer_common import BlockProcessingChannel, InterpretTimingMetadata, InterpGains, FixedGains
 from ..track_processor import TrackProcessor
 
@@ -148,3 +150,19 @@ class ObjectRenderer(object):
         direct_out = self.delays.process(interpolated[:, :self._nchannels])
         diffuse_out = self.decorrelators_vbs.process(interpolated[:, self._nchannels:])
         return direct_out + diffuse_out
+
+
+@singledispatch
+def build_objects_renderer(_layout, **_options):
+    """build an objects renderer (e.g. ObjectRenderer) given a loudspeaker
+    layout or other output format; this can be overridden from other modules to
+    add support for different formats
+
+    returns None if no handler renderer is defined for this format
+    """
+    return None
+
+
+@build_objects_renderer.register(Layout)
+def _build_objects_renderer_speakers(layout, **options):
+    return ObjectRenderer(layout, **options)
