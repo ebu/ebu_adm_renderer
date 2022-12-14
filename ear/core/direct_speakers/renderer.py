@@ -1,5 +1,5 @@
 import numpy as np
-from .panner import DirectSpeakersPanner
+from .panner import build_direct_speakers_panner
 from ..renderer_common import BlockProcessingChannel, InterpretTimingMetadata, FixedGains
 from ..track_processor import TrackProcessor
 
@@ -44,7 +44,7 @@ class DirectSpeakersRenderer(object):
     """
 
     def __init__(self, layout, **options):
-        self._panner = DirectSpeakersPanner(layout, **options)
+        self._panner = build_direct_speakers_panner(layout, **options)
         self._nchannels = layout.num_channels
 
         # tuples of a track spec processor and a BlockProcessingChannel to

@@ -1,4 +1,5 @@
 from attr import attrs, attrib, evolve
+from functools import singledispatch
 from multipledispatch import dispatch
 import numpy as np
 import re
@@ -6,6 +7,7 @@ import warnings
 from ..geom import inside_angle_range
 from .. import point_source
 from .. import allocentric
+from ..layout import Layout
 from ..renderer_common import is_lfe
 from ..screen_edge_lock import ScreenEdgeLockHandler
 from ...fileio.adm.elements import DirectSpeakerCartesianPosition, DirectSpeakerPolarPosition
@@ -463,3 +465,13 @@ class DirectSpeakersPanner(object):
             pv = np.zeros(self.n_channels)
             pv[~self.is_lfe] = psp.handle(position)
             return pv
+
+
+@singledispatch
+def build_direct_speakers_panner(layout, **options):
+    return None
+
+
+@build_direct_speakers_panner.register(Layout)
+def _build_direct_speakers_panner_speakers(layout, **options):
+    return DirectSpeakersPanner(layout, **options)
