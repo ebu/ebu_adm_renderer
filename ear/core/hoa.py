@@ -54,7 +54,7 @@ norm_functions = dict(
 
 
 def sph_harm(n, m, az, el, norm=norm_SN3D):
-    """Spherical harmonic function Y_n^m(ax, el)."""
+    """Spherical harmonic function Y_n^m(az, el)."""
     n, m, az, el = np.broadcast_arrays(n, m, az, el)
     scale = np.ones_like(m, dtype=float)
     select = m > 0
