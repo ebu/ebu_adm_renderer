@@ -1,6 +1,6 @@
 import numpy as np
 from attr import attrs, attrib
-from .design import HOADecoderDesign
+from .design import build_hoa_decoder_design
 from ..renderer_common import BlockProcessingChannel, InterpretTimingMetadata, ProcessingBlock
 from ..track_processor import MultiTrackProcessor
 
@@ -65,7 +65,7 @@ class HOARenderer(object):
     """
 
     def __init__(self, layout, design_opts={}):
-        self._decoder_design = HOADecoderDesign(layout.without_lfe, **design_opts)
+        self._decoder_design = build_hoa_decoder_design(layout.without_lfe, **design_opts)
         self._output_channels = ~layout.is_lfe
 
         self.block_processing_channels = []

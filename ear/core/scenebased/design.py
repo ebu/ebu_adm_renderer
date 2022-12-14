@@ -1,6 +1,8 @@
+from functools import singledispatch
 import numpy as np
 import warnings
 from .. import hoa
+from ..layout import Layout
 from .. import point_source
 
 
@@ -85,3 +87,13 @@ class HOADecoderDesign(object):
             decoder /= np.sqrt(np.mean(np.sum(np.dot(decoder, K_v) ** 2, axis=0)))
 
         return decoder
+
+
+@singledispatch
+def build_hoa_decoder_design(layout, **options):
+    return None
+
+
+@build_hoa_decoder_design.register(Layout)
+def _build_hoa_decoder_design_speakers(layout, **options):
+    return HOADecoderDesign(layout, **options)
