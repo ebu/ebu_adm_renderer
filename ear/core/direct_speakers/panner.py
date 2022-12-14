@@ -216,29 +216,14 @@ itu_packs = {
 }
 
 
-class DirectSpeakersPanner(object):
+class SpeakerLabelHandler(object):
+    """utilities for things related to speakerLabels
 
-    def __init__(self, layout, point_source_opts={}, additional_substitutions={}):
-        self.layout = layout
-        self.psp = point_source.configure(layout.without_lfe, **point_source_opts)
+    this is a bit random, but useful for rendering to formats other than
+    loudspeakers
+    """
 
-        self.n_channels = len(layout.channels)
-        self.channel_names = layout.channel_names
-
-        self.azimuths = np.array([channel.polar_nominal_position.azimuth for channel in layout.channels])
-        self.elevations = np.array([channel.polar_nominal_position.elevation for channel in layout.channels])
-        self.distances = np.array([channel.polar_nominal_position.distance for channel in layout.channels])
-
-        self.positions = layout.nominal_positions
-        self.is_lfe = layout.is_lfe
-
-        self.allo_positions = allocentric.positions_for_layout_if_defined(layout)
-        self.allo_psp = point_source.configure_allocentric_if_defined(layout.without_lfe)
-
-        self._screen_edge_lock_handler = ScreenEdgeLockHandler(self.layout.screen, layout)
-
-        self.pvs = np.eye(self.n_channels)
-
+    def __init__(self, additional_substitutions={}):
         self.substitutions = {
             "LFE": "LFE1",
             "LFEL": "LFE1",
@@ -262,6 +247,62 @@ class DirectSpeakersPanner(object):
             label = self.substitutions[label]
 
         return label
+
+    def is_lfe_channel(self, type_metadata):
+        """Determine if type_metadata is an LFE channel, issuing a warning if
+        there's a discrepancy between the speakerLabel and the frequency
+        element, or if a speakerLabel contains "LFE" but is not treated as one
+        by the standard
+        """
+        has_lfe_freq = is_lfe(type_metadata.extra_data.channel_frequency)
+
+        has_lfe_name = False
+        for label in type_metadata.block_format.speakerLabel:
+            nominal_label = self.nominal_speaker_label(label)
+
+            if nominal_label in ("LFE1", "LFE2"):
+                has_lfe_name = True
+
+        if has_lfe_freq != has_lfe_name and type_metadata.block_format.speakerLabel:
+            warnings.warn("LFE indication from frequency element does not match speakerLabel.")
+
+        tm_is_lfe = has_lfe_freq or has_lfe_name
+
+        if not tm_is_lfe and any("LFE" in label.upper() for label in type_metadata.block_format.speakerLabel):
+            warnings.warn(
+                "block {bf.id} not being treated as LFE, but has 'LFE' in a speakerLabel; "
+                "use an ITU speakerLabel or audioChannelFormat frequency element instead".format(
+                    bf=type_metadata.block_format
+                )
+            )
+
+        return tm_is_lfe
+
+
+class DirectSpeakersPanner(object):
+
+    def __init__(self, layout, point_source_opts={}, additional_substitutions={}):
+        self.layout = layout
+        self.psp = point_source.configure(layout.without_lfe, **point_source_opts)
+
+        self.n_channels = len(layout.channels)
+        self.channel_names = layout.channel_names
+
+        self.azimuths = np.array([channel.polar_nominal_position.azimuth for channel in layout.channels])
+        self.elevations = np.array([channel.polar_nominal_position.elevation for channel in layout.channels])
+        self.distances = np.array([channel.polar_nominal_position.distance for channel in layout.channels])
+
+        self.positions = layout.nominal_positions
+        self.is_lfe = layout.is_lfe
+
+        self.allo_positions = allocentric.positions_for_layout_if_defined(layout)
+        self.allo_psp = point_source.configure_allocentric_if_defined(layout.without_lfe)
+
+        self._screen_edge_lock_handler = ScreenEdgeLockHandler(self.layout.screen, layout)
+
+        self.pvs = np.eye(self.n_channels)
+
+        self.label_handler = SpeakerLabelHandler(additional_substitutions)
 
     def closest_channel_index(self, positions, position, candidates, tol):
         """Get the index of the candidate speaker closest to a given position.
@@ -335,24 +376,6 @@ class DirectSpeakersPanner(object):
             np.all(self.allo_positions - tol <= bounds_max, axis=1)
         )
 
-    def is_lfe_channel(self, type_metadata):
-        """Determine if type_metadata is an LFE channel, issuing a warning if
-        there's a discrepancy between the speakerLabel and the frequency
-        element."""
-        has_lfe_freq = is_lfe(type_metadata.extra_data.channel_frequency)
-
-        has_lfe_name = False
-        for label in type_metadata.block_format.speakerLabel:
-            nominal_label = self.nominal_speaker_label(label)
-
-            if nominal_label in ("LFE1", "LFE2"):
-                has_lfe_name = True
-
-        if has_lfe_freq != has_lfe_name and type_metadata.block_format.speakerLabel:
-            warnings.warn("LFE indication from frequency element does not match speakerLabel.")
-
-        return has_lfe_freq or has_lfe_name
-
     def handle(self, type_metadata):
         tol = 1e-5
 
@@ -371,22 +394,14 @@ class DirectSpeakersPanner(object):
         else:
             assert False, "unexpected type"
 
-        is_lfe_channel = self.is_lfe_channel(type_metadata)
-
-        if not is_lfe_channel and any("LFE" in l.upper() for l in block_format.speakerLabel):
-            warnings.warn(
-                "block {bf.id} not being treated as LFE, but has 'LFE' in a speakerLabel; "
-                "use an ITU speakerLabel or audioChannelFormat frequency element instead".format(
-                    bf=block_format
-                )
-            )
+        is_lfe_channel = self.label_handler.is_lfe_channel(type_metadata)
 
         if type_metadata.audioPackFormats is not None:
             pack = type_metadata.audioPackFormats[-1]
             if pack.is_common_definition and pack.id in itu_packs:
                 itu_layout_name = itu_packs[pack.id]
                 label = block_format.speakerLabel[0]
-                nominal_label = self.nominal_speaker_label(label)
+                nominal_label = self.label_handler.nominal_speaker_label(label)
 
                 for rule in rules:
                     gains = rule.apply(itu_layout_name, nominal_label, self.layout)
@@ -401,7 +416,7 @@ class DirectSpeakersPanner(object):
         # speakerLabel values have higher priority
 
         for label in block_format.speakerLabel:
-            nominal_label = self.nominal_speaker_label(label)
+            nominal_label = self.label_handler.nominal_speaker_label(label)
             if nominal_label in self.channel_names:
                 idx = self.channel_names.index(nominal_label)
                 if is_lfe_channel == self.is_lfe[idx]:
