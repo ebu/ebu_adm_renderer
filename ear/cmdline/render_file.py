@@ -14,6 +14,7 @@ from ..fileio.adm.elements import AudioProgramme, AudioObject
 from ..fileio.bw64.chunks import FormatInfoChunk
 from ..fileio.adm import timing_fixes
 import logging
+import textwrap
 from .error_handler import error_handler
 
 
@@ -40,12 +41,33 @@ class OfflineRenderDriver(object):
     blocksize = 8192
 
     @classmethod
+    def get_systems_help(cls):
+        formats_string = ", ".join(bs2051.layout_names)
+
+        from ..core import hoa
+        norm_names = ", ".join(hoa.norm_functions)
+
+        text = f"""\
+        output system, accoring to ITU-R BS.2051
+
+        available systems:
+        {formats_string}
+
+        HOA output can be specified as "hoa_norm_order_n" or "ambix_n" where:
+        - norm is the normalization style, one of {norm_names}
+        - order is the channel order, currently only ACN
+        - n is the maximum order (e.g. 1 for first-order)
+
+        ambix_n is equivalent to hoa_SN3D_ACN_n
+        """
+
+        return textwrap.dedent(text)
+
+    @classmethod
     def add_args(cls, parser):
         """Add arguments to an ArgumentParser that can be used by from_args."""
-        formats_string = ", ".join(bs2051.layout_names)
         parser.add_argument("-s", "--system", required=True, metavar="target_system",
-                            help="Target output system, accoring to ITU-R BS.2051. "
-                                 "Available systems are: {}".format(formats_string))
+                            help=cls.get_systems_help())
 
         parser.add_argument("-l", "--layout", type=argparse.FileType("r"), metavar="layout_file",
                             help="Layout config file")
@@ -221,7 +243,7 @@ class OfflineRenderDriver(object):
 
 
 def make_parser():
-    parser = argparse.ArgumentParser(description="EBU ADM renderer")
+    parser = argparse.ArgumentParser(description="EBU ADM renderer", formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument("-d", "--debug",
                         help="print debug information when an error occurs",
