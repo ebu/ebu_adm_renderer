@@ -465,6 +465,7 @@ def _check_screen_speakers(layout):
                                     az=channel.polar_position.azimuth,
                                 ))
 
+
 def _configure_full(layout):
     layout = _set_screen_speaker_nominal_positions(layout)
 
