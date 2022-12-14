@@ -108,6 +108,11 @@ class Layout(object):
     style = attrib(validator=instance_of(LayoutStyle), default=LayoutStyle.ITU)
 
     @property
+    def num_channels(self):
+        """the number of channels in this layout"""
+        return len(self.channels)
+
+    @property
     def positions(self):
         """Channel positions as an (n, 3) numpy array."""
         return np.array([channel.position for channel in self.channels])
