@@ -4,6 +4,8 @@ from attr import attrs, attrib, Factory
 import scipy.sparse
 from itertools import chain
 from ..core import bs2051, layout, Renderer
+from ..core import hoa_overloads  # noqa: F401
+from ..core.hoa_adapter import HOAFormat
 from ..core.monitor import PeakMonitor
 from ..core.metadata_processing import preprocess_rendering_items, convert_objects_to_cartesian, convert_objects_to_polar
 from ..core.select_items import select_rendering_items
@@ -83,6 +85,10 @@ class OfflineRenderDriver(object):
             upmix (sparse array or None): optional matrix to apply after rendering
             n_channels (int): number of channels required in output file
         """
+        spkr_layout = HOAFormat.parse_or_none(self.target_layout)
+        if spkr_layout is not None:
+            return spkr_layout, None, spkr_layout.num_channels
+
         spkr_layout = bs2051.get_layout(self.target_layout)
 
         if self.speakers_file is not None:
