@@ -299,8 +299,8 @@ class DirectSpeakersPanner(object):
         else:
             return None
 
-    @dispatch(DirectSpeakerPolarPosition, float)  # noqa: F811
-    def channels_within_bounds(self, position, tol):
+    @dispatch(DirectSpeakerPolarPosition, float)
+    def channels_within_bounds(self, position, tol):  # noqa: F811
         """Get a bit mask of channels within the bounds in position."""
 
         def min_max_default(bound):
@@ -320,8 +320,8 @@ class DirectSpeakersPanner(object):
             (self.distances > dist_min - tol) & (self.distances < dist_max + tol)
         )
 
-    @dispatch(DirectSpeakerCartesianPosition, float)  # noqa: F811
-    def channels_within_bounds(self, position, tol):
+    @dispatch(DirectSpeakerCartesianPosition, float)
+    def channels_within_bounds(self, position, tol):  # noqa: F811
         """Get a bit mask of channels within the bounds in position."""
 
         bounds = [position.bounded_X, position.bounded_Y, position.bounded_Z]
