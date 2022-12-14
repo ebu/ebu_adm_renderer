@@ -245,5 +245,6 @@ def main():
     with error_handler(logger, debug=args.debug, strict=args.strict):
         OfflineRenderDriver.from_args(args).run(args.input_file, args.output_file)
 
+
 if __name__ == "__main__":
     main()
