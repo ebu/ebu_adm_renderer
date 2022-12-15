@@ -75,7 +75,7 @@ def _add_symmetric_rules(rules):
 
         new_rule = evolve(rule,
                           speakerLabel=opposite_name(rule.speakerLabel),
-                          gains=[(opposite_name(l), g) for l, g in rule.gains],
+                          gains=[(opposite_name(name), gain) for name, gain in rule.gains],
                           )
 
         # don't add rules which would have the same effect
