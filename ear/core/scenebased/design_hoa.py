@@ -22,6 +22,13 @@ class HOAFormatConvert:
         Returns:
             l, m decoder matrix from m HOA channels to l loudspeaker channels
         """
+        if type_metadata.screenRef:
+            warnings.warn("screenRef for HOA is not implemented; ignoring")
+        if (
+            type_metadata.extra_data.channel_frequency.lowPass is not None
+            or type_metadata.extra_data.channel_frequency.highPass is not None
+        ):
+            warnings.warn("frequency information for HOA is not implemented; ignoring")
 
         in_orders, in_degrees = np.array(type_metadata.orders), np.array(
             type_metadata.degrees
