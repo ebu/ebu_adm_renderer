@@ -461,9 +461,8 @@ def _check_screen_speakers(layout):
                 raise ValueError("channel {name} has azimuth {az}, which is not "
                                  "in the allowed ranges of 5 to 25 and 35 to 60 "
                                  "degrees.".format(
-                                    name=channel.name,
-                                    az=channel.polar_position.azimuth,
-                                ))
+                                     name=channel.name,
+                                     az=channel.polar_position.azimuth))
 
 
 def _configure_full(layout):
