@@ -3,8 +3,7 @@ import scipy.spatial
 from attr import attrs, attrib, evolve
 from .util import as_array, has_shape
 from .geom import ngon_vertex_order, PolarPosition
-from .layout import Channel
-from ..options import OptionsHandler
+from .layout import Channel, LayoutStyle
 from . import bs2051
 
 
@@ -462,9 +461,9 @@ def _check_screen_speakers(layout):
                 raise ValueError("channel {name} has azimuth {az}, which is not "
                                  "in the allowed ranges of 5 to 25 and 35 to 60 "
                                  "degrees.".format(
-                                    name=channel.name,
-                                    az=channel.polar_position.azimuth,
-                                ))
+                                     name=channel.name,
+                                     az=channel.polar_position.azimuth))
+
 
 def _configure_full(layout):
     layout = _set_screen_speaker_nominal_positions(layout)
@@ -523,6 +522,28 @@ def _configure_full(layout):
             assert False, "facets with more than 4 vertices are not supported"
 
     return PointSourcePannerDownmix(PointSourcePanner(regions), downmix=downmix)
+
+
+def _configure_regular(layout):
+    positions_real = layout.norm_positions
+
+    facets = _convex_hull_facets(positions_real)
+
+    # Turn the facets into regions for the point source panner.
+    regions = []
+
+    for facet_verts in facets:
+        facet_verts = np.fromiter(facet_verts, int)
+        if len(facet_verts) == 3:
+            regions.append(Triplet(output_channels=facet_verts,
+                                   positions=positions_real[facet_verts]))
+        elif len(facet_verts) == 4:
+            regions.append(QuadRegion(output_channels=facet_verts,
+                                      positions=positions_real[facet_verts]))
+        else:
+            assert False, "facets with more than 4 vertices are not supported"
+
+    return PointSourcePanner(regions)
 
 
 class AllocentricPanner(object):
@@ -709,7 +730,13 @@ def configure_allocentric(layout):
     return AllocentricPanner(positions)
 
 
-configure_options = OptionsHandler()
+def configure_allocentric_if_defined(layout):
+    """Build an allocentric point-source panner for the given layout if the
+    allocentric positions for it are defined, otherwise return None.
+    """
+    from . import allocentric
+    if allocentric.positions_defined(layout):
+        return configure_allocentric(layout)
 
 
 def configure(layout):
@@ -727,7 +754,12 @@ def configure(layout):
 
     _check_screen_speakers(layout)
 
-    if layout.name == "0+2+0":
-        return _configure_stereo(layout)
+    if layout.style == LayoutStyle.ITU:
+        if layout.name == "0+2+0":
+            return _configure_stereo(layout)
+        else:
+            return _configure_full(layout)
+    elif layout.style == LayoutStyle.REGULAR:
+        return _configure_regular(layout)
     else:
-        return _configure_full(layout)
+        raise RuntimeError(f"unknown layout style: {layout.style}")

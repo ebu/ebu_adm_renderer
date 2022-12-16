@@ -1,5 +1,4 @@
 from functools import partial
-from ...fileio.adm.exceptions import AdmError
 from .utils import get_path_param
 
 # functions which take a path through the audioPackFormats and an

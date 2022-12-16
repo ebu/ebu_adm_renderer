@@ -1,4 +1,5 @@
 from attr import attrs, attrib, evolve
+from functools import singledispatch
 from multipledispatch import dispatch
 import numpy as np
 import re
@@ -6,8 +7,8 @@ import warnings
 from ..geom import inside_angle_range
 from .. import point_source
 from .. import allocentric
+from ..layout import Layout
 from ..renderer_common import is_lfe
-from ...options import OptionsHandler, SubOptions, Option
 from ..screen_edge_lock import ScreenEdgeLockHandler
 from ...fileio.adm.elements import DirectSpeakerCartesianPosition, DirectSpeakerPolarPosition
 
@@ -76,7 +77,7 @@ def _add_symmetric_rules(rules):
 
         new_rule = evolve(rule,
                           speakerLabel=opposite_name(rule.speakerLabel),
-                          gains=[(opposite_name(l), g) for l, g in rule.gains],
+                          gains=[(opposite_name(name), gain) for name, gain in rule.gains],
                           )
 
         # don't add rules which would have the same effect
@@ -217,41 +218,14 @@ itu_packs = {
 }
 
 
-class DirectSpeakersPanner(object):
+class SpeakerLabelHandler(object):
+    """utilities for things related to speakerLabels
 
-    options = OptionsHandler(
-        point_source_opts=SubOptions(
-            handler=point_source.configure_options,
-            description="options for point source panner",
-        ),
-        additional_substitutions=Option(
-            default={},
-            description="dictionary of additional speaker label substitutions",
-        ),
-    )
+    this is a bit random, but useful for rendering to formats other than
+    loudspeakers
+    """
 
-    @options.with_defaults
-    def __init__(self, layout, point_source_opts={}, additional_substitutions={}):
-        self.layout = layout
-        self.psp = point_source.configure(layout.without_lfe, **point_source_opts)
-
-        self.n_channels = len(layout.channels)
-        self.channel_names = layout.channel_names
-
-        self.azimuths = np.array([channel.polar_nominal_position.azimuth for channel in layout.channels])
-        self.elevations = np.array([channel.polar_nominal_position.elevation for channel in layout.channels])
-        self.distances = np.array([channel.polar_nominal_position.distance for channel in layout.channels])
-
-        self.positions = layout.nominal_positions
-        self.is_lfe = layout.is_lfe
-
-        self.allo_positions = allocentric.positions_for_layout(layout)
-        self.allo_psp = point_source.configure_allocentric(layout.without_lfe)
-
-        self._screen_edge_lock_handler = ScreenEdgeLockHandler(self.layout.screen, layout)
-
-        self.pvs = np.eye(self.n_channels)
-
+    def __init__(self, additional_substitutions={}):
         self.substitutions = {
             "LFE": "LFE1",
             "LFEL": "LFE1",
@@ -275,6 +249,62 @@ class DirectSpeakersPanner(object):
             label = self.substitutions[label]
 
         return label
+
+    def is_lfe_channel(self, type_metadata):
+        """Determine if type_metadata is an LFE channel, issuing a warning if
+        there's a discrepancy between the speakerLabel and the frequency
+        element, or if a speakerLabel contains "LFE" but is not treated as one
+        by the standard
+        """
+        has_lfe_freq = is_lfe(type_metadata.extra_data.channel_frequency)
+
+        has_lfe_name = False
+        for label in type_metadata.block_format.speakerLabel:
+            nominal_label = self.nominal_speaker_label(label)
+
+            if nominal_label in ("LFE1", "LFE2"):
+                has_lfe_name = True
+
+        if has_lfe_freq != has_lfe_name and type_metadata.block_format.speakerLabel:
+            warnings.warn("LFE indication from frequency element does not match speakerLabel.")
+
+        tm_is_lfe = has_lfe_freq or has_lfe_name
+
+        if not tm_is_lfe and any("LFE" in label.upper() for label in type_metadata.block_format.speakerLabel):
+            warnings.warn(
+                "block {bf.id} not being treated as LFE, but has 'LFE' in a speakerLabel; "
+                "use an ITU speakerLabel or audioChannelFormat frequency element instead".format(
+                    bf=type_metadata.block_format
+                )
+            )
+
+        return tm_is_lfe
+
+
+class DirectSpeakersPanner(object):
+
+    def __init__(self, layout, point_source_opts={}, additional_substitutions={}):
+        self.layout = layout
+        self.psp = point_source.configure(layout.without_lfe, **point_source_opts)
+
+        self.n_channels = len(layout.channels)
+        self.channel_names = layout.channel_names
+
+        self.azimuths = np.array([channel.polar_nominal_position.azimuth for channel in layout.channels])
+        self.elevations = np.array([channel.polar_nominal_position.elevation for channel in layout.channels])
+        self.distances = np.array([channel.polar_nominal_position.distance for channel in layout.channels])
+
+        self.positions = layout.nominal_positions
+        self.is_lfe = layout.is_lfe
+
+        self.allo_positions = allocentric.positions_for_layout_if_defined(layout)
+        self.allo_psp = point_source.configure_allocentric_if_defined(layout.without_lfe)
+
+        self._screen_edge_lock_handler = ScreenEdgeLockHandler(self.layout.screen, layout)
+
+        self.pvs = np.eye(self.n_channels)
+
+        self.label_handler = SpeakerLabelHandler(additional_substitutions)
 
     def closest_channel_index(self, positions, position, candidates, tol):
         """Get the index of the candidate speaker closest to a given position.
@@ -312,8 +342,8 @@ class DirectSpeakersPanner(object):
         else:
             return None
 
-    @dispatch(DirectSpeakerPolarPosition, float)  # noqa: F811
-    def channels_within_bounds(self, position, tol):
+    @dispatch(DirectSpeakerPolarPosition, float)
+    def channels_within_bounds(self, position, tol):  # noqa: F811
         """Get a bit mask of channels within the bounds in position."""
 
         def min_max_default(bound):
@@ -333,8 +363,8 @@ class DirectSpeakersPanner(object):
             (self.distances > dist_min - tol) & (self.distances < dist_max + tol)
         )
 
-    @dispatch(DirectSpeakerCartesianPosition, float)  # noqa: F811
-    def channels_within_bounds(self, position, tol):
+    @dispatch(DirectSpeakerCartesianPosition, float)
+    def channels_within_bounds(self, position, tol):  # noqa: F811
         """Get a bit mask of channels within the bounds in position."""
 
         bounds = [position.bounded_X, position.bounded_Y, position.bounded_Z]
@@ -348,45 +378,6 @@ class DirectSpeakersPanner(object):
             np.all(self.allo_positions - tol <= bounds_max, axis=1)
         )
 
-    def is_lfe_channel(self, type_metadata):
-        """Determine if type_metadata is an LFE channel, issuing a warning if
-        there's a discrepancy between the speakerLabel and the frequency
-        element."""
-        has_lfe_freq = is_lfe(type_metadata.extra_data.channel_frequency)
-
-        has_lfe_name = False
-        for label in type_metadata.block_format.speakerLabel:
-            nominal_label = self.nominal_speaker_label(label)
-
-            if nominal_label in ("LFE1", "LFE2"):
-                has_lfe_name = True
-
-        if has_lfe_freq != has_lfe_name and type_metadata.block_format.speakerLabel:
-            warnings.warn("LFE indication from frequency element does not match speakerLabel.")
-
-        return has_lfe_freq or has_lfe_name
-
-    @dispatch(DirectSpeakerPolarPosition)  # noqa: F811
-    def apply_screen_edge_lock(self, position):
-        az, el = self._screen_edge_lock_handler.handle_az_el(position.azimuth,
-                                                             position.elevation,
-                                                             position.screenEdgeLock)
-
-        return evolve(position,
-                      bounded_azimuth=evolve(position.bounded_azimuth, value=az),
-                      bounded_elevation=evolve(position.bounded_elevation, value=el))
-
-    @dispatch(DirectSpeakerCartesianPosition)  # noqa: F811
-    def apply_screen_edge_lock(self, position):
-        X, Y, Z = self._screen_edge_lock_handler.handle_vector(position.as_cartesian_array(),
-                                                               position.screenEdgeLock,
-                                                               cartesian=True)
-
-        return evolve(position,
-                      bounded_X=evolve(position.bounded_X, value=X),
-                      bounded_Y=evolve(position.bounded_Y, value=Y),
-                      bounded_Z=evolve(position.bounded_Z, value=Z))
-
     def handle(self, type_metadata):
         tol = 1e-5
 
@@ -396,27 +387,23 @@ class DirectSpeakersPanner(object):
             psp = self.psp
             positions = self.positions
         elif isinstance(block_format.position, DirectSpeakerCartesianPosition):
+            if self.allo_psp is None:
+                raise RuntimeError("allocentric rendering is not defined for this layout; "
+                                   "perhaps use conversion or another layout")
+
             psp = self.allo_psp
             positions = self.allo_positions
         else:
             assert False, "unexpected type"
 
-        is_lfe_channel = self.is_lfe_channel(type_metadata)
-
-        if not is_lfe_channel and any("LFE" in l.upper() for l in block_format.speakerLabel):
-            warnings.warn(
-                "block {bf.id} not being treated as LFE, but has 'LFE' in a speakerLabel; "
-                "use an ITU speakerLabel or audioChannelFormat frequency element instead".format(
-                    bf=block_format
-                )
-            )
+        is_lfe_channel = self.label_handler.is_lfe_channel(type_metadata)
 
         if type_metadata.audioPackFormats is not None:
             pack = type_metadata.audioPackFormats[-1]
             if pack.is_common_definition and pack.id in itu_packs:
                 itu_layout_name = itu_packs[pack.id]
                 label = block_format.speakerLabel[0]
-                nominal_label = self.nominal_speaker_label(label)
+                nominal_label = self.label_handler.nominal_speaker_label(label)
 
                 for rule in rules:
                     gains = rule.apply(itu_layout_name, nominal_label, self.layout)
@@ -431,14 +418,14 @@ class DirectSpeakersPanner(object):
         # speakerLabel values have higher priority
 
         for label in block_format.speakerLabel:
-            nominal_label = self.nominal_speaker_label(label)
+            nominal_label = self.label_handler.nominal_speaker_label(label)
             if nominal_label in self.channel_names:
                 idx = self.channel_names.index(nominal_label)
                 if is_lfe_channel == self.is_lfe[idx]:
                     return self.pvs[idx]
 
         # shift the nominal speaker position to the screen edges if specified
-        shifted_position = self.apply_screen_edge_lock(block_format.position)
+        shifted_position = self._screen_edge_lock_handler.handle_ds_position(block_format.position)
 
         # otherwise, find the closest speaker with the correct type within the given bounds
 
@@ -478,3 +465,13 @@ class DirectSpeakersPanner(object):
             pv = np.zeros(self.n_channels)
             pv[~self.is_lfe] = psp.handle(position)
             return pv
+
+
+@singledispatch
+def build_direct_speakers_panner(layout, **options):
+    return None
+
+
+@build_direct_speakers_panner.register(Layout)
+def _build_direct_speakers_panner_speakers(layout, **options):
+    return DirectSpeakersPanner(layout, **options)

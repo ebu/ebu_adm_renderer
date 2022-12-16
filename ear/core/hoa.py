@@ -54,7 +54,15 @@ norm_functions = dict(
 
 
 def sph_harm(n, m, az, el, norm=norm_SN3D):
-    """Spherical harmonic function Y_n^m(ax, el)."""
+    """Spherical harmonic function Y_n^m(az, el).
+
+    azimuth and elevation are the same as used elsewhere in the ADM (azimuth is
+    measured left from the front; elevation is measured up from centre), except
+    in radians rather than degrees
+
+    this differs slightly from the definitions in BS.2076, where the elevation
+    is measured down from the top
+    """
     n, m, az, el = np.broadcast_arrays(n, m, az, el)
     scale = np.ones_like(m, dtype=float)
     select = m > 0

@@ -39,6 +39,11 @@ def _screen_spk_position_to_cart(position):
     return pos_left * [np.sign(position.azimuth), 1.0, 1.0]
 
 
+def positions_defined(layout) -> bool:
+    """are allocentric positions defined for the given layout?"""
+    return layout.name in _allo_positions
+
+
 def positions_for_layout(layout):
     layout_positions = _allo_positions[layout.name]
 
@@ -50,6 +55,14 @@ def positions_for_layout(layout):
 
     return np.array([get_position(channel)
                      for channel in layout.channels])
+
+
+def positions_for_layout_if_defined(layout):
+    """get allocentric positions for layout if they are defined, or None
+    otherwise
+    """
+    if positions_defined(layout):
+        return positions_for_layout(layout)
 
 
 def get_excluded(channel_positions, is_excluded):

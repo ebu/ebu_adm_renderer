@@ -12,12 +12,12 @@ from ...fileio.adm.elements import (AudioProgramme, AudioContent, AudioObject,
                                     )
 from .pack_allocation import allocate_packs, AllocationPack, AllocationChannel, AllocationTrack
 from .utils import (get_path_param, get_per_channel_param, get_single_param,
-                    in_by_id, object_paths_from, pack_format_packs, pack_format_paths_from)
+                    in_by_id, object_paths_from, pack_format_paths_from)
 from .validate import (validate_structure, validate_selected_audioTrackUID,
                        possible_reference_errors,
                        )
 from ..metadata_input import (ExtraData, ADMPath, MetadataSourceIter,
-                              RenderingItem, ObjectTypeMetadata,
+                              ObjectTypeMetadata,
                               ObjectRenderingItem, DirectSpeakersTypeMetadata,
                               DirectSpeakersRenderingItem, HOATypeMetadata,
                               HOARenderingItem, ImportanceData, TrackSpec,

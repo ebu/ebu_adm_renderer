@@ -139,6 +139,10 @@ def test_Layout_check_upmix_matrix(layout):
     assert errors == ["Speaker idx 1 used by multiple channels: ['M+030', 'M-030']"]
 
 
+def test_Layout_num_channels(layout):
+    assert layout.num_channels == 2
+
+
 def test_load_layout_info():
     def run_test(yaml_obj, expected, func=load_real_layout):
         from six import StringIO

@@ -1,8 +1,7 @@
 import numpy as np
-from .objectbased.renderer import ObjectRenderer
+from .objectbased.renderer import build_objects_renderer
 from .direct_speakers.renderer import DirectSpeakersRenderer
 from .scenebased.renderer import HOARenderer
-from ..options import SubOptions, OptionsHandler
 from .metadata_input import ObjectRenderingItem, DirectSpeakersRenderingItem, HOARenderingItem
 from .block_aligner import BlockAligner
 
@@ -13,28 +12,15 @@ class Renderer(object):
 
     Parameters:
         layout (.layout.Layout): loudspeaker layout to render to
+        object_renderer_opts (dict): options for objects renderer
+        direct_speakers_opts (dict): options for direct speakers renderer
+        hoa_renderer_opts (dict): options for HOA renderer
     """
 
-    options = OptionsHandler(
-        object_renderer_opts=SubOptions(
-            handler=ObjectRenderer.options,
-            description="options for object based renderer",
-        ),
-        direct_speakers_opts=SubOptions(
-            handler=DirectSpeakersRenderer.options,
-            description="options for direct speakers renderer",
-        ),
-        hoa_renderer_opts=SubOptions(
-            handler=HOARenderer.options,
-            description="options for HOA renderer",
-        ),
-    )
-
-    @options.with_defaults
     def __init__(self, layout, object_renderer_opts={}, direct_speakers_opts={}, hoa_renderer_opts={}):
-        self.block_aligner = BlockAligner(len(layout.channels))
+        self.block_aligner = BlockAligner(layout.num_channels)
 
-        self._object_renderer = ObjectRenderer(layout, **object_renderer_opts)
+        self._object_renderer = build_objects_renderer(layout, **object_renderer_opts)
         self._direct_speakers_renderer = DirectSpeakersRenderer(layout, **direct_speakers_opts)
         self._hoa_renderer = HOARenderer(layout, **hoa_renderer_opts)
 

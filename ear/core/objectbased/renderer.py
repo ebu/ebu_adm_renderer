@@ -1,11 +1,12 @@
 import numpy as np
 import math
 from fractions import Fraction
+from functools import singledispatch
 from ..convolver import OverlapSaveConvolver, VariableBlockSizeAdapter
 from ..delay import Delay
-from ...options import Option, SubOptions, OptionsHandler
 from .gain_calc import GainCalc
 from . import decorrelate
+from ..layout import Layout
 from ..renderer_common import BlockProcessingChannel, InterpretTimingMetadata, InterpGains, FixedGains
 from ..track_processor import TrackProcessor
 
@@ -77,24 +78,16 @@ class InterpretObjectMetadata(InterpretTimingMetadata):
 
 
 class ObjectRenderer(object):
+    """renderer for Objects content
 
-    options = OptionsHandler(
-        block_size=Option(
-            default=512,
-            description="block size for decorrelator convolution",
-        ),
-        gain_calc_opts=SubOptions(
-            handler=GainCalc.options,
-            description="options for gain calculator",
-        ),
-        decorrelator_opts=SubOptions(
-            handler=decorrelate.design_options,
-            description="options for decorrelation filter design",
-        ),
-    )
+    Args:
+        layout (Layout): layout to render to
+        gain_calc_opts (dict): options for gain calculator
+        decorrelator_opts (dict): options for decorrelation filter design
+        block_size (int): block size for decorrelator convolution
+    """
 
-    @options.with_defaults
-    def __init__(self, layout, gain_calc_opts, decorrelator_opts, block_size):
+    def __init__(self, layout, gain_calc_opts={}, decorrelator_opts={}, block_size=512):
         self._gain_calc = GainCalc(layout, **gain_calc_opts)
         self._nchannels = len(layout.channels)
 
@@ -157,3 +150,19 @@ class ObjectRenderer(object):
         direct_out = self.delays.process(interpolated[:, :self._nchannels])
         diffuse_out = self.decorrelators_vbs.process(interpolated[:, self._nchannels:])
         return direct_out + diffuse_out
+
+
+@singledispatch
+def build_objects_renderer(_layout, **_options):
+    """build an objects renderer (e.g. ObjectRenderer) given a loudspeaker
+    layout or other output format; this can be overridden from other modules to
+    add support for different formats
+
+    returns None if no handler renderer is defined for this format
+    """
+    return None
+
+
+@build_objects_renderer.register(Layout)
+def _build_objects_renderer_speakers(layout, **options):
+    return ObjectRenderer(layout, **options)

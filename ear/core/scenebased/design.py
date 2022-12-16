@@ -1,8 +1,9 @@
+from functools import singledispatch
 import numpy as np
 import warnings
 from .. import hoa
+from ..layout import Layout
 from .. import point_source
-from ...options import OptionsHandler, Option, SubOptions
 
 
 class HOADecoderDesign(object):
@@ -10,25 +11,15 @@ class HOADecoderDesign(object):
 
     Args:
         layout (Layout): Loudspeaker layout to design decoders for.
+        norm_mean_power (bool): normalise the decoder
+        maxRE (bool): apply maxRE weighting
+        maxRE_scale (str): normalisation method for maxRE weights; only
+            relevant if maxRE is set and norm_mean_power is not.
+            options: none, speakers, components, order
+        point_source_opts (dict): options for point source panner
     """
 
-    options = OptionsHandler(
-        norm_mean_power=Option(default=True,
-                               description="normalize the decoder"),
-        maxRE=Option(default=False,
-                     description="apply maxRE weighting"),
-        maxRE_scale=Option(default="none",
-                           description=("normalisation method for maxRE weights; "
-                                        "only relevant if maxRE is set and norm_mean_power is not. "
-                                        "options: none, speakers, components, order")),
-        point_source_opts=SubOptions(
-            handler=point_source.configure_options,
-            description="options for point source panner",
-        ),
-    )
-
-    @options.with_defaults
-    def __init__(self, layout, norm_mean_power, maxRE, maxRE_scale, point_source_opts):
+    def __init__(self, layout, norm_mean_power=True, maxRE=False, maxRE_scale="none", point_source_opts={}):
         self.psp = point_source.configure(layout, **point_source_opts)
 
         self._initialised = False
@@ -96,3 +87,13 @@ class HOADecoderDesign(object):
             decoder /= np.sqrt(np.mean(np.sum(np.dot(decoder, K_v) ** 2, axis=0)))
 
         return decoder
+
+
+@singledispatch
+def build_hoa_decoder_design(layout, **options):
+    return None
+
+
+@build_hoa_decoder_design.register(Layout)
+def _build_hoa_decoder_design_speakers(layout, **options):
+    return HOADecoderDesign(layout, **options)
