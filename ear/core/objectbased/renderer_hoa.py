@@ -6,14 +6,13 @@ from .gain_calc_hoa import GainCalcHOA
 from .renderer import ObjectRenderer, build_objects_renderer
 
 
-def design_decorrelators(layout):
+def design_decorrelators(layout, size=512):
     from .. import hoa
     from ..quadrature import get_t_design
     from .decorrelate import design_decorrelator_basic
 
     points = get_t_design((layout.max_order * 2) + 1)
 
-    size = 128
     decorrelators = np.array(
         [design_decorrelator_basic(i, size=size) for i in range(len(points))]
     ).T
