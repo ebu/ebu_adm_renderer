@@ -70,7 +70,7 @@ class OverlapSaveConvolverMatrix:
 class ObjectRendererHOA(ObjectRenderer):
     def __init__(self, layout, gain_calc_opts={}, decorrelator_opts={}, block_size=512):
         self._gain_calc = GainCalcHOA(layout, **gain_calc_opts)
-        self._nchannels = n = layout.num_channels
+        self._nchannels = layout.num_channels
 
         # tuples of a track spec processor and a BlockProcessingChannel to
         # apply to the samples it produces.
