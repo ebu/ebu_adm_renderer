@@ -16,7 +16,7 @@ def design_decorrelators(layout):
     size = 128
     decorrelators = np.array(
         [design_decorrelator_basic(i, size=size) for i in range(len(points))]
-    )
+    ).T
 
     az = -np.arctan2(points[:, 0], points[:, 1])
     el = np.arctan2(points[:, 2], np.hypot(points[:, 0], points[:, 1]))
@@ -33,20 +33,39 @@ def design_decorrelators(layout):
     decoder = encoder.T / len(points)
 
     # decode to t-design, decorrelate, then re-encode
-    # order: in, out, sample
-    decorr_mat = np.einsum("ij,jk,jl->ilk", encoder, decorrelators, decoder)
+    # order: sample, in, out
+    decorr_mat = np.einsum("ij,kj,jl->kil", encoder, decorrelators, decoder)
 
     # normalisebased on an omni source
-    decorr_mat /= np.linalg.norm(decorr_mat[0])
+    decorr_mat /= np.linalg.norm(decorr_mat[:, 0])
 
     # apply normalisation -- do this at the end to ensure it behaves the same
     # with different normalisations
     norm = layout.norm_fn(n, np.abs(m)) / hoa.norm_N3D(n, np.abs(m))
-    decorr_mat *= (1 / norm[:, np.newaxis, np.newaxis]) * norm[
-        np.newaxis, :, np.newaxis
-    ]
+    decorr_mat *= norm / norm[:, np.newaxis]
 
     return decorr_mat
+
+
+class OverlapSaveConvolverMatrix:
+    def __init__(self, block_size, filters):
+        """
+        Args:
+            block_size (int): block size
+            filters (ndarray of shape (i, o, n)): filters with i input channels, o output channels and n samples
+        """
+        self._num_in, self._num_out = filters.shape[1:]
+
+        filters_flat = filters.reshape(filters.shape[0], -1)
+
+        self._decorrelators = OverlapSaveConvolver(
+            block_size, filters_flat.shape[1], filters_flat
+        )
+
+    def filter_block(self, in_block):
+        decorr_in = np.repeat(in_block, self._num_out, axis=1)
+        decor_out = self._decorrelators.filter_block(decorr_in)
+        return np.sum(decor_out.reshape(-1, self._num_in, self._num_out), axis=1)
 
 
 class ObjectRendererHOA(ObjectRenderer):
@@ -59,24 +78,12 @@ class ObjectRendererHOA(ObjectRenderer):
         self.block_processing_channels = []
 
         decorrlation_filters = design_decorrelators(layout)
-        decorrelator_delay = (decorrlation_filters.shape[-1] - 1) // 2
+        decorrelator_delay = (decorrlation_filters.shape[0] - 1) // 2
 
-        decorrlation_filters_flat = decorrlation_filters.reshape(
-            -1, decorrlation_filters.shape[-1]
-        )
-
-        decorrelators = OverlapSaveConvolver(
-            block_size, decorrlation_filters_flat.shape[0], decorrlation_filters_flat.T
-        )
-
-        def filter_block(in_block):
-            # adapt OverlapSaveConvolver to work with a matrix of filters
-            decorr_in = np.repeat(in_block, n, axis=1)
-            decor_out = decorrelators.filter_block(decorr_in)
-            return np.sum(decor_out.reshape(-1, n, n), axis=2)
+        decorrelators = OverlapSaveConvolverMatrix(block_size, decorrlation_filters)
 
         self.decorrelators_vbs = VariableBlockSizeAdapter(
-            block_size, self._nchannels, filter_block
+            block_size, self._nchannels, decorrelators.filter_block
         )
 
         self.overall_delay = self.decorrelators_vbs.delay(decorrelator_delay)
