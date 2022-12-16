@@ -22,7 +22,7 @@ def design_decorrelators(layout):
     el = np.arctan2(points[:, 2], np.hypot(points[:, 0], points[:, 1]))
 
     n, m = layout.orders_degrees
-    Y = hoa.sph_harm(
+    encoder = hoa.sph_harm(
         n[:, np.newaxis],
         m[:, np.newaxis],
         az[np.newaxis],
@@ -30,11 +30,21 @@ def design_decorrelators(layout):
         norm=hoa.norm_N3D,
     )
 
-    # TODO: apply normalisation
+    decoder = encoder.T / len(points)
 
     # decode to t-design, decorrelate, then re-encode
     # order: in, out, sample
-    decorr_mat = np.einsum("ij,jk,jl->ilk", Y, decorrelators, Y.T)
+    decorr_mat = np.einsum("ij,jk,jl->ilk", encoder, decorrelators, decoder)
+
+    # normalisebased on an omni source
+    decorr_mat /= np.linalg.norm(decorr_mat[0])
+
+    # apply normalisation -- do this at the end to ensure it behaves the same
+    # with different normalisations
+    norm = layout.norm_fn(n, np.abs(m)) / hoa.norm_N3D(n, np.abs(m))
+    decorr_mat *= (1 / norm[:, np.newaxis, np.newaxis]) * norm[
+        np.newaxis, :, np.newaxis
+    ]
 
     return decorr_mat
 
