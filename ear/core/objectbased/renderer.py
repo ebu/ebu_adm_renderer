@@ -102,11 +102,11 @@ class ObjectRenderer(object):
         # apply to the samples it produces.
         self.block_processing_channels = []
 
-        decorrlation_filters = decorrelate.design_decorrelators(layout, **decorrelator_opts)
-        decorrelator_delay = (decorrlation_filters.shape[0] - 1) // 2
+        decorrelation_filters = decorrelate.design_decorrelators(layout, **decorrelator_opts)
+        decorrelator_delay = (decorrelation_filters.shape[0] - 1) // 2
 
         decorrelators = OverlapSaveConvolver(
-            block_size, self._nchannels, decorrlation_filters)
+            block_size, self._nchannels, decorrelation_filters)
         self.decorrelators_vbs = VariableBlockSizeAdapter(
             block_size, self._nchannels, decorrelators.filter_block)
 
