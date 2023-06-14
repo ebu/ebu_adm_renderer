@@ -126,7 +126,7 @@ class EgoChannelLockHandler(ChannelLockHandlerBase):
 
 class AlloChannelLockHandler(ChannelLockHandlerBase):
     """Channel lock specialised for allocentric; allocentric loudspeaker
-    positions are used, and the distance calculation is unweighted."""
+    positions are used, and the distance calculation is weighted."""
 
     def __init__(self, layout):
         super(AlloChannelLockHandler, self).__init__(layout)
