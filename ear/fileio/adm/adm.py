@@ -1,15 +1,20 @@
+from attr import attrs, attrib
 from itertools import chain
 import warnings
 from collections import OrderedDict
 from six import iteritems
+from .elements.version import version_validator, Version
 from .exceptions import AdmIDError, AdmIDWarning
 from . import elements
 
 
+@attrs(cmp=False)
 class ADM(object):
     """An ADM document."""
 
-    def __init__(self):
+    version: Version = attrib(default=None, validator=version_validator)
+
+    def __attrs_post_init__(self):
         self._ap = []
         self._ac = []
         self._ao = []

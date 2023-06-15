@@ -7,6 +7,7 @@ from copy import deepcopy
 from ..xml import parse_string, adm_to_xml, ParseError
 from ..exceptions import AdmError
 from ..elements import AudioBlockFormatBinaural, CartesianZone, PolarZone
+from ..elements.version import BS2076Version, NoVersion, UnknownVersion
 from ....common import CartesianPosition, PolarPosition, CartesianScreen, PolarScreen
 
 ns = "urn:ebu:metadata-schema:ebuCore_2015"
@@ -110,6 +111,18 @@ def get_acf(adm):
 
 
 bf_path = "//adm:audioBlockFormat"
+
+
+def test_version(base):
+    afe_path = "//adm:audioFormatExtended"
+
+    assert isinstance(base.adm.version, NoVersion)
+
+    adm = base.adm_after_mods(set_attrs(afe_path, version="ITU-R_BS.2076-2"))
+    assert adm.version == BS2076Version(2)
+
+    adm = base.adm_after_mods(set_attrs(afe_path, version="ITU-R_BS.2076-2a"))
+    assert adm.version == UnknownVersion("ITU-R_BS.2076-2a")
 
 
 def test_loudness(base):
@@ -773,6 +786,8 @@ def as_dict(inst):
 
 
 def check_round_trip(adm):
+    import attr
+
     xml = adm_to_xml(adm)
     xml_str = lxml.etree.tostring(xml, pretty_print=True)
     parsed_adm = parse_string(xml_str)
@@ -784,6 +799,8 @@ def check_round_trip(adm):
             sorted(parsed_adm.elements, key=lambda el: el.id)):
 
         assert as_dict(element_orig) == as_dict(element_parsed)
+
+    assert attr.asdict(parsed_adm) == attr.asdict(adm)
 
 
 def test_round_trip_base(base):

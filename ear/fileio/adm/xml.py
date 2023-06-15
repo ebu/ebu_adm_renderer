@@ -17,6 +17,7 @@ from .elements import (
     FormatDefinition, TypeDefinition, Frequency, LoudnessMetadata)
 from .elements.geom import (DirectSpeakerPolarPosition, DirectSpeakerCartesianPosition,
                             ObjectPolarPosition, ObjectCartesianPosition)
+from .elements.version import parse_version, NoVersion
 from .time_format import parse_time, unparse_time
 from ...common import PolarPosition, CartesianPosition, CartesianScreen, PolarScreen
 
@@ -119,6 +120,7 @@ BoolType = TypeConvert(load_bool, "{:d}".format)  # noqa: P103
 TimeType = TypeConvert(parse_time, unparse_time)
 RefType = TypeConvert(loads=None,
                       dumps=lambda data: data.id)
+VersionType = TypeConvert(loads=parse_version, dumps=str)
 
 TrackUIDRefType = TypeConvert(
     loads=lambda s: None if s == "ATU_00000000" else s,
@@ -1131,6 +1133,24 @@ def parse_adm_elements(adm, element, common_definitions=False):
             add_func(adm_element)
 
 
+def parse_audioFormatExtended(adm: ADM, element: lxml.etree._Element):
+    """find the audioFormatExtended tag, and add information from it (including
+    sub-elements) to adm
+    """
+    afe_elements = list(xpath(element, "//{ns}audioFormatExtended"))
+    if len(afe_elements) == 0:
+        raise ValueError("no audioFormatExtended elements found")
+    elif len(afe_elements) > 1:
+        raise ValueError("multiple audioFormatExtended elements found")
+    else:
+        afe_element = afe_elements[0]
+
+        if not common_definitions:
+            adm.version = VersionType.loads(afe_element.attrib.get("version"))
+
+        parse_adm_elements(adm, afe_element)
+
+
 def _sort_block_formats(channelFormats):
     def sort_key(bf):
         return (bf.rtime if bf.rtime is not None else Fraction(0),
@@ -1179,7 +1199,7 @@ def load_axml_doc(adm, element, lookup_references=True, fix_block_format_duratio
                This is deprecated; use the functions in
                :mod:`ear.fileio.adm.timing_fixes` instead.
     """
-    parse_adm_elements(adm, element)
+    parse_audioFormatExtended(adm, element)
 
     if lookup_references:
         adm.lazy_lookup_references()
@@ -1296,6 +1316,9 @@ def adm_to_xml(adm: ADM) -> lxml.etree._Element:
 
     E = ElementMaker(namespace=default_ns, nsmap=default_nsmap)
     afx = E.audioFormatExtended()
+
+    if adm.version is not None and not isinstance(adm.version, NoVersion):
+        afx.attrib["version"] = VersionType.dumps(adm.version)
 
     for to_xml, elements in element_types:
         for element in elements:
