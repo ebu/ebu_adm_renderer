@@ -14,7 +14,7 @@ def test_dump_axml(tmpdir):
     with openBw64(filename, 'w', axml=axml) as outfile:
         outfile.write(np.zeros((1000, 1)))
 
-    assert subprocess.check_output(["ear-utils", "dump_axml", filename]) == axml
+    assert subprocess.check_output(["ear-utils", "-d", "dump_axml", filename]) == axml
 
 
 def test_dump_chna(tmpdir):
@@ -31,11 +31,11 @@ def test_dump_chna(tmpdir):
         outfile.write(np.zeros((1000, 1)))
 
     expected = str(audioID) + "\n"
-    output = subprocess.check_output(["ear-utils", "dump_chna", filename]).decode("utf8")
+    output = subprocess.check_output(["ear-utils", "-d", "dump_chna", filename]).decode("utf8")
     assert output == expected
 
     expected = chna.asByteArray()[8:]  # strip marker and size
-    output = subprocess.check_output(["ear-utils", "dump_chna", "--binary", filename])
+    output = subprocess.check_output(["ear-utils", "-d", "dump_chna", "--binary", filename])
     assert output == expected
 
 
@@ -55,7 +55,7 @@ def test_replace_axml_basic(tmpdir):
     with openBw64(filename_in, 'w', axml=axml_in) as outfile:
         outfile.write(np.zeros((1000, 1)))
 
-    assert subprocess.check_call(["ear-utils", "replace_axml", "-a", filename_axml,
+    assert subprocess.check_call(["ear-utils", "-d", "replace_axml", "-a", filename_axml,
                                   filename_in, filename_out]) == 0
 
     with openBw64(filename_out, 'r') as infile:
@@ -76,7 +76,7 @@ def test_replace_axml_regenerate(tmpdir):
     with open(filename_axml, 'wb') as f:
         f.write(axml_out)
 
-    assert subprocess.check_call(["ear-utils", "replace_axml", "-a", filename_axml, "--gen-chna",
+    assert subprocess.check_call(["ear-utils", "-d", "replace_axml", "-a", filename_axml, "--gen-chna",
                                   bwf_file, filename_out]) == 0
 
     with openBw64(filename_out, 'r') as f:
@@ -93,6 +93,7 @@ def test_regenerate(tmpdir):
 
     args = [
         "ear-utils",
+        "-d",
         "regenerate",
         "--enable-block-duration-fix",
         bwf_file,
@@ -112,6 +113,7 @@ def test_rewrite(tmpdir):
 
     args = [
         "ear-utils",
+        "-d",
         "rewrite",
         bwf_file,
         bwf_out,
