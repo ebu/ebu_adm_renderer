@@ -134,6 +134,24 @@ class TestLoad:
         with pytest.raises(Exception, match=expected):
             load_chna_chunk(adm, chna)
 
+    def test_adm_track_and_channel(self, adm, chna):
+        adm.addAudioTrackUID(
+            AudioTrackUID(
+                id="ATU_00000001",
+                trackIndex=1,
+                audioTrackFormat=adm["AT_00010001_01"],
+                audioChannelFormat=adm["AC_00010001"],
+                audioPackFormat=adm["AP_00010002"],
+            )
+        )
+        chna.audioIDs = [AudioID(1, "ATU_00000001", "AC_00010001", "AP_00010002")]
+        expected = (
+            "audioTrackUID ATU_00000001 is linked to both an audioTrackFormat "
+            "and a audioChannelFormat"
+        )
+        with pytest.raises(Exception, match=expected):
+            load_chna_chunk(adm, chna)
+
 
 class TestPopulate:
     def test_track_format(self, adm, chna):

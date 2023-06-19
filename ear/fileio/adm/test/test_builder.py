@@ -100,3 +100,37 @@ def test_mono():
 
     assert programme.audioContents == [content]
     assert content.audioObjects == [item.audio_object]
+
+
+def test_v2():
+    builder = ADMBuilder.for_version(2)
+    assert builder.use_track_uid_to_channel_format_ref
+
+    programme = builder.create_programme(audioProgrammeName="programme")
+    content = builder.create_content(audioContentName="content")
+
+    block_formats = [
+        AudioBlockFormatObjects(
+            position=ObjectPolarPosition(azimuth=0.0, elevation=0.0, distance=1.0),
+        ),
+    ]
+    item = builder.create_item_objects(0, "MyObject 1", block_formats=block_formats)
+
+    assert item.track_uid.trackIndex == 1
+    assert item.track_uid.audioPackFormat is item.pack_format
+    assert item.track_uid.audioTrackFormat is None
+    assert item.track_uid.audioChannelFormat is item.channel_format
+
+    assert item.track_format is None
+    assert item.stream_format is None
+
+    assert item.channel_format.audioBlockFormats == block_formats
+    assert item.channel_format.audioChannelFormatName == "MyObject 1"
+
+    assert item.pack_format.audioChannelFormats == [item.channel_format]
+
+    assert item.audio_object.audioPackFormats == [item.pack_format]
+    assert item.audio_object.audioTrackUIDs == [item.track_uid]
+
+    assert programme.audioContents == [content]
+    assert content.audioObjects == [item.audio_object]

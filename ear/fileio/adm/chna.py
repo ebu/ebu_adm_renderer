@@ -1,6 +1,60 @@
+from collections import namedtuple
 import re
 from .elements import AudioTrackUID
 from ..bw64.chunks import AudioID
+
+_TrackOrChannelRef = namedtuple("_TrackOrChannelRef", ("is_channel", "id"))
+
+
+def _load_track_or_channel_ref(track, chna_entry):
+    """update an audioTrackUID with the track format or channel format reference in a CHNA entry"""
+    # chna and audioTrackUID both reference either a track or a channel format;
+    # for both, find which it is, and its ID
+    chna_track_ref = chna_entry.audioTrackFormatIDRef
+    chna_ref = _TrackOrChannelRef(
+        chna_track_ref.startswith("AC_"), chna_track_ref.upper()
+    )
+
+    track_ref = None
+    if track.audioTrackFormat is not None and track.audioChannelFormat is not None:
+        # this check is already in validation, but this code normally runs
+        # first, and if we don't check here then the exception below could be
+        # thrown first, which would be confusing
+        raise Exception(
+            f"audioTrackUID {track.id} is linked to both an audioTrackFormat and a audioChannelFormat"
+        )
+    elif track.audioChannelFormat is not None:
+        track_ref = _TrackOrChannelRef(True, track.audioChannelFormat.id.upper())
+    elif track.audioTrackFormat is not None:
+        track_ref = _TrackOrChannelRef(False, track.audioTrackFormat.id.upper())
+
+    # then assign if it has no reference, or check the reference is the same
+    if track_ref is None:
+        if chna_ref.is_channel:
+            track.audioChannelFormatIDRef = chna_ref.id
+        else:
+            track.audioTrackFormatIDRef = chna_ref.id
+    elif chna_ref != track_ref:
+        raise Exception(
+            f"Error in track UID {track.id}: CHNA entry references '{chna_ref.id}' "
+            f"but AXML references '{track_ref.id}'"
+        )
+
+
+def _load_pack_ref(track, chna_entry):
+    """update an audioTrackUID with the pack format reference in a CHNA entry"""
+    if chna_entry.audioPackFormatIDRef is not None:
+        if track.audioPackFormat is None:
+            track.audioPackFormatIDRef = chna_entry.audioPackFormatIDRef
+        elif (
+            track.audioPackFormat.id.upper() != chna_entry.audioPackFormatIDRef.upper()
+        ):
+            raise Exception(
+                "Error in track UID {track.id}: audioPackFormatIDRef in CHNA, '{chna_entry.audioPackFormatIDRef}' "
+                "does not match value in AXML, '{track.audioPackFormat.id}'.".format(
+                    track=track, chna_entry=chna_entry
+                )
+            )
 
 
 def load_chna_chunk(adm, chna):
@@ -31,34 +85,8 @@ def load_chna_chunk(adm, chna):
         else:
             assert track.trackIndex == chna_entry.trackIndex
 
-        # CHNA audioTrackFormatIDRef can either reference either a track or channe
-        # bad format will be caught in lazy_lookup_references
-        if chna_entry.audioTrackFormatIDRef.startswith("AC_"):
-            if track.audioChannelFormat is None and track.audioTrackFormat is None:
-                track.audioChannelFormatIDRef = chna_entry.audioTrackFormatIDRef
-            elif track.audioTrackFormat is not None:
-                raise Exception(f"Error in track UID {track.id}: CHNA entry references '{chna_entry.audioTrackFormatIDRef}' "
-                                f"but AXML references '{track.audioTrackFormat.id}'")
-            elif track.audioChannelFormat.id.upper() != chna_entry.audioTrackFormatIDRef.upper():
-                raise Exception(f"Error in track UID {track.id}: CHNA entry references '{chna_entry.audioTrackFormatIDRef}' "
-                                f"but AXML references '{track.audioChannelFormat.id}'")
-        else:
-            if track.audioTrackFormat is None and track.audioChannelFormat is None:
-                track.audioTrackFormatIDRef = chna_entry.audioTrackFormatIDRef
-            elif track.audioChannelFormat is not None:
-                raise Exception(f"Error in track UID {track.id}: CHNA entry references '{chna_entry.audioTrackFormatIDRef}' "
-                                f"but AXML references '{track.audioChannelFormat.id}'")
-            elif track.audioTrackFormat.id.upper() != chna_entry.audioTrackFormatIDRef.upper():
-                raise Exception(f"Error in track UID {track.id}: CHNA entry references '{chna_entry.audioTrackFormatIDRef}' "
-                                f"but AXML references '{track.audioTrackFormat.id}'")
-
-        if chna_entry.audioPackFormatIDRef is not None:
-            if track.audioPackFormat is None:
-                track.audioPackFormatIDRef = chna_entry.audioPackFormatIDRef
-            elif track.audioPackFormat.id.upper() != chna_entry.audioPackFormatIDRef.upper():
-                raise Exception("Error in track UID {track.id}: audioPackFormatIDRef in CHNA, '{chna_entry.audioPackFormatIDRef}' "
-                                "does not match value in AXML, '{track.audioPackFormat.id}'.".format(
-                                    track=track, chna_entry=chna_entry))
+        _load_track_or_channel_ref(track, chna_entry)
+        _load_pack_ref(track, chna_entry)
 
     for atu in adm.audioTrackUIDs:
         if atu.id is not None and atu.id.upper() == "ATU_00000000":

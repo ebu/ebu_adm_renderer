@@ -10,6 +10,7 @@ from .elements import (
     AudioStreamFormat,
     AudioBlockFormatHoa,
 )
+from .elements.version import version_at_least, BS2076Version
 
 
 class _Default(object):
@@ -39,11 +40,14 @@ def _make_singlar_property(attribute, attribute_singular):
 
     def getter(self):
         items = getattr(self, attribute)
-        assert len(items) == 1, f"expected 1 {attribute_singular}, got {len(items)}"
-        return items[0]
+        assert len(items) in (0, 1), f"expected 0 or 1 {attribute_singular}, got {len(items)}"
+        if items:
+            return items[0]
+        else:
+            return None
 
     def setter(self, new_val):
-        return setattr(self, attribute, [new_val])
+        return setattr(self, attribute, [] if new_val is None else [new_val])
 
     return property(getter, setter, doc=f"singular accessor for {attribute}")
 
@@ -69,6 +73,9 @@ class ADMBuilder(object):
         item_parent (Optional[Union[AudioContent, AudioObject]]): The last
             explicitly created audioContent or audioObject, used as the parent
             for audioObjects created by create_item* functions.
+        use_track_uid_to_channel_format_ref (bool): Use audioTrackUID to
+            audioChannelFormat references; set by default when adm.version is
+            at least BS.2076-2
     """
 
     adm = attrib(default=Factory(ADM))
@@ -78,6 +85,22 @@ class ADMBuilder(object):
     last_pack_format = attrib(default=None)
     last_stream_format = attrib(default=None)
     item_parent = attrib(default=None)
+    use_track_uid_to_channel_format_ref = attrib()
+
+    @use_track_uid_to_channel_format_ref.default
+    def _use_track_uid_to_channel_format_ref_default(self):
+        return version_at_least(self.adm.version, 2)
+
+    @classmethod
+    def for_version(cls, version):
+        """Make a builder for a given ADM version (either int or BS2076Version).
+
+        Args:
+            version (int or BS2076Version): version to set on ADM
+        """
+        if isinstance(version, int):
+            version = BS2076Version(version)
+        return cls(ADM(version=version))
 
     def load_common_definitions(self):
         """Load common definitions into adm."""
@@ -255,8 +278,12 @@ class ADMBuilder(object):
         """Structure referencing the ADM components of a format with a
         particular channel layout.
 
-        This holds an audioPackFormat, and one audioTrackFormat,
-        audioStreamFormat and audioChannelFormat per channel in the format.
+        This holds an audioPackFormat, and one audioChannelFormat per channel
+        in the format.
+
+        If use_track_uid_to_channel_format_ref is not set, it also holds one
+        audioTrackFormat and audioStreamFormat per channel; otherwise the
+        corresponding attributes contain empty lists.
 
         Attributes:
             channel_formats (list[AudioChannelFormat])
@@ -341,7 +368,8 @@ class ADMBuilder(object):
         )
 
         self.last_pack_format = format.pack_format
-        self.last_stream_format = format.stream_format
+        if not self.use_track_uid_to_channel_format_ref:
+            self.last_stream_format = format.stream_format
 
         return format
 
@@ -377,9 +405,6 @@ class ADMBuilder(object):
             name=name,
             parent=parent,
         )
-
-        self.last_pack_format = item.pack_format
-        self.last_stream_format = item.stream_format
 
         return item
 
@@ -420,9 +445,6 @@ class ADMBuilder(object):
             block_formats=[block_formats],
             parent=parent,
         )
-
-        self.last_pack_format = item.pack_format
-        self.last_stream_format = item.stream_format
 
         return item
 
@@ -480,21 +502,22 @@ class ADMBuilder(object):
             self.adm.addAudioChannelFormat(channel_format)
             channel_formats.append(channel_format)
 
-            stream_format = AudioStreamFormat(
-                audioStreamFormatName=channel_name,
-                format=FormatDefinition.PCM,
-                audioChannelFormat=channel_format,
-            )
-            self.adm.addAudioStreamFormat(stream_format)
-            stream_formats.append(stream_format)
+            if not self.use_track_uid_to_channel_format_ref:
+                stream_format = AudioStreamFormat(
+                    audioStreamFormatName=channel_name,
+                    format=FormatDefinition.PCM,
+                    audioChannelFormat=channel_format,
+                )
+                self.adm.addAudioStreamFormat(stream_format)
+                stream_formats.append(stream_format)
 
-            track_format = AudioTrackFormat(
-                audioTrackFormatName=channel_name,
-                audioStreamFormat=stream_format,
-                format=FormatDefinition.PCM,
-            )
-            self.adm.addAudioTrackFormat(track_format)
-            track_formats.append(track_format)
+                track_format = AudioTrackFormat(
+                    audioTrackFormatName=channel_name,
+                    audioStreamFormat=stream_format,
+                    format=FormatDefinition.PCM,
+                )
+                self.adm.addAudioTrackFormat(track_format)
+                track_formats.append(track_format)
 
         pack_format = AudioPackFormat(
             audioPackFormatName=name,
@@ -535,21 +558,24 @@ class ADMBuilder(object):
         Returns:
             Item: the created components
         """
-        if len(track_indices) != len(format.track_formats):
+        if len(track_indices) != len(format.channel_formats):
             raise ValueError(
                 "track_indices and format must have the same number of channels"
             )
 
         track_uids = []
 
-        for i, (track_index, track_format) in enumerate(
-            zip(track_indices, format.track_formats)
-        ):
+        for i, track_index in enumerate(track_indices):
             track_uid = AudioTrackUID(
                 trackIndex=track_index + 1,
-                audioTrackFormat=track_format,
                 audioPackFormat=format.pack_format,
             )
+
+            if self.use_track_uid_to_channel_format_ref:
+                track_uid.audioChannelFormat = format.channel_formats[i]
+            else:
+                track_uid.audioTrackFormat = format.track_formats[i]
+
             self.adm.addAudioTrackUID(track_uid)
             track_uids.append(track_uid)
 
