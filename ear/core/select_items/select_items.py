@@ -470,10 +470,12 @@ class _PackAllocator(object):
 
     @classmethod
     def channel_format_for_track_uid(cls, audioTrackUID):
-        return (audioTrackUID
-                .audioTrackFormat
-                .audioStreamFormat
-                .audioChannelFormat)
+        if audioTrackUID.audioTrackFormat is not None:
+            return audioTrackUID.audioTrackFormat.audioStreamFormat.audioChannelFormat
+        elif audioTrackUID.audioChannelFormat is not None:
+            return audioTrackUID.audioChannelFormat
+        else:
+            assert False  # checked in validation
 
     def get_selected_packs_tracks_silent(self, state):
         """Get the audioPackFormats, audioTrackUIDs and silent tracks

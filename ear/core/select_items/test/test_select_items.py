@@ -464,3 +464,19 @@ def test_absoluteDisance_objects():
     )
     with pytest.raises(AdmError, match=expected):
         select_rendering_items(builder.adm)
+
+
+def test_trackUID_channelFormat_reference():
+    builder = ADMBuilder.for_version(2)
+    programme = builder.create_programme(audioProgrammeName="MyProgramme")
+    content = builder.create_content(audioContentName="MyContent", parent=programme)
+    item = builder.create_item_objects(
+        1, "MyObject 1", parent=content, block_formats=[]
+    )
+    generate_ids(builder.adm)
+
+    selected_items = select_rendering_items(builder.adm)
+
+    assert len(selected_items) == 1
+    assert selected_items[0].track_spec == DirectTrackSpec(1)
+    assert selected_items[0].adm_path.audioChannelFormat == item.channel_format
