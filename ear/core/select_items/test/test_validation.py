@@ -143,8 +143,39 @@ def test_audioTrackUID_trackFormat_exception():
 
     check_select_items_raises(
         builder,
-        "audioTrackUID {atu.id} is not linked to an audioTrackFormat",
+        "audioTrackUID {atu.id} is not linked to an audioTrackFormat or audioChannelFormat",
         atu=item.track_uid)
+
+
+def test_audioTrackUID_channelFormat_exception():
+    builder = ADMBuilder.for_version(2)
+    programme = builder.create_programme(audioProgrammeName="MyProgramme")
+    builder.create_content(audioContentName="MyContent", parent=programme)
+    item = builder.create_item_objects(track_index=1, name="MyObject")
+
+    item.track_uid.audioChannelFormat = None
+
+    check_select_items_raises(
+        builder,
+        "audioTrackUID {atu.id} is not linked to an audioTrackFormat or audioChannelFormat",
+        atu=item.track_uid,
+    )
+
+
+def test_audioTrackUID_trackFormat_and_channelFormat_exception():
+    builder = ADMBuilder.for_version(2)
+    builder.use_track_uid_to_channel_format_ref = False
+    programme = builder.create_programme(audioProgrammeName="MyProgramme")
+    builder.create_content(audioContentName="MyContent", parent=programme)
+    item = builder.create_item_objects(track_index=1, name="MyObject")
+
+    item.track_uid.audioChannelFormat = item.channel_format
+
+    check_select_items_raises(
+        builder,
+        "audioTrackUID {atu.id} is linked to both an audioTrackFormat and a audioChannelFormat",
+        atu=item.track_uid,
+    )
 
 
 def test_consistency_exception_1():

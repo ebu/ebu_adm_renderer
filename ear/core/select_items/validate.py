@@ -408,6 +408,18 @@ def _validate_track_channel_ref_only_in_v2(adm):
         )
 
 
+def _validate_track_uid_track_or_channel_ref(adm):
+    for atu in adm.audioTrackUIDs:
+        if atu.audioTrackFormat is None and atu.audioChannelFormat is None:
+            raise AdmError(
+                f"audioTrackUID {atu.id} is not linked to an audioTrackFormat or audioChannelFormat"
+            )
+        if atu.audioTrackFormat is not None and atu.audioChannelFormat is not None:
+            raise AdmError(
+                f"audioTrackUID {atu.id} is linked to both an audioTrackFormat and a audioChannelFormat"
+            )
+
+
 def validate_structure(adm):
     adm.validate()
     _validate_object_loops(adm)
@@ -420,6 +432,7 @@ def validate_structure(adm):
     _validate_hoa_parameters_consistent(adm)
     _validate_matrix_types(adm)
     _validate_track_channel_ref_only_in_v2(adm)
+    _validate_track_uid_track_or_channel_ref(adm)
 
 
 def validate_selected_audioTrackUID(audioTrackUID):
@@ -430,12 +443,6 @@ def validate_selected_audioTrackUID(audioTrackUID):
                            atu=audioTrackUID,
                        ))
 
-    if audioTrackUID.audioTrackFormat is None:
-        raise AdmError("audioTrackUID {self.id} is not linked "
-                       "to an audioTrackFormat".format(
-                           self=audioTrackUID,
-                       ))
-
     if audioTrackUID.audioPackFormat is None:
         raise AdmError("audioTrackUID {atu.id} does not have an audioPackFormat "
                        "reference. This may be used in coded formats, which are not "
@@ -443,14 +450,17 @@ def validate_selected_audioTrackUID(audioTrackUID):
                            atu=audioTrackUID,
                        ))
 
-    audioStreamFormat = audioTrackUID.audioTrackFormat.audioStreamFormat
+    if audioTrackUID.audioTrackFormat is not None:
+        audioStreamFormat = audioTrackUID.audioTrackFormat.audioStreamFormat
 
-    if audioStreamFormat.audioChannelFormat is None:
-        raise AdmError("audioStreamFormat {asf.id} does not have an audioChannelFormat "
-                       "reference. This may be used in coded formats, which are not "
-                       "currently supported.".format(
-                           asf=audioStreamFormat,
-                       ))
+        if audioStreamFormat.audioChannelFormat is None:
+            raise AdmError(
+                "audioStreamFormat {asf.id} does not have an audioChannelFormat "
+                "reference. This may be used in coded formats, which are not "
+                "currently supported.".format(
+                    asf=audioStreamFormat,
+                )
+            )
 
 
 def possible_audioTrackUID_errors(audioTrackUID):
