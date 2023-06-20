@@ -1,4 +1,5 @@
 from ...fileio.adm.elements import AudioPackFormat, AudioChannelFormat, TypeDefinition, ObjectCartesianPosition
+from ...fileio.adm.elements.version import version_at_least
 from ...fileio.adm.exceptions import AdmError
 from . import matrix
 from .utils import (get_single_param, in_by_id, pack_format_channels,
@@ -396,6 +397,17 @@ def _validate_matrix_types(adm):
             _validate_non_matrix_pack(apf)
 
 
+def _validate_track_channel_ref_only_in_v2(adm):
+    # allow in CHNA-only mode
+    v2_allowed = adm.version is None or version_at_least(adm.version, 2)
+    if not v2_allowed and any(
+        atu.audioChannelFormat is not None for atu in adm.audioTrackUIDs
+    ):
+        raise AdmError(
+            "audioTrackUID (or CHNA entry) to audioChannelFormat references are not valid before BS.2076-2"
+        )
+
+
 def validate_structure(adm):
     adm.validate()
     _validate_object_loops(adm)
@@ -407,6 +419,7 @@ def validate_structure(adm):
     _validate_hoa_order_degree(adm)
     _validate_hoa_parameters_consistent(adm)
     _validate_matrix_types(adm)
+    _validate_track_channel_ref_only_in_v2(adm)
 
 
 def validate_selected_audioTrackUID(audioTrackUID):

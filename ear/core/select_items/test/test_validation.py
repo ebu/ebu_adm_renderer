@@ -4,6 +4,7 @@ from ....fileio.adm.builder import ADMBuilder
 from ....fileio.adm.elements import (TypeDefinition, Frequency,
                                      AudioBlockFormatHoa, AudioBlockFormatObjects,
                                      ObjectPolarPosition, ObjectCartesianPosition)
+from ....fileio.adm.elements.version import NoVersion
 from ....fileio.adm.exceptions import AdmError
 from ....fileio.adm.generate_ids import generate_ids
 from ....fileio.adm.exceptions import AdmFormatRefError
@@ -630,3 +631,20 @@ def test_matrix_non_matrix_with_encodePackFormats():
         builder,
         "non-matrix audioPackFormat {apf.id} has encodePackFormat references",
         apf=builder.adm["AP_00010001"])
+
+
+@pytest.mark.parametrize("version", (NoVersion(), 1))
+def test_audioTrackUID_to_channel_version(version):
+    builder = ADMBuilder.for_version(version)
+    builder.load_common_definitions()
+
+    builder.create_track_uid(
+        trackIndex=1,
+        audioPackFormat=builder.adm["AP_00010001"],
+        audioChannelFormat=builder.adm["AC_00010003"],
+    )
+
+    check_select_items_raises(
+        builder,
+        r"audioTrackUID \(or CHNA entry\) to audioChannelFormat references are not valid before BS.2076-2",
+    )
