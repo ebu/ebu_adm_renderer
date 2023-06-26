@@ -1,3 +1,4 @@
+import math
 import sys
 import warnings
 from fractions import Fraction
@@ -282,6 +283,7 @@ class ElementParser(object):
         self.required_args = set()
         self.arg_to_name = {}
         self.validate = validate
+        self.generic_handlers = []
 
         for prop in properties:
             for handler_type, adm_name, handler in prop.get_handlers():
@@ -292,6 +294,8 @@ class ElementParser(object):
                 elif handler_type == "text":
                     assert self.text_handler is None, "more than one text handler"
                     self.text_handler = handler
+                elif handler_type == "generic":
+                    self.generic_handlers.append(handler)
                 else:
                     assert False  # pragma: no cover
 
@@ -319,6 +323,14 @@ class ElementParser(object):
 
         if self.text_handler is not None:
             self.text_handler(kwargs, text(element))
+
+        for handler in self.generic_handlers:
+            try:
+                handler(kwargs, element)
+            except ParseError:
+                raise
+            except Exception as e:
+                reraise(ParseError, ParseError(e, element), sys.exc_info()[2])
 
         if not (viewkeys(kwargs) >= self.required_args):
             missing_args = self.required_args - viewkeys(kwargs)
@@ -458,6 +470,62 @@ block_format_props = [
     Attribute(adm_name="rtime", arg_name="rtime", type=TimeType),
     Attribute(adm_name="duration", arg_name="duration", type=TimeType),
 ]
+
+
+# gain
+
+
+def parse_gain(gain_str, gainUnit):
+    gain_num = FloatType.loads(gain_str)
+
+    if gainUnit == "linear":
+        return gain_num
+    elif gainUnit == "dB":
+        return math.pow(10, gain_num / 20.0)
+    else:
+        raise ValueError(f"gainUnit must be linear or dB, not {gainUnit!r}")
+
+
+def handle_gain_element(kwargs, el):
+    if "gain" in kwargs:
+        raise ValueError("multiple gain elements found")
+
+    gainUnit = el.attrib.get("gainUnit", "linear")
+
+    kwargs["gain"] = parse_gain(text(el), gainUnit)
+
+
+def gain_to_xml(element, obj):
+    if obj.gain != 1.0:
+        new_el = element.makeelement(QName(default_ns, "gain"))
+        new_el.text = FloatType.dumps(obj.gain)
+        element.append(new_el)
+
+
+# use where gain is kept in a sub-element with a gainUnit attribute
+gain_element = CustomElement("gain", handle_gain_element, to_xml=gain_to_xml)
+
+
+class GainAttribute:
+    """use where gain is kept in an attribute with an optional gainUnit attribute"""
+
+    required = False
+
+    def get_handlers(self):
+        def handler(kwargs, el):
+            if "gain" in el.attrib:
+                gain = parse_gain(
+                    el.attrib["gain"], el.attrib.get("gainUnit", "linear")
+                )
+                kwargs["gain"] = gain
+            elif "gainUnit" in el.attrib:
+                raise ValueError("gainUnit must not be specified without gain")
+
+        return [("generic", None, handler)]
+
+    def to_xml(self, element, obj):
+        if obj.gain is not None:
+            element.attrib["gain"] = FloatType.dumps(obj.gain)
 
 
 # typeDefinition == "Objects"
@@ -671,7 +739,7 @@ block_format_objects_handler = ElementParser(dict, "audioBlockFormat", block_for
     AttrElement(adm_name="width", arg_name="width", type=FloatType, default=0.0),
     AttrElement(adm_name="height", arg_name="height", type=FloatType, default=0.0),
     AttrElement(adm_name="depth", arg_name="depth", type=FloatType, default=0.0),
-    AttrElement(adm_name="gain", arg_name="gain", type=FloatType, default=1.0),
+    gain_element,
     AttrElement(adm_name="diffuse", arg_name="diffuse", type=FloatType, default=0.0),
     AttrElement(adm_name="cartesian", arg_name="cartesian", type=BoolType, default=False),
     AttrElement(adm_name="screenRef", arg_name="screenRef", type=BoolType, default=False),
@@ -793,7 +861,7 @@ block_format_HOA_handler = ElementParser(AudioBlockFormatHoa, "audioBlockFormat"
 
 matrix_coefficient_handler = ElementParser(MatrixCoefficient, "coefficient", [
     HandleText(arg_name="inputChannelFormatIDRef", attr_name="inputChannelFormat", type=RefType),
-    Attribute(adm_name="gain", arg_name="gain", type=FloatType),
+    GainAttribute(),
     Attribute(adm_name="phase", arg_name="phase", type=FloatType),
     Attribute(adm_name="delay", arg_name="delay", type=FloatType),
     Attribute(adm_name="gainVar", arg_name="gainVar", type=StringType),
