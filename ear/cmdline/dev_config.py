@@ -10,7 +10,7 @@ def dump_config_command(args, config):
     from ..core import Renderer
     from .. import options
     import sys
-    config_str = options.dump_config_with_comments(Renderer.options, options=config)
+    config_str = options.dump_config(Renderer.options, options=config)
 
     if args.output is None or args.output == "-":
         sys.stdout.write(config_str)

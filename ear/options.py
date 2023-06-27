@@ -1,5 +1,4 @@
 from attr import attrs, attrib
-from ruamel import yaml
 from functools import wraps
 import warnings
 
@@ -16,7 +15,7 @@ class Option(object):
     default = attrib()
     description = attrib()
 
-    def _get_default_yaml(self, *args, **kwargs):
+    def _get_default_yaml(self):
         return self.default
 
 
@@ -37,8 +36,8 @@ class SubOptions(object):
     def default(self):
         return {}
 
-    def _get_default_yaml(self, *args, **kwargs):
-        return self.handler._get_defaults_yaml(*args, **kwargs)
+    def _get_default_yaml(self):
+        return self.handler._get_defaults_yaml()
 
 
 class OptionsHandler(object):
@@ -70,19 +69,14 @@ class OptionsHandler(object):
             return f(*args, **kwargs)
         return wrapper
 
-    def _get_defaults_yaml(self, indent=2, current_indent=0):
-        mapping = yaml.comments.CommentedMap()
-        for key, option in self.options.items():
-            mapping[key] = option._get_default_yaml(indent=indent, current_indent=current_indent + indent)
-            mapping.yaml_set_comment_before_after_key(key, option.description, indent=current_indent)
-
-        return mapping
+    def _get_defaults_yaml(self):
+        return {key: option._get_default_yaml() for (key, option) in self.options.items()}
 
 
 def _merge_options_into_defaults(options, defaults):
     for key, option in options.items():
         if key in defaults:
-            if isinstance(defaults[key], yaml.comments.CommentedMap):
+            if isinstance(defaults[key], dict):
                 _merge_options_into_defaults(option, defaults[key])
             else:
                 defaults[key] = option
@@ -90,23 +84,26 @@ def _merge_options_into_defaults(options, defaults):
             warnings.warn("removing unknown option {}".format(key))
 
 
-def dump_config_with_comments(root_handler, options={}, indent=4):
+def dump_config(root_handler, options={}):
     """Dump a configuration to a yaml-formatted string, including the default
-    options, and optionally user-set options, and comments with option
-    descriptions.
+    options, and optionally user-set options
 
     Parameters:
         root_handler (OptionsHandler): handler to get defaults and descriptions from
         options (dict): user-provided options that override the defaults in root_handler
-        indent (int): indent size in spaces
     """
-    defaults = root_handler._get_defaults_yaml(indent=indent)
+    from .compatibility import dump_yaml_str
+
+    defaults = root_handler._get_defaults_yaml()
 
     _merge_options_into_defaults(options, defaults)
 
-    return yaml.dump(defaults,
-                     Dumper=yaml.RoundTripDumper,
-                     indent=indent)
+    return dump_yaml_str(defaults)
+
+
+def dump_config_with_comments(root_handler, options={}, indent=4):
+    """for compatibility -- doesn't add comments or obey indent"""
+    return dump_config(root_handler, options)
 
 
 def test_merge():
@@ -129,3 +126,9 @@ def test_merge():
     assert defaults["a_opts"]["foo"] == 8
     assert defaults["a_opts"]["bar"] == 6
     assert defaults["baz"] == 4
+
+
+def test_dump_renderer_options():
+    from .core.renderer import Renderer
+
+    assert isinstance(dump_config(Renderer.options), str)
