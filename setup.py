@@ -17,7 +17,7 @@ setup(
     install_requires=[
         'numpy~=1.14',
         'scipy~=1.0',
-        'attrs>=19.3,<22',
+        'attrs>=22.2',
         'PyYAML~=6.0',
         'lxml~=4.4',
         'six~=1.11',
