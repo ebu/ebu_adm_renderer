@@ -379,3 +379,10 @@ def test_screen_edge_lock_cart():
         ))
     npt.assert_allclose(p.handle(DirectSpeakersTypeMetadata(bf)),
                         direct_pv(layout, "M-030"))
+
+
+def test_gain():
+    layout = bs2051.get_layout("4+5+0")
+    p = DirectSpeakersPanner(layout)
+
+    npt.assert_allclose(p.handle(tm_with_labels(["M+000"], gain=0.5)), direct_pv(layout, "M+000") * 0.5)

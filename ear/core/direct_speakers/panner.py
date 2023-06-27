@@ -389,6 +389,11 @@ class DirectSpeakersPanner(object):
                       bounded_Z=evolve(position.bounded_Z, value=Z))
 
     def handle(self, type_metadata):
+        pvs = self._handle_without_gain(type_metadata)
+        pvs *= type_metadata.block_format.gain
+        return pvs
+
+    def _handle_without_gain(self, type_metadata):
         tol = 1e-5
 
         block_format = type_metadata.block_format
