@@ -50,7 +50,6 @@
             postShellHook = ''
               export PYTHONPATH=$(pwd):$PYTHONPATH
             '';
-            # dontUseSetuptoolsShellHook = true;
           });
           devShell = devShells.ear;
         }
