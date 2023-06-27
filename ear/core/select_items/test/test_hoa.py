@@ -6,8 +6,7 @@ from ....fileio.adm.elements import TypeDefinition, FormatDefinition, AudioBlock
 
 
 class HOABuilder(ADMBuilder):
-    """ADMBuilder with pre-defined encode and decode matrix, with references to
-    the various components"""
+    """ADMBuilder with pre-defined first and second order HOA packs"""
 
     def __init__(self):
         super(HOABuilder, self).__init__()
