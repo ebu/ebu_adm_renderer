@@ -464,14 +464,6 @@ type_handler = TypeAttribute(TypeDefinition, "typeDefinition", "typeLabel", "typ
 format_handler = TypeAttribute(FormatDefinition, "formatDefinition", "formatLabel", "format")
 
 
-# properties common to all block formats
-block_format_props = [
-    Attribute(adm_name="audioBlockFormatID", arg_name="id", required=True),
-    Attribute(adm_name="rtime", arg_name="rtime", type=TimeType),
-    Attribute(adm_name="duration", arg_name="duration", type=TimeType),
-]
-
-
 # gain
 
 
@@ -526,6 +518,15 @@ class GainAttribute:
     def to_xml(self, element, obj):
         if obj.gain is not None:
             element.attrib["gain"] = FloatType.dumps(obj.gain)
+
+
+# properties common to all block formats
+block_format_props = [
+    Attribute(adm_name="audioBlockFormatID", arg_name="id", required=True),
+    Attribute(adm_name="rtime", arg_name="rtime", type=TimeType),
+    Attribute(adm_name="duration", arg_name="duration", type=TimeType),
+    gain_element,
+]
 
 
 # typeDefinition == "Objects"
@@ -739,7 +740,6 @@ block_format_objects_handler = ElementParser(dict, "audioBlockFormat", block_for
     AttrElement(adm_name="width", arg_name="width", type=FloatType, default=0.0),
     AttrElement(adm_name="height", arg_name="height", type=FloatType, default=0.0),
     AttrElement(adm_name="depth", arg_name="depth", type=FloatType, default=0.0),
-    gain_element,
     AttrElement(adm_name="diffuse", arg_name="diffuse", type=FloatType, default=0.0),
     AttrElement(adm_name="cartesian", arg_name="cartesian", type=BoolType, default=False),
     AttrElement(adm_name="screenRef", arg_name="screenRef", type=BoolType, default=False),

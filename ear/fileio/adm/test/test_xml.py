@@ -411,6 +411,12 @@ def test_directspeakers(base):
                                  E.position("15", coordinate="elevation"))
     assert block_format.position.distance == 1.0
 
+    # gain
+    block_format = with_children(E.position("0", coordinate="azimuth"),
+                                 E.position("0", coordinate="elevation"),
+                                 E.gain("0.5"))
+    assert block_format.gain == 0.5
+
     # test min and max
     block_format = with_children(E.position("-29", coordinate="azimuth"),
                                  E.position("-28", coordinate="azimuth", bound="max"),
@@ -501,11 +507,21 @@ def test_frequency(base):
 
 
 def test_binaural(base):
-    block_format = base.bf_after_mods(
-        set_attrs("//adm:audioChannelFormat", typeDefinition="Binaural", typeLabel="005"),
-        remove_children("//adm:position"))
+    to_binaural = (
+        set_attrs(
+            "//adm:audioChannelFormat", typeDefinition="Binaural", typeLabel="005"
+        ),
+        remove_children("//adm:position"),
+    )
 
+    block_format = base.bf_after_mods(*to_binaural)
     assert isinstance(block_format, AudioBlockFormatBinaural)
+    assert block_format.gain == 1.0
+
+    block_format = base.bf_after_mods(
+        *to_binaural, add_children(bf_path, E.gain("0.5"))
+    )
+    assert block_format.gain == 0.5
 
 
 def test_hoa(base):
@@ -514,6 +530,8 @@ def test_hoa(base):
             set_attrs("//adm:audioChannelFormat", typeDefinition="HOA", typeLabel="004"),
             remove_children("//adm:position"),
             add_children(bf_path, *children))
+
+    assert with_children(E.gain("0.5")).gain == 0.5
 
     # normal usage
     block_format = with_children(E.order("1"), E.degree("-1"))

@@ -14,11 +14,13 @@ class AudioBlockFormat(object):
         id (Optional[str])
         rtime (Optional[fractions.Fraction])
         duration (Optional[fractions.Fraction])
+        gain (float)
     """
 
     id = attrib(default=None)
     rtime = attrib(validator=optional(instance_of(Fraction)), default=None)
     duration = attrib(validator=optional(instance_of(Fraction)), default=None)
+    gain = attrib(validator=instance_of(float), default=1.0)
 
     def lazy_lookup_references(self, adm):
         pass
@@ -188,7 +190,6 @@ class AudioBlockFormatObjects(AudioBlockFormat):
         width (float)
         height (float)
         depth (float)
-        gain (float)
         diffuse (float)
         channelLock (Optional[ChannelLock])
         objectDivergence (Optional[ObjectDivergence])
@@ -203,7 +204,6 @@ class AudioBlockFormatObjects(AudioBlockFormat):
     width = attrib(converter=float, default=0.)
     height = attrib(converter=float, default=0.)
     depth = attrib(converter=float, default=0.)
-    gain = attrib(converter=float, default=1.)
     diffuse = attrib(converter=float, default=0.)
     channelLock = attrib(default=None, validator=optional(instance_of(ChannelLock)))
     objectDivergence = attrib(default=None, validator=optional(instance_of(ObjectDivergence)))
