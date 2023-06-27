@@ -14,8 +14,14 @@
             name = "ear";
             src = ./.;
             propagatedBuildInputs = with python3.pkgs; [ numpy scipy enum34 six attrs multipledispatch lxml pyyaml setuptools ];
+
             doCheck = true;
-            nativeCheckInputs = with python3.pkgs; [ pytest pytest-cov pytest-datafiles soundfile ];
+            nativeCheckInputs = with python3.pkgs; [ pytest pytestCheckHook pytest-cov pytest-datafiles soundfile ];
+            pytestFlagsArray = [ "ear" ];
+            preCheck = ''
+              export PATH="$PATH:$out/bin"
+            '';
+
             postPatch = ''
               # latest attrs should be fine...
               sed -i "s/'attrs.*'/'attrs'/" setup.py
