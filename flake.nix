@@ -1,4 +1,5 @@
 {
+  inputs.nixpkgs.url = "nixpkgs/nixos-23.05";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
   outputs = { self, nixpkgs, flake-utils }:
@@ -14,7 +15,7 @@
             src = ./.;
             propagatedBuildInputs = with python3.pkgs; [ numpy scipy enum34 six attrs multipledispatch lxml pyyaml setuptools ];
             doCheck = true;
-            checkInputs = with python3.pkgs; [ pytest pytest-cov pytest-datafiles soundfile ];
+            nativeCheckInputs = with python3.pkgs; [ pytest pytest-cov pytest-datafiles soundfile ];
             postPatch = ''
               # latest attrs should be fine...
               sed -i "s/'attrs.*'/'attrs'/" setup.py
