@@ -140,3 +140,23 @@ def test_hoa_pack_params():
     assert meta.nfcRefDist == 1.0
     assert meta.screenRef is True
     assert meta.extra_data.pack_absoluteDistance == 2.0
+
+
+def test_hoa_gains():
+    builder = HOABuilder()
+
+    gains = [0.1, 0.2, 0.3, 0.4]
+
+    for (channel, gain) in zip(builder.first_pack.audioChannelFormats, gains):
+        channel.audioBlockFormats[0].gain = gain
+
+    for i, track in enumerate(builder.first_tracks, 1):
+        builder.create_track_uid(audioPackFormat=builder.first_pack, audioTrackFormat=track,
+                                 trackIndex=i)
+
+    generate_ids(builder.adm)
+
+    [item] = select_rendering_items(builder.adm)
+    meta = item.metadata_source.get_next_block()
+
+    assert meta.gains == gains
