@@ -8,6 +8,7 @@
 
 ### Changed
 - Added a warning for audioBlockFormats which have a duration but no rtime; previously these were fixed silently. See [#54].
+- Switched from ruamel.yaml to PyYAML. See [#62].
 
 ## [2.1.0] - 2022-01-26
 
@@ -153,6 +154,7 @@ Initial release.
 [#45]: https://github.com/ebu/ebu_adm_renderer/pull/45
 [#48]: https://github.com/ebu/ebu_adm_renderer/pull/48
 [#54]: https://github.com/ebu/ebu_adm_renderer/pull/54
+[#62]: https://github.com/ebu/ebu_adm_renderer/pull/62
 [34b738a]: https://github.com/ebu/ebu_adm_renderer/commit/34b738a
 [04533fc]: https://github.com/ebu/ebu_adm_renderer/commit/04533fc
 [222374a]: https://github.com/ebu/ebu_adm_renderer/commit/222374a

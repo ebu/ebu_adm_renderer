@@ -11,20 +11,28 @@ def write_bytes_to_stdout(b):
 
 def load_yaml(stream):
     """load yaml from a file-like object; used to make it easier to cater to
-    API changes in ruamel.yaml
+    API changes in the yaml library
     """
-    from ruamel.yaml import YAML
+    import yaml
 
-    yaml = YAML(typ="safe", pure=True)
-    return yaml.load(stream)
+    return yaml.load(stream, Loader=yaml.Loader)
 
 
 def dump_yaml_str(yaml_obj):
     """stringify some yaml"""
-    from ruamel.yaml import YAML
-    from six import StringIO
+    import yaml
 
-    yaml = YAML(typ="safe", pure=True)
-    f = StringIO()
-    yaml.dump(yaml_obj, f)
-    return f.getvalue()
+    return yaml.dump(yaml_obj)
+
+
+def test_yaml():
+    from io import StringIO
+
+    obj = {"some": "yaml"}
+
+    yaml_str = dump_yaml_str(obj)
+
+    f = StringIO(yaml_str)
+    parsed_obj = load_yaml(f)
+
+    assert parsed_obj == obj
