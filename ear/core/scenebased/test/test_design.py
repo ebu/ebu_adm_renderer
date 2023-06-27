@@ -50,3 +50,11 @@ def test_basic(panner, type_metadata):
     decoder = panner.design(type_metadata)
     # print(repr(decoder))
     np.testing.assert_allclose(decoder, ref_decoder, atol=1e-6)
+
+
+def test_gains(panner, type_metadata):
+    gains = np.linspace(0.1, 0.9, len(type_metadata.orders))
+    type_metadata.gains = gains.tolist()
+
+    decoder = panner.design(type_metadata)
+    np.testing.assert_allclose(decoder, ref_decoder * gains, atol=1e-6)

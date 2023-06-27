@@ -95,4 +95,4 @@ class HOADecoderDesign(object):
             K_v = hoa.sph_harm(n[:, np.newaxis], m[:, np.newaxis], az[np.newaxis], el[np.newaxis], norm=norm)
             decoder /= np.sqrt(np.mean(np.sum(np.dot(decoder, K_v) ** 2, axis=0)))
 
-        return decoder
+        return decoder * type_metadata.gains
