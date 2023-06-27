@@ -21,11 +21,6 @@
             preCheck = ''
               export PATH="$PATH:$out/bin"
             '';
-
-            postPatch = ''
-              # latest attrs should be fine...
-              sed -i "s/'attrs.*'/'attrs'/" setup.py
-            '';
           };
           defaultPackage = packages.ear;
 
