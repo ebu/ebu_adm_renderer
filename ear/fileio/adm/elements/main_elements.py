@@ -86,7 +86,7 @@ class ADMElement(object):
     def element_type(self):
         return type(self).__name__
 
-    def validate(self):
+    def validate(self, adm=None):
         validate(self)
 
 
@@ -322,10 +322,10 @@ class AudioChannelFormat(ADMElement):
         block_type = block_formats.by_type_definition[self.type]
         list_of(block_type)(self, attr, value)
 
-    def validate(self):
-        super(AudioChannelFormat, self).validate()
+    def validate(self, adm=None):
+        super(AudioChannelFormat, self).validate(adm=adm)
         for block in self.audioBlockFormats:
-            block.validate()
+            block.validate(adm=adm, audioChannelFormat=self)
 
 
 @attrs(slots=True)
@@ -363,8 +363,8 @@ class AudioStreamFormat(ADMElement):
                 _link_track_stream_format(track_format, self)
             self.audioTrackFormatIDRef = None
 
-    def validate(self):
-        super(AudioStreamFormat, self).validate()
+    def validate(self, adm=None):
+        super(AudioStreamFormat, self).validate(adm=adm)
         if self.audioPackFormat is not None and self.audioChannelFormat is not None:
             raise AdmError("audioStreamFormat {self.id} has a reference to both an "
                            "audioPackFormat and an audioChannelFormat".format(self=self))
@@ -396,8 +396,8 @@ class AudioTrackFormat(ADMElement):
             _link_track_stream_format(self, stream_format)
             self.audioStreamFormatIDRef = None
 
-    def validate(self):
-        super(AudioTrackFormat, self).validate()
+    def validate(self, adm=None):
+        super(AudioTrackFormat, self).validate(adm=None)
         if self.audioStreamFormat is None:
             raise AdmError("audioTrackFormat {self.id} is not linked "
                            "to an audioStreamFormat".format(self=self))

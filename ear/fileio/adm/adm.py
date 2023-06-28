@@ -82,7 +82,7 @@ class ADM(object):
             This is not extensive.
         """
         for element in self.elements:
-            element.validate()
+            element.validate(adm=self)
 
     def addAudioProgramme(self, programme: elements.AudioProgramme):
         """Add an audioProgramme."""

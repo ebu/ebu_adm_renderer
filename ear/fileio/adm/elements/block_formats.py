@@ -25,7 +25,7 @@ class AudioBlockFormat(object):
     def lazy_lookup_references(self, adm):
         pass
 
-    def validate(self):
+    def validate(self, adm=None, audioChannelFormat=None):
         validate(self)
 
         if not (
@@ -69,7 +69,7 @@ class MatrixCoefficient(object):
             self.inputChannelFormat = adm.lookup_element(self.inputChannelFormatIDRef)
             self.inputChannelFormatIDRef = None
 
-    def validate(self):
+    def validate(self, adm=None, audioChannelFormat=None, audioBlockFormat=None):
         validate(self)
         if self.inputChannelFormat is None:
             raise ValueError("MatrixCoefficient must have an inputChannelFormat attribute")
@@ -97,10 +97,10 @@ class AudioBlockFormatMatrix(AudioBlockFormat):
         for coefficient in self.matrix:
             coefficient.lazy_lookup_references(adm)
 
-    def validate(self):
-        super(AudioBlockFormatMatrix, self).validate()
+    def validate(self, adm=None, audioChannelFormat=None):
+        super(AudioBlockFormatMatrix, self).validate(adm=adm, audioChannelFormat=audioChannelFormat)
         for coefficient in self.matrix:
-            coefficient.validate()
+            coefficient.validate(adm=adm, audioChannelFormat=audioChannelFormat, audioBlockFormat=self)
 
 
 @attrs(slots=True)
