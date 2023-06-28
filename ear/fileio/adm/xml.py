@@ -160,13 +160,13 @@ class Attribute(object):
 @attrs
 class Element(object):
     """An xml sub-element; see sub-classes."""
-    adm_name = attrib()
 
 
 @attrs
 class ListElement(Element):
     """An xml sub-element whose text contents is added to a list in the
     constructor kwargs, either directly or via some conversion."""
+    adm_name = attrib()
     arg_name = attrib()
     attr_name = attrib(default=Factory(lambda self: self.arg_name, takes_self=True))
     type = attrib(default=StringType)
@@ -199,6 +199,7 @@ class ListElement(Element):
 class AttrElement(Element):
     """An xml sub-element whose text contents is converted to a constructor
     kwarg, either directly or via some conversion."""
+    adm_name = attrib()
     arg_name = attrib()
     attr_name = attrib(default=Factory(lambda self: self.arg_name, takes_self=True))
     type = attrib(default=StringType)
@@ -260,6 +261,7 @@ class HandleText(object):
 @attrs
 class CustomElement(Element):
     """An xml sub-element that is handled by some handler function."""
+    adm_name = attrib()
     handler = attrib()
     to_xml = attrib(default=None)
     arg_name = attrib(default=None)
@@ -267,6 +269,21 @@ class CustomElement(Element):
 
     def get_handlers(self):
         return [("element", qname, self.handler) for qname in qnames(self.adm_name)]
+
+
+@attrs
+class GenericElement(Element):
+    """Some XML relative to a parent element (e.g. sub-elements or attributes)
+    which are handled by some handler function which is passed the parent
+    element.
+    """
+    handler = attrib()
+    to_xml = attrib(default=None)
+    arg_name = attrib(default=None)
+    required = attrib(default=False)
+
+    def get_handlers(self):
+        return [("generic", None, self.handler)]
 
 
 class ElementParser(object):
