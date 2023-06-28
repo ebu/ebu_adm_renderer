@@ -823,6 +823,10 @@ def parse_speaker_position(element):
                          .format(found=','.join(coordinates)))
 
 
+def handle_speaker_position(kwargs, el):
+    kwargs["position"] = parse_speaker_position(el)
+
+
 def speaker_position_to_xml(parent, obj):
     pos = obj.position
 
@@ -854,23 +858,13 @@ def speaker_position_to_xml(parent, obj):
         assert False, "unexpected type"  # pragma: no cover
 
 
-block_format_direct_speakers_handler = ElementParser(dict, "audioBlockFormat", block_format_props + [
+block_format_direct_speakers_handler = ElementParser(AudioBlockFormatDirectSpeakers, "audioBlockFormat", block_format_props + [
     ListElement(adm_name="speakerLabel", arg_name="speakerLabel"),
+    GenericElement(handler=handle_speaker_position, to_xml=speaker_position_to_xml),
 ])
 
 
 block_format_binaural_handler = ElementParser(AudioBlockFormatBinaural, "audioBlockFormat", block_format_props)
-
-
-def parse_block_format_direct_speakers(element):
-    props = block_format_direct_speakers_handler.parse(element)
-    props["position"] = parse_speaker_position(element)
-    return AudioBlockFormatDirectSpeakers(**props)
-
-
-def block_format_direct_speakers_to_xml(parent, obj):
-    element = block_format_direct_speakers_handler.to_xml(parent, obj)
-    speaker_position_to_xml(element, obj)
 
 
 block_format_HOA_handler = ElementParser(AudioBlockFormatHoa, "audioBlockFormat", block_format_props + [
@@ -924,7 +918,7 @@ block_format_matrix_handler = ElementParser(AudioBlockFormatMatrix, "audioBlockF
 
 block_format_handlers = {
     TypeDefinition.Objects: block_format_objects_handler.parse,
-    TypeDefinition.DirectSpeakers: parse_block_format_direct_speakers,
+    TypeDefinition.DirectSpeakers: block_format_direct_speakers_handler.parse,
     TypeDefinition.Binaural: block_format_binaural_handler.parse,
     TypeDefinition.HOA: block_format_HOA_handler.parse,
     TypeDefinition.Matrix: block_format_matrix_handler.parse,
@@ -943,7 +937,7 @@ def handle_block_format(kwargs, el):
 
 block_format_to_xml_handlers = {
     TypeDefinition.Objects: block_format_objects_handler.to_xml,
-    TypeDefinition.DirectSpeakers: block_format_direct_speakers_to_xml,
+    TypeDefinition.DirectSpeakers: block_format_direct_speakers_handler.to_xml,
     TypeDefinition.Binaural: block_format_binaural_handler.to_xml,
     TypeDefinition.HOA: block_format_HOA_handler.to_xml,
     TypeDefinition.Matrix: block_format_matrix_handler.to_xml,
