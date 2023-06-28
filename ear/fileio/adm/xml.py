@@ -495,13 +495,23 @@ def parse_gain(gain_str, gainUnit):
         raise ValueError(f"gainUnit must be linear or dB, not {gainUnit!r}")
 
 
-def handle_gain_element(kwargs, el):
+def handle_gain_element_v2(kwargs, el):
     if "gain" in kwargs:
         raise ValueError("multiple gain elements found")
 
     gainUnit = el.attrib.get("gainUnit", "linear")
 
     kwargs["gain"] = parse_gain(text(el), gainUnit)
+
+
+def handle_gain_element_v1(kwargs, el):
+    if "gain" in kwargs:
+        raise ValueError("multiple gain elements found")
+
+    if "gainUnit" in el.attrib:
+        raise ValueError("gainUnit is a BS.2076-2 feature")
+
+    kwargs["gain"] = FloatType.loads(text(el))
 
 
 def gain_to_xml(element, obj):
@@ -512,7 +522,9 @@ def gain_to_xml(element, obj):
 
 
 # use where gain is kept in a sub-element with a gainUnit attribute
-gain_element = CustomElement("gain", handle_gain_element, to_xml=gain_to_xml)
+gain_element_v1 = CustomElement("gain", handle_gain_element_v1, to_xml=gain_to_xml)
+gain_element_v2 = CustomElement("gain", handle_gain_element_v2, to_xml=gain_to_xml)
+gain_element = gain_element_v2
 
 
 class GainAttribute:
