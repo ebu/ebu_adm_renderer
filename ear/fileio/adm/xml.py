@@ -527,26 +527,23 @@ gain_element_v2 = CustomElement("gain", handle_gain_element_v2, to_xml=gain_to_x
 gain_element = gain_element_v2
 
 
-class GainAttribute:
-    """use where gain is kept in an attribute with an optional gainUnit attribute"""
+def handle_gain_attribute(kwargs, el):
+    if "gain" in el.attrib:
+        gain = parse_gain(
+            el.attrib["gain"], el.attrib.get("gainUnit", "linear")
+        )
+        kwargs["gain"] = gain
+    elif "gainUnit" in el.attrib:
+        raise ValueError("gainUnit must not be specified without gain")
 
-    required = False
 
-    def get_handlers(self):
-        def handler(kwargs, el):
-            if "gain" in el.attrib:
-                gain = parse_gain(
-                    el.attrib["gain"], el.attrib.get("gainUnit", "linear")
-                )
-                kwargs["gain"] = gain
-            elif "gainUnit" in el.attrib:
-                raise ValueError("gainUnit must not be specified without gain")
+def gain_attribute_to_xml(element, obj):
+    if obj.gain is not None:
+        element.attrib["gain"] = FloatType.dumps(obj.gain)
 
-        return [("generic", None, handler)]
 
-    def to_xml(self, element, obj):
-        if obj.gain is not None:
-            element.attrib["gain"] = FloatType.dumps(obj.gain)
+# use where gain is kept in an attribute with an optional gainUnit attribute
+gain_attribute = GenericElement(handler=handle_gain_attribute, to_xml=gain_attribute_to_xml)
 
 
 # properties common to all block formats
@@ -879,7 +876,7 @@ block_format_HOA_handler = ElementParser(AudioBlockFormatHoa, "audioBlockFormat"
 
 matrix_coefficient_handler = ElementParser(MatrixCoefficient, "coefficient", [
     HandleText(arg_name="inputChannelFormatIDRef", attr_name="inputChannelFormat", type=RefType),
-    GainAttribute(),
+    gain_attribute,
     Attribute(adm_name="phase", arg_name="phase", type=FloatType),
     Attribute(adm_name="delay", arg_name="delay", type=FloatType),
     Attribute(adm_name="gainVar", arg_name="gainVar", type=StringType),
