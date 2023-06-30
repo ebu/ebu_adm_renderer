@@ -524,10 +524,17 @@ def gain_to_xml(element, obj):
 # use where gain is kept in a sub-element with a gainUnit attribute
 gain_element_v1 = CustomElement("gain", handle_gain_element_v1, to_xml=gain_to_xml)
 gain_element_v2 = CustomElement("gain", handle_gain_element_v2, to_xml=gain_to_xml)
-gain_element = gain_element_v2
 
 
-def handle_gain_attribute(kwargs, el):
+def handle_gain_attribute_v1(kwargs, el):
+    if "gainUnit" in el.attrib:
+        raise ValueError("gainUnit is a BS.2076-2 feature")
+
+    if "gain" in el.attrib:
+        kwargs["gain"] = FloatType.loads(el.attrib["gain"])
+
+
+def handle_gain_attribute_v2(kwargs, el):
     if "gain" in el.attrib:
         gain = parse_gain(
             el.attrib["gain"], el.attrib.get("gainUnit", "linear")
@@ -543,7 +550,12 @@ def gain_attribute_to_xml(element, obj):
 
 
 # use where gain is kept in an attribute with an optional gainUnit attribute
-gain_attribute = GenericElement(handler=handle_gain_attribute, to_xml=gain_attribute_to_xml)
+gain_attribute_v1 = GenericElement(
+    handler=handle_gain_attribute_v1, to_xml=gain_attribute_to_xml
+)
+gain_attribute_v2 = GenericElement(
+    handler=handle_gain_attribute_v2, to_xml=gain_attribute_to_xml
+)
 
 
 # typeDefinition == "Objects"
@@ -1078,6 +1090,18 @@ class MainElementHandler:
             ],
         )
 
+    def make_gain_element(self):
+        return self.by_version(
+            v1=gain_element_v1,
+            v2=gain_element_v2,
+        )
+
+    def make_gain_attribute(self):
+        return self.by_version(
+            v1=gain_attribute_v1,
+            v2=gain_attribute_v2,
+        )
+
     # main elements
 
     def make_programme_handler(self):
@@ -1345,7 +1369,7 @@ class MainElementHandler:
             Attribute(adm_name="audioBlockFormatID", arg_name="id", required=True),
             Attribute(adm_name="rtime", arg_name="rtime", type=TimeType),
             Attribute(adm_name="duration", arg_name="duration", type=TimeType),
-            gain_element,
+            self.make_gain_element(),
         ]
 
     def make_block_format_objects_handler(self):
@@ -1447,7 +1471,7 @@ class MainElementHandler:
                     attr_name="inputChannelFormat",
                     type=RefType,
                 ),
-                gain_attribute,
+                self.make_gain_attribute(),
                 Attribute(adm_name="phase", arg_name="phase", type=FloatType),
                 Attribute(adm_name="delay", arg_name="delay", type=FloatType),
                 Attribute(adm_name="gainVar", arg_name="gainVar", type=StringType),

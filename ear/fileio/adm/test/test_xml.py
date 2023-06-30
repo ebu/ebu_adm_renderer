@@ -197,21 +197,25 @@ def test_gain(base):
     assert base.bf_after_mods(add_children(bf_path, E.gain("0"))).gain == 0.0
     assert base.bf_after_mods(add_children(bf_path, E.gain("0.5"))).gain == 0.5
     assert (
-        base.bf_after_mods(add_children(bf_path, E.gain("0.5", gainUnit="linear"))).gain
+        base.bf_after_mods(set_version(2), add_children(bf_path, E.gain("0.5", gainUnit="linear"))).gain
         == 0.5
     )
 
     # db
     assert (
-        base.bf_after_mods(add_children(bf_path, E.gain("20", gainUnit="dB"))).gain
+        base.bf_after_mods(set_version(2), add_children(bf_path, E.gain("20", gainUnit="dB"))).gain
         == 10.0
     )
     expected = "gainUnit must be linear or dB, not 'DB'"
     with pytest.raises(ParseError, match=expected):
-        base.bf_after_mods(add_children(bf_path, E.gain("20", gainUnit="DB")))
+        base.bf_after_mods(set_version(2), add_children(bf_path, E.gain("20", gainUnit="DB")))
 
     # default
     assert base.bf_after_mods().gain == 1.0
+
+    expected = "gainUnit is a BS.2076-2 feature"
+    with pytest.raises(ParseError, match=expected):
+        base.bf_after_mods(add_children(bf_path, E.gain("20", gainUnit="dB")))
 
 
 def test_extent(base):
@@ -658,6 +662,7 @@ def test_matrix_params(base_mat):
 
 def test_matrix_gain_db(base_mat):
     adm = base_mat.adm_after_mods(
+        set_version(2),
         del_attrs("//adm:coefficient", "gain", "gainUnit"),
         set_attrs(
             "//*[@audioChannelFormatID='AC_00021003']//adm:coefficient[1]",
@@ -678,6 +683,7 @@ def test_matrix_gain_db(base_mat):
     expected = "gainUnit must not be specified without gain"
     with pytest.raises(ParseError, match=expected):
         base_mat.adm_after_mods(
+            set_version(2),
             del_attrs("//adm:coefficient", "gain", "gainUnit"),
             set_attrs(
                 "//*[@audioChannelFormatID='AC_00021003']//adm:coefficient[1]",
@@ -688,11 +694,24 @@ def test_matrix_gain_db(base_mat):
     expected = "gainUnit must be linear or dB, not 'DB'"
     with pytest.raises(ParseError, match=expected):
         base_mat.adm_after_mods(
+            set_version(2),
             del_attrs("//adm:coefficient", "gain", "gainUnit"),
             set_attrs(
                 "//*[@audioChannelFormatID='AC_00021003']//adm:coefficient[1]",
                 gain="1.0",
                 gainUnit="DB",
+            ),
+        )
+
+    expected = "gainUnit is a BS.2076-2 feature"
+    with pytest.raises(ParseError, match=expected):
+        base_mat.adm_after_mods(
+            set_version(1),
+            del_attrs("//adm:coefficient", "gain", "gainUnit"),
+            set_attrs(
+                "//*[@audioChannelFormatID='AC_00021003']//adm:coefficient[1]",
+                gain="20.0",
+                gainUnit="dB",
             ),
         )
 
