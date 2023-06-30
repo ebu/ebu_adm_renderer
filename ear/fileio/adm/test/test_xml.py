@@ -104,6 +104,15 @@ def del_attrs(xpath_to_el, *attrs):
     return f
 
 
+def set_version(version):
+    afe_path = "//adm:audioFormatExtended"
+
+    if isinstance(version, int):
+        version = f"ITU-R_BS.2076-{version}"
+
+    return set_attrs(afe_path, version=version)
+
+
 def get_acf(adm):
     """Get the first non-common-definition channel format."""
     for cf in adm.audioChannelFormats:
@@ -115,11 +124,9 @@ bf_path = "//adm:audioBlockFormat"
 
 
 def test_version(base):
-    afe_path = "//adm:audioFormatExtended"
-
     assert isinstance(base.adm.version, NoVersion)
 
-    adm = base.adm_after_mods(set_attrs(afe_path, version="ITU-R_BS.2076-2"))
+    adm = base.adm_after_mods(set_version("ITU-R_BS.2076-2"))
     assert adm.version == BS2076Version(2)
 
     # new versions are not supported -- historically BS.2076 has not been
@@ -135,12 +142,12 @@ def test_version(base):
     # that doesn't know about them, so let's not do that
     expected = "ADM version 'ITU-R_BS.2076-3' is not supported"
     with pytest.raises(NotImplementedError, match=expected):
-        base.adm_after_mods(set_attrs(afe_path, version="ITU-R_BS.2076-3"))
+        base.adm_after_mods(set_version("ITU-R_BS.2076-3"))
 
     # unknown
     expected = "ADM version 'ITU-R_BS.2076-2a' is not supported"
     with pytest.raises(NotImplementedError, match=expected):
-        base.adm_after_mods(set_attrs(afe_path, version="ITU-R_BS.2076-2a"))
+        base.adm_after_mods(set_version("ITU-R_BS.2076-2a"))
 
 
 def test_loudness(base):
