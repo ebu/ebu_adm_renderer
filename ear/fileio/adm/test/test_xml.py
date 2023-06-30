@@ -7,7 +7,7 @@ from copy import deepcopy
 from ..xml import parse_string, adm_to_xml, ParseError
 from ..exceptions import AdmError
 from ..elements import AudioBlockFormatBinaural, CartesianZone, PolarZone
-from ..elements.version import BS2076Version, NoVersion, UnknownVersion
+from ..elements.version import BS2076Version, NoVersion
 from ....common import CartesianPosition, PolarPosition, CartesianScreen, PolarScreen
 
 ns = "urn:ebu:metadata-schema:ebuCore_2015"
@@ -122,8 +122,25 @@ def test_version(base):
     adm = base.adm_after_mods(set_attrs(afe_path, version="ITU-R_BS.2076-2"))
     assert adm.version == BS2076Version(2)
 
-    adm = base.adm_after_mods(set_attrs(afe_path, version="ITU-R_BS.2076-2a"))
-    assert adm.version == UnknownVersion("ITU-R_BS.2076-2a")
+    # new versions are not supported -- historically BS.2076 has not been
+    # forwards-compatible, so it's best to error out early.
+
+    # for example:
+    # - addition of audioObject gain/mute/positionOffset
+    # - addition of gainUnit
+    # - change of default azimuthRange for divergence
+
+    # all of these will cause silent errors (i.e. unintended behaviour, not an
+    # error message) if a document containing them is interpreted by software
+    # that doesn't know about them, so let's not do that
+    expected = "ADM version 'ITU-R_BS.2076-3' is not supported"
+    with pytest.raises(NotImplementedError, match=expected):
+        base.adm_after_mods(set_attrs(afe_path, version="ITU-R_BS.2076-3"))
+
+    # unknown
+    expected = "ADM version 'ITU-R_BS.2076-2a' is not supported"
+    with pytest.raises(NotImplementedError, match=expected):
+        base.adm_after_mods(set_attrs(afe_path, version="ITU-R_BS.2076-2a"))
 
 
 def test_loudness(base):

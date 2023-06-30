@@ -18,7 +18,7 @@ from .elements import (
     FormatDefinition, TypeDefinition, Frequency, LoudnessMetadata)
 from .elements.geom import (DirectSpeakerPolarPosition, DirectSpeakerCartesianPosition,
                             ObjectPolarPosition, ObjectCartesianPosition)
-from .elements.version import parse_version, NoVersion
+from .elements.version import parse_version, BS2076Version, NoVersion, Version
 from .time_format import parse_time, unparse_time
 from ...common import PolarPosition, CartesianPosition, CartesianScreen, PolarScreen
 
@@ -546,15 +546,6 @@ def gain_attribute_to_xml(element, obj):
 gain_attribute = GenericElement(handler=handle_gain_attribute, to_xml=gain_attribute_to_xml)
 
 
-# properties common to all block formats
-block_format_props = [
-    Attribute(adm_name="audioBlockFormatID", arg_name="id", required=True),
-    Attribute(adm_name="rtime", arg_name="rtime", type=TimeType),
-    Attribute(adm_name="duration", arg_name="duration", type=TimeType),
-    gain_element,
-]
-
-
 # typeDefinition == "Objects"
 
 
@@ -753,22 +744,6 @@ zone_exclusion_handler = ElementParser((lambda zones=[]: zones), "zoneExclusion"
 ])
 
 
-block_format_objects_handler = ElementParser(AudioBlockFormatObjects, "audioBlockFormat", block_format_props + [
-    GenericElement(handler=handle_objects_position, to_xml=object_position_to_xml),
-    CustomElement("channelLock", handle_channel_lock, to_xml=channel_lock_to_xml),
-    CustomElement("jumpPosition", handle_jump_position, to_xml=jump_position_to_xml),
-    CustomElement("objectDivergence", handle_divergence, to_xml=divergence_to_xml),
-    AttrElement(adm_name="width", arg_name="width", type=FloatType, default=0.0),
-    AttrElement(adm_name="height", arg_name="height", type=FloatType, default=0.0),
-    AttrElement(adm_name="depth", arg_name="depth", type=FloatType, default=0.0),
-    AttrElement(adm_name="diffuse", arg_name="diffuse", type=FloatType, default=0.0),
-    AttrElement(adm_name="cartesian", arg_name="cartesian", type=BoolType, default=False),
-    AttrElement(adm_name="screenRef", arg_name="screenRef", type=BoolType, default=False),
-    AttrElement(adm_name="importance", arg_name="importance", type=IntType, default=10),
-    zone_exclusion_handler.as_handler("zoneExclusion", default=[]),
-])
-
-
 # typeDefinition == "DirectSpeakers"
 
 
@@ -855,99 +830,7 @@ def speaker_position_to_xml(parent, obj):
         assert False, "unexpected type"  # pragma: no cover
 
 
-block_format_direct_speakers_handler = ElementParser(AudioBlockFormatDirectSpeakers, "audioBlockFormat", block_format_props + [
-    ListElement(adm_name="speakerLabel", arg_name="speakerLabel"),
-    GenericElement(handler=handle_speaker_position, to_xml=speaker_position_to_xml),
-])
-
-
-block_format_binaural_handler = ElementParser(AudioBlockFormatBinaural, "audioBlockFormat", block_format_props)
-
-
-block_format_HOA_handler = ElementParser(AudioBlockFormatHoa, "audioBlockFormat", block_format_props + [
-    AttrElement(adm_name="equation", arg_name="equation", type=StringType),
-    AttrElement(adm_name="order", arg_name="order", type=IntType),
-    AttrElement(adm_name="degree", arg_name="degree", type=IntType),
-    AttrElement(adm_name="normalization", arg_name="normalization", type=StringType),
-    AttrElement(adm_name="nfcRefDist", arg_name="nfcRefDist", type=FloatType),
-    AttrElement(adm_name="screenRef", arg_name="screenRef", type=BoolType),
-])
-
-
-matrix_coefficient_handler = ElementParser(MatrixCoefficient, "coefficient", [
-    HandleText(arg_name="inputChannelFormatIDRef", attr_name="inputChannelFormat", type=RefType),
-    gain_attribute,
-    Attribute(adm_name="phase", arg_name="phase", type=FloatType),
-    Attribute(adm_name="delay", arg_name="delay", type=FloatType),
-    Attribute(adm_name="gainVar", arg_name="gainVar", type=StringType),
-    Attribute(adm_name="phaseVar", arg_name="phaseVar", type=StringType),
-    Attribute(adm_name="delayVar", arg_name="delayVar", type=StringType),
-])
-
-
-def handle_matrix(kwargs, el):
-    if "matrix" in kwargs:
-        raise ValueError("multiple matrix elements found")
-
-    kwargs["matrix"] = [matrix_coefficient_handler.parse(child)
-                        for child in xpath(el, "{ns}coefficient")]
-
-
-def matrix_to_xml(parent, obj):
-    el = parent.makeelement(QName(default_ns, "matrix"))
-
-    for coefficient in obj.matrix:
-        matrix_coefficient_handler.to_xml(el, coefficient)
-
-    parent.append(el)
-
-
-block_format_matrix_handler = ElementParser(AudioBlockFormatMatrix, "audioBlockFormat", block_format_props + [
-    AttrElement(adm_name="outputChannelFormatIDRef",
-                arg_name="outputChannelFormatIDRef",
-                attr_name="outputChannelFormat", type=RefType),
-    AttrElement(adm_name="outputChannelIDRef",
-                arg_name="outputChannelFormatIDRef",
-                attr_name="outputChannelFormat", type=RefType, parse_only=True),
-    CustomElement("matrix", handle_matrix, to_xml=matrix_to_xml),
-])
-
-
-block_format_handlers = {
-    TypeDefinition.Objects: block_format_objects_handler.parse,
-    TypeDefinition.DirectSpeakers: block_format_direct_speakers_handler.parse,
-    TypeDefinition.Binaural: block_format_binaural_handler.parse,
-    TypeDefinition.HOA: block_format_HOA_handler.parse,
-    TypeDefinition.Matrix: block_format_matrix_handler.parse,
-}
-
-
-def handle_block_format(kwargs, el):
-    type = kwargs["type"]
-    try:
-        handler = block_format_handlers[type]
-    except KeyError:
-        raise ValueError("Do not know how to parse block format of type {type.name}".format(type=type))
-    block_format = handler(el)
-    kwargs.setdefault("audioBlockFormats", []).append(block_format)
-
-
-block_format_to_xml_handlers = {
-    TypeDefinition.Objects: block_format_objects_handler.to_xml,
-    TypeDefinition.DirectSpeakers: block_format_direct_speakers_handler.to_xml,
-    TypeDefinition.Binaural: block_format_binaural_handler.to_xml,
-    TypeDefinition.HOA: block_format_HOA_handler.to_xml,
-    TypeDefinition.Matrix: block_format_matrix_handler.to_xml,
-}
-
-
-def block_format_to_xml(parent, obj):
-    try:
-        handler = block_format_to_xml_handlers[obj.type]
-    except KeyError:
-        raise ValueError("Do not know how to generate block format of type {type.name}".format(type=obj.type))
-    for bf in obj.audioBlockFormats:
-        handler(parent, bf)
+# frequency
 
 
 def handle_frequency(kwargs, el):
@@ -979,60 +862,7 @@ def frequency_to_xml(parent, obj):
         parent.append(element)
 
 
-channel_format_handler = ElementParser(AudioChannelFormat, "audioChannelFormat", [
-    Attribute(adm_name="audioChannelFormatID", arg_name="id", required=True),
-    Attribute(adm_name="audioChannelFormatName", arg_name="audioChannelFormatName", required=True),
-    type_handler,
-    CustomElement("audioBlockFormat", handle_block_format, arg_name="audioBlockFormats", to_xml=block_format_to_xml, required=True),
-    CustomElement("frequency", handle_frequency, to_xml=frequency_to_xml),
-])
-
-pack_format_handler = ElementParser(AudioPackFormat, "audioPackFormat", [
-    Attribute(adm_name="audioPackFormatID", arg_name="id", required=True),
-    Attribute(adm_name="audioPackFormatName", arg_name="audioPackFormatName", required=True),
-    type_handler,
-    Attribute(adm_name="importance", arg_name="importance", type=IntType),
-    RefList("audioChannelFormat"),
-    RefList("audioPackFormat"),
-    AttrElement(adm_name="absoluteDistance", arg_name="absoluteDistance", type=FloatType),
-    RefList("encodePackFormat"),
-    RefList("decodePackFormat", parse_only=True),
-    RefElement("inputPackFormat"),
-    RefElement("outputPackFormat"),
-    AttrElement(adm_name="normalization", arg_name="normalization", type=StringType),
-    AttrElement(adm_name="nfcRefDist", arg_name="nfcRefDist", type=FloatType),
-    AttrElement(adm_name="screenRef", arg_name="screenRef", type=BoolType),
-])
-
-
-def _check_stream_track_ref(kwargs):
-    if "audioTrackFormatIDRef" not in kwargs:
-        warnings.warn("audioStreamFormat {id} has no audioTrackFormatIDRef; "
-                      "this may be incompatible with some software".format(id=kwargs["id"]))
-
-
-stream_format_handler = ElementParser(AudioStreamFormat, "audioStreamFormat", [
-    Attribute(adm_name="audioStreamFormatID", arg_name="id", required=True),
-    Attribute(adm_name="audioStreamFormatName", arg_name="audioStreamFormatName", required=True),
-    format_handler,
-    RefList("audioTrackFormat"),
-    RefElement("audioChannelFormat"),
-    RefElement("audioPackFormat"),
-], _check_stream_track_ref)
-
-
-def _check_track_stream_ref(kwargs):
-    if "audioStreamFormatIDRef" not in kwargs:
-        warnings.warn("audioTrackFormat {id} has no audioStreamFormatIDRef; "
-                      "this may be incompatible with some software".format(id=kwargs["id"]))
-
-
-track_format_handler = ElementParser(AudioTrackFormat, "audioTrackFormat", [
-    Attribute(adm_name="audioTrackFormatID", arg_name="id", required=True),
-    Attribute(adm_name="audioTrackFormatName", arg_name="audioTrackFormatName", required=True),
-    format_handler,
-    RefElement("audioStreamFormat"),
-], _check_track_stream_ref)
+# screen
 
 
 default_screen = PolarScreen(aspectRatio=1.78,
@@ -1131,93 +961,635 @@ screen_handler = ElementParser(make_screen, "audioProgrammeReferenceScreen", [
 ])
 
 
-def make_audio_programme(referenceScreen=None, **kwargs):
-    if referenceScreen is None:
-        referenceScreen = default_screen
-    return AudioProgramme(referenceScreen=referenceScreen, **kwargs)
+# main elements
 
 
-loudness_handler = ElementParser(LoudnessMetadata, "loudnessMetadata", [
-    Attribute(adm_name="loudnessMethod", arg_name="loudnessMethod", type=StringType),
-    Attribute(adm_name="loudnessRecType", arg_name="loudnessRecType", type=StringType),
-    Attribute(adm_name="loudnessCorrectionType", arg_name="loudnessCorrectionType", type=StringType),
-    AttrElement(adm_name="integratedLoudness", arg_name="integratedLoudness", type=FloatType),
-    AttrElement(adm_name="loudnessRange", arg_name="loudnessRange", type=FloatType),
-    AttrElement(adm_name="maxTruePeak", arg_name="maxTruePeak", type=FloatType),
-    AttrElement(adm_name="maxMomentary", arg_name="maxMomentary", type=FloatType),
-    AttrElement(adm_name="maxShortTerm", arg_name="maxShortTerm", type=FloatType),
-    AttrElement(adm_name="dialogueLoudness", arg_name="dialogueLoudness", type=FloatType),
-])
+@attrs
+class AudioStreamFormatWrapper(object):
+    """Wrapper around an audioStreamFormat which adds audioTrackFormat references."""
 
-programme_handler = ElementParser(make_audio_programme, "audioProgramme", [
-    Attribute(adm_name="audioProgrammeID", arg_name="id", required=True),
-    Attribute(adm_name="audioProgrammeName", arg_name="audioProgrammeName", required=True),
-    Attribute(adm_name="audioProgrammeLanguage", arg_name="audioProgrammeLanguage"),
-    Attribute(adm_name="start", arg_name="start", type=TimeType),
-    Attribute(adm_name="end", arg_name="end", type=TimeType),
-    Attribute(adm_name="maxDuckingDepth", arg_name="maxDuckingDepth", type=FloatType),
-    RefList("audioContent"),
-    screen_handler.as_handler("referenceScreen", default=default_screen),
-    loudness_handler.as_list_handler("loudnessMetadata"),
-])
+    wrapped = attrib()
+    audioTrackFormats = attrib(default=Factory(list))
 
-content_handler = ElementParser(AudioContent, "audioContent", [
-    Attribute(adm_name="audioContentID", arg_name="id", required=True),
-    Attribute(adm_name="audioContentName", arg_name="audioContentName", required=True),
-    Attribute(adm_name="audioContentLanguage", arg_name="audioContentLanguage"),
-    AttrElement(adm_name="dialogue", arg_name="dialogue", type=IntType),
-    RefList("audioObject"),
-    loudness_handler.as_list_handler("loudnessMetadata"),
-])
+    def __getattr__(self, name):
+        return getattr(self.wrapped, name)
 
-object_handler = ElementParser(AudioObject, "audioObject", [
-    Attribute(adm_name="audioObjectID", arg_name="id", required=True),
-    Attribute(adm_name="audioObjectName", arg_name="audioObjectName", required=True),
-    Attribute(adm_name="start", arg_name="start", type=TimeType),
-    Attribute(adm_name="duration", arg_name="duration", type=TimeType),
-    Attribute(adm_name="dialogue", arg_name="dialogue", type=IntType),
-    Attribute(adm_name="importance", arg_name="importance", type=IntType),
-    Attribute(adm_name="interact", arg_name="interact", type=BoolType),
-    Attribute(adm_name="disableDucking", arg_name="disableDucking", type=BoolType),
-    RefList("audioPackFormat"),
-    RefList("audioObject"),
-    RefList("audioComplementaryObject"),
-    ListElement(adm_name="audioTrackUIDRef", arg_name="audioTrackUIDRef", attr_name="audioTrackUIDs", type=TrackUIDRefType),
-])
+    @classmethod
+    def wrapped_audioStreamFormats(cls, adm):
+        from collections import OrderedDict
 
-track_uid_handler = ElementParser(AudioTrackUID, "audioTrackUID", [
-    Attribute(adm_name="UID", arg_name="id", required=True),
-    Attribute(adm_name="sampleRate", arg_name="sampleRate", type=IntType),
-    Attribute(adm_name="bitDepth", arg_name="bitDepth", type=IntType),
-    RefElement("audioTrackFormat"),
-    RefElement("audioChannelFormat"),
-    RefElement("audioPackFormat"),
-])
+        stream_formats = OrderedDict(
+            (id(stream_format), cls(stream_format))
+            for stream_format in adm.audioStreamFormats
+        )
+
+        for track_format in adm.audioTrackFormats:
+            if track_format.audioStreamFormat is not None:
+                stream_format = track_format.audioStreamFormat
+                stream_formats[id(stream_format)].audioTrackFormats.append(track_format)
+
+        return list(stream_formats.values())
 
 
-def parse_adm_elements(adm, element, common_definitions=False):
-    element_types = [
-        ("//{ns}audioProgramme", programme_handler.parse, adm.addAudioProgramme),
-        ("//{ns}audioContent", content_handler.parse, adm.addAudioContent),
-        ("//{ns}audioObject", object_handler.parse, adm.addAudioObject),
-        ("//{ns}audioChannelFormat", channel_format_handler.parse, adm.addAudioChannelFormat),
-        ("//{ns}audioPackFormat", pack_format_handler.parse, adm.addAudioPackFormat),
-        ("//{ns}audioStreamFormat", stream_format_handler.parse, adm.addAudioStreamFormat),
-        ("//{ns}audioTrackFormat", track_format_handler.parse, adm.addAudioTrackFormat),
-        ("//{ns}audioTrackUID", track_uid_handler.parse, adm.addAudioTrackUID),
-    ]
+@attrs
+class MainElement:
+    """information required to handle a particular type of main element, used
+    in MainElementHandler
+    """
 
-    for path, parse_func, add_func in element_types:
-        for sub_element in xpath(element, path):
-            adm_element = parse_func(sub_element)
-
-            if common_definitions:
-                adm_element.is_common_definition = True
-
-            add_func(adm_element)
+    # xml name of this element
+    name = attrib()
+    # ElementParser for this element
+    handler = attrib()
+    # given an ADM object and some sub-object, add the sub-object to the ADM
+    add_func = attrib()
+    # get a list of sub-objects given an ADM object
+    get_func = attrib()
 
 
-def parse_audioFormatExtended(adm: ADM, element: lxml.etree._Element):
+class MainElementHandler:
+    """a collection of handlers for the main ADM elements
+
+    this exists to allow some control over how ADM elements are handled
+    (specifically in different versions), without having to modify the whole
+    hierarchy of handlers to get at one at the bottom of the stack
+
+    this can be done either by adding parameters/attributes (e.g. with
+    version), or by sub-classing and overriding one of the make_ functions
+    """
+
+    def __init__(self, version):
+        self.version = version
+
+        self.loudness_handler = self.make_loudness_handler()
+
+        self.block_format_props = self.make_block_format_props()
+
+        self.main_elements = self.get_main_elements()
+
+    def by_version(self, **kwargs):
+        """select a handler by version; call like by_version(v1=handler_v1...)"""
+        return kwargs[f"v{self.version.version}"]
+
+    # misc. sub-elements
+
+    def make_loudness_handler(self):
+        return ElementParser(
+            LoudnessMetadata,
+            "loudnessMetadata",
+            [
+                Attribute(
+                    adm_name="loudnessMethod",
+                    arg_name="loudnessMethod",
+                    type=StringType,
+                ),
+                Attribute(
+                    adm_name="loudnessRecType",
+                    arg_name="loudnessRecType",
+                    type=StringType,
+                ),
+                Attribute(
+                    adm_name="loudnessCorrectionType",
+                    arg_name="loudnessCorrectionType",
+                    type=StringType,
+                ),
+                AttrElement(
+                    adm_name="integratedLoudness",
+                    arg_name="integratedLoudness",
+                    type=FloatType,
+                ),
+                AttrElement(
+                    adm_name="loudnessRange", arg_name="loudnessRange", type=FloatType
+                ),
+                AttrElement(
+                    adm_name="maxTruePeak", arg_name="maxTruePeak", type=FloatType
+                ),
+                AttrElement(
+                    adm_name="maxMomentary", arg_name="maxMomentary", type=FloatType
+                ),
+                AttrElement(
+                    adm_name="maxShortTerm", arg_name="maxShortTerm", type=FloatType
+                ),
+                AttrElement(
+                    adm_name="dialogueLoudness",
+                    arg_name="dialogueLoudness",
+                    type=FloatType,
+                ),
+            ],
+        )
+
+    # main elements
+
+    def make_programme_handler(self):
+        def make_audio_programme(referenceScreen=None, **kwargs):
+            if referenceScreen is None:
+                referenceScreen = default_screen
+            return AudioProgramme(referenceScreen=referenceScreen, **kwargs)
+
+        return ElementParser(
+            make_audio_programme,
+            "audioProgramme",
+            [
+                Attribute(adm_name="audioProgrammeID", arg_name="id", required=True),
+                Attribute(
+                    adm_name="audioProgrammeName",
+                    arg_name="audioProgrammeName",
+                    required=True,
+                ),
+                Attribute(
+                    adm_name="audioProgrammeLanguage", arg_name="audioProgrammeLanguage"
+                ),
+                Attribute(adm_name="start", arg_name="start", type=TimeType),
+                Attribute(adm_name="end", arg_name="end", type=TimeType),
+                Attribute(
+                    adm_name="maxDuckingDepth",
+                    arg_name="maxDuckingDepth",
+                    type=FloatType,
+                ),
+                RefList("audioContent"),
+                screen_handler.as_handler("referenceScreen", default=default_screen),
+                self.loudness_handler.as_list_handler("loudnessMetadata"),
+            ],
+        )
+
+    def make_content_handler(self):
+        return ElementParser(
+            AudioContent,
+            "audioContent",
+            [
+                Attribute(adm_name="audioContentID", arg_name="id", required=True),
+                Attribute(
+                    adm_name="audioContentName",
+                    arg_name="audioContentName",
+                    required=True,
+                ),
+                Attribute(
+                    adm_name="audioContentLanguage", arg_name="audioContentLanguage"
+                ),
+                AttrElement(adm_name="dialogue", arg_name="dialogue", type=IntType),
+                RefList("audioObject"),
+                self.loudness_handler.as_list_handler("loudnessMetadata"),
+            ],
+        )
+
+    def make_object_handler(self):
+        return ElementParser(
+            AudioObject,
+            "audioObject",
+            [
+                Attribute(adm_name="audioObjectID", arg_name="id", required=True),
+                Attribute(
+                    adm_name="audioObjectName",
+                    arg_name="audioObjectName",
+                    required=True,
+                ),
+                Attribute(adm_name="start", arg_name="start", type=TimeType),
+                Attribute(adm_name="duration", arg_name="duration", type=TimeType),
+                Attribute(adm_name="dialogue", arg_name="dialogue", type=IntType),
+                Attribute(adm_name="importance", arg_name="importance", type=IntType),
+                Attribute(adm_name="interact", arg_name="interact", type=BoolType),
+                Attribute(
+                    adm_name="disableDucking", arg_name="disableDucking", type=BoolType
+                ),
+                RefList("audioPackFormat"),
+                RefList("audioObject"),
+                RefList("audioComplementaryObject"),
+                ListElement(
+                    adm_name="audioTrackUIDRef",
+                    arg_name="audioTrackUIDRef",
+                    attr_name="audioTrackUIDs",
+                    type=TrackUIDRefType,
+                ),
+            ],
+        )
+
+    def make_channel_format_handler(self):
+        return ElementParser(
+            AudioChannelFormat,
+            "audioChannelFormat",
+            [
+                Attribute(
+                    adm_name="audioChannelFormatID", arg_name="id", required=True
+                ),
+                Attribute(
+                    adm_name="audioChannelFormatName",
+                    arg_name="audioChannelFormatName",
+                    required=True,
+                ),
+                type_handler,
+                self.make_block_format_handler(),
+                CustomElement("frequency", handle_frequency, to_xml=frequency_to_xml),
+            ],
+        )
+
+    def make_pack_format_handler(self):
+        return ElementParser(
+            AudioPackFormat,
+            "audioPackFormat",
+            [
+                Attribute(adm_name="audioPackFormatID", arg_name="id", required=True),
+                Attribute(
+                    adm_name="audioPackFormatName",
+                    arg_name="audioPackFormatName",
+                    required=True,
+                ),
+                type_handler,
+                Attribute(adm_name="importance", arg_name="importance", type=IntType),
+                RefList("audioChannelFormat"),
+                RefList("audioPackFormat"),
+                AttrElement(
+                    adm_name="absoluteDistance",
+                    arg_name="absoluteDistance",
+                    type=FloatType,
+                ),
+                RefList("encodePackFormat"),
+                RefList("decodePackFormat", parse_only=True),
+                RefElement("inputPackFormat"),
+                RefElement("outputPackFormat"),
+                AttrElement(
+                    adm_name="normalization", arg_name="normalization", type=StringType
+                ),
+                AttrElement(
+                    adm_name="nfcRefDist", arg_name="nfcRefDist", type=FloatType
+                ),
+                AttrElement(adm_name="screenRef", arg_name="screenRef", type=BoolType),
+            ],
+        )
+
+    def make_stream_format_handler(self):
+        def _check_stream_track_ref(kwargs):
+            if "audioTrackFormatIDRef" not in kwargs:
+                warnings.warn(
+                    "audioStreamFormat {id} has no audioTrackFormatIDRef; "
+                    "this may be incompatible with some software".format(
+                        id=kwargs["id"]
+                    )
+                )
+
+        return ElementParser(
+            AudioStreamFormat,
+            "audioStreamFormat",
+            [
+                Attribute(adm_name="audioStreamFormatID", arg_name="id", required=True),
+                Attribute(
+                    adm_name="audioStreamFormatName",
+                    arg_name="audioStreamFormatName",
+                    required=True,
+                ),
+                format_handler,
+                RefList("audioTrackFormat"),
+                RefElement("audioChannelFormat"),
+                RefElement("audioPackFormat"),
+            ],
+            _check_stream_track_ref,
+        )
+
+    def make_track_format_handler(self):
+        def _check_track_stream_ref(kwargs):
+            if "audioStreamFormatIDRef" not in kwargs:
+                warnings.warn(
+                    "audioTrackFormat {id} has no audioStreamFormatIDRef; "
+                    "this may be incompatible with some software".format(
+                        id=kwargs["id"]
+                    )
+                )
+
+        return ElementParser(
+            AudioTrackFormat,
+            "audioTrackFormat",
+            [
+                Attribute(adm_name="audioTrackFormatID", arg_name="id", required=True),
+                Attribute(
+                    adm_name="audioTrackFormatName",
+                    arg_name="audioTrackFormatName",
+                    required=True,
+                ),
+                format_handler,
+                RefElement("audioStreamFormat"),
+            ],
+            _check_track_stream_ref,
+        )
+
+    def make_track_uid_handler(self):
+        return ElementParser(
+            AudioTrackUID,
+            "audioTrackUID",
+            [
+                Attribute(adm_name="UID", arg_name="id", required=True),
+                Attribute(adm_name="sampleRate", arg_name="sampleRate", type=IntType),
+                Attribute(adm_name="bitDepth", arg_name="bitDepth", type=IntType),
+                RefElement("audioTrackFormat"),
+                RefElement("audioChannelFormat"),
+                RefElement("audioPackFormat"),
+            ],
+        )
+
+    def get_main_elements(self):
+        return [
+            MainElement(
+                "audioProgramme",
+                handler=self.make_programme_handler(),
+                add_func=lambda adm, obj: adm.addAudioProgramme(obj),
+                get_func=lambda adm: adm.audioProgrammes,
+            ),
+            MainElement(
+                "audioContent",
+                handler=self.make_content_handler(),
+                add_func=lambda adm, obj: adm.addAudioContent(obj),
+                get_func=lambda adm: adm.audioContents,
+            ),
+            MainElement(
+                "audioObject",
+                handler=self.make_object_handler(),
+                add_func=lambda adm, obj: adm.addAudioObject(obj),
+                get_func=lambda adm: adm.audioObjects,
+            ),
+            MainElement(
+                "audioChannelFormat",
+                handler=self.make_channel_format_handler(),
+                add_func=lambda adm, obj: adm.addAudioChannelFormat(obj),
+                get_func=lambda adm: adm.audioChannelFormats,
+            ),
+            MainElement(
+                "audioPackFormat",
+                handler=self.make_pack_format_handler(),
+                add_func=lambda adm, obj: adm.addAudioPackFormat(obj),
+                get_func=lambda adm: adm.audioPackFormats,
+            ),
+            MainElement(
+                "audioStreamFormat",
+                handler=self.make_stream_format_handler(),
+                add_func=lambda adm, obj: adm.addAudioStreamFormat(obj),
+                get_func=lambda adm: AudioStreamFormatWrapper.wrapped_audioStreamFormats(
+                    adm
+                ),
+            ),
+            MainElement(
+                "audioTrackFormat",
+                handler=self.make_track_format_handler(),
+                add_func=lambda adm, obj: adm.addAudioTrackFormat(obj),
+                get_func=lambda adm: adm.audioTrackFormats,
+            ),
+            MainElement(
+                "audioTrackUID",
+                handler=self.make_track_uid_handler(),
+                add_func=lambda adm, obj: adm.addAudioTrackUID(obj),
+                get_func=lambda adm: adm.audioTrackUIDs,
+            ),
+        ]
+
+    # block formats
+
+    def make_block_format_props(self):
+        return [
+            Attribute(adm_name="audioBlockFormatID", arg_name="id", required=True),
+            Attribute(adm_name="rtime", arg_name="rtime", type=TimeType),
+            Attribute(adm_name="duration", arg_name="duration", type=TimeType),
+            gain_element,
+        ]
+
+    def make_block_format_objects_handler(self):
+        return ElementParser(
+            AudioBlockFormatObjects,
+            "audioBlockFormat",
+            self.block_format_props
+            + [
+                GenericElement(
+                    handler=handle_objects_position, to_xml=object_position_to_xml
+                ),
+                CustomElement(
+                    "channelLock", handle_channel_lock, to_xml=channel_lock_to_xml
+                ),
+                CustomElement(
+                    "jumpPosition", handle_jump_position, to_xml=jump_position_to_xml
+                ),
+                CustomElement(
+                    "objectDivergence", handle_divergence, to_xml=divergence_to_xml
+                ),
+                AttrElement(
+                    adm_name="width", arg_name="width", type=FloatType, default=0.0
+                ),
+                AttrElement(
+                    adm_name="height", arg_name="height", type=FloatType, default=0.0
+                ),
+                AttrElement(
+                    adm_name="depth", arg_name="depth", type=FloatType, default=0.0
+                ),
+                AttrElement(
+                    adm_name="diffuse", arg_name="diffuse", type=FloatType, default=0.0
+                ),
+                AttrElement(
+                    adm_name="cartesian",
+                    arg_name="cartesian",
+                    type=BoolType,
+                    default=False,
+                ),
+                AttrElement(
+                    adm_name="screenRef",
+                    arg_name="screenRef",
+                    type=BoolType,
+                    default=False,
+                ),
+                AttrElement(
+                    adm_name="importance",
+                    arg_name="importance",
+                    type=IntType,
+                    default=10,
+                ),
+                zone_exclusion_handler.as_handler("zoneExclusion", default=[]),
+            ],
+        )
+
+    def make_block_format_direct_speakers_handler(self):
+        return ElementParser(
+            AudioBlockFormatDirectSpeakers,
+            "audioBlockFormat",
+            self.block_format_props
+            + [
+                ListElement(adm_name="speakerLabel", arg_name="speakerLabel"),
+                GenericElement(
+                    handler=handle_speaker_position, to_xml=speaker_position_to_xml
+                ),
+            ],
+        )
+
+    def make_block_format_binaural_handler(self):
+        return ElementParser(
+            AudioBlockFormatBinaural, "audioBlockFormat", self.block_format_props
+        )
+
+    def make_block_format_HOA_handler(self):
+        return ElementParser(
+            AudioBlockFormatHoa,
+            "audioBlockFormat",
+            self.block_format_props
+            + [
+                AttrElement(adm_name="equation", arg_name="equation", type=StringType),
+                AttrElement(adm_name="order", arg_name="order", type=IntType),
+                AttrElement(adm_name="degree", arg_name="degree", type=IntType),
+                AttrElement(
+                    adm_name="normalization", arg_name="normalization", type=StringType
+                ),
+                AttrElement(
+                    adm_name="nfcRefDist", arg_name="nfcRefDist", type=FloatType
+                ),
+                AttrElement(adm_name="screenRef", arg_name="screenRef", type=BoolType),
+            ],
+        )
+
+    def make_matrix_coefficient_handler(self):
+        return ElementParser(
+            MatrixCoefficient,
+            "coefficient",
+            [
+                HandleText(
+                    arg_name="inputChannelFormatIDRef",
+                    attr_name="inputChannelFormat",
+                    type=RefType,
+                ),
+                gain_attribute,
+                Attribute(adm_name="phase", arg_name="phase", type=FloatType),
+                Attribute(adm_name="delay", arg_name="delay", type=FloatType),
+                Attribute(adm_name="gainVar", arg_name="gainVar", type=StringType),
+                Attribute(adm_name="phaseVar", arg_name="phaseVar", type=StringType),
+                Attribute(adm_name="delayVar", arg_name="delayVar", type=StringType),
+            ],
+        )
+
+    def make_block_format_matrix_handler(self):
+        matrix_coefficient_handler = self.make_matrix_coefficient_handler()
+
+        def handle_matrix(kwargs, el):
+            if "matrix" in kwargs:
+                raise ValueError("multiple matrix elements found")
+
+            kwargs["matrix"] = [
+                matrix_coefficient_handler.parse(child)
+                for child in xpath(el, "{ns}coefficient")
+            ]
+
+        def matrix_to_xml(parent, obj):
+            el = parent.makeelement(QName(default_ns, "matrix"))
+
+            for coefficient in obj.matrix:
+                matrix_coefficient_handler.to_xml(el, coefficient)
+
+            parent.append(el)
+
+        return ElementParser(
+            AudioBlockFormatMatrix,
+            "audioBlockFormat",
+            self.block_format_props
+            + [
+                AttrElement(
+                    adm_name="outputChannelFormatIDRef",
+                    arg_name="outputChannelFormatIDRef",
+                    attr_name="outputChannelFormat",
+                    type=RefType,
+                ),
+                AttrElement(
+                    adm_name="outputChannelIDRef",
+                    arg_name="outputChannelFormatIDRef",
+                    attr_name="outputChannelFormat",
+                    type=RefType,
+                    parse_only=True,
+                ),
+                CustomElement("matrix", handle_matrix, to_xml=matrix_to_xml),
+            ],
+        )
+
+    def make_block_format_handlers(self):
+        return {
+            TypeDefinition.Objects: self.make_block_format_objects_handler(),
+            TypeDefinition.DirectSpeakers: self.make_block_format_direct_speakers_handler(),
+            TypeDefinition.Binaural: self.make_block_format_binaural_handler(),
+            TypeDefinition.HOA: self.make_block_format_HOA_handler(),
+            TypeDefinition.Matrix: self.make_block_format_matrix_handler(),
+        }
+
+    def make_block_format_handler(self):
+        handlers = self.make_block_format_handlers()
+
+        def handle(kwargs, el):
+            type = kwargs["type"]
+            try:
+                handler = handlers[type]
+            except KeyError:
+                raise ValueError(
+                    "Do not know how to parse block format of type {type.name}".format(
+                        type=type
+                    )
+                )
+            block_format = handler.parse(el)
+            kwargs.setdefault("audioBlockFormats", []).append(block_format)
+
+        def to_xml(parent, obj):
+            try:
+                handler = handlers[obj.type]
+            except KeyError:
+                raise ValueError(
+                    "Do not know how to generate block format of type {type.name}".format(
+                        type=obj.type
+                    )
+                )
+            for bf in obj.audioBlockFormats:
+                handler.to_xml(parent, bf)
+
+        return CustomElement(
+            "audioBlockFormat",
+            handle,
+            arg_name="audioBlockFormats",
+            to_xml=to_xml,
+            required=True,
+        )
+
+    # external interface for parsing/generating elements
+
+    def parse_adm_elements(self, adm, element, common_definitions=False):
+        for element_t in self.main_elements:
+            parse_func = element_t.handler.parse
+
+            for sub_element in xpath(element, "//{ns}" + element_t.name):
+                adm_element = parse_func(sub_element)
+
+                if common_definitions:
+                    adm_element.is_common_definition = True
+
+                element_t.add_func(adm, adm_element)
+
+    def add_elements_to_afx(self, adm: ADM, afx: lxml.etree._Element):
+        for element_t in self.main_elements:
+            for element in element_t.get_func(adm):
+                if not element.is_common_definition:
+                    element_t.handler.to_xml(afx, element)
+
+
+default_main_element_handler_v1 = MainElementHandler(BS2076Version(1))
+default_main_element_handler_v2 = MainElementHandler(BS2076Version(2))
+
+# default MainElementHandler for each version
+default_main_elements_handlers = {
+    None: default_main_element_handler_v1,
+    NoVersion(): default_main_element_handler_v1,
+    BS2076Version(1): default_main_element_handler_v1,
+    BS2076Version(2): default_main_element_handler_v2,
+}
+
+
+def default_get_main_elements_handler(version: Version) -> MainElementHandler:
+    """get the default MainElementHandler for a given version, or raise"""
+    try:
+        return default_main_elements_handlers[version]
+    except KeyError:
+        raise NotImplementedError(f"ADM version '{version!s}' is not supported")
+
+
+def parse_audioFormatExtended(
+    adm: ADM,
+    element: lxml.etree._Element,
+    common_definitions=False,
+    get_main_elemtnts_handler=default_get_main_elements_handler,
+):
     """find the audioFormatExtended tag, and add information from it (including
     sub-elements) to adm
     """
@@ -1232,7 +1604,10 @@ def parse_audioFormatExtended(adm: ADM, element: lxml.etree._Element):
         if not common_definitions:
             adm.version = VersionType.loads(afe_element.attrib.get("version"))
 
-        parse_adm_elements(adm, afe_element)
+        handler = get_main_elemtnts_handler(adm.version)
+        handler.parse_adm_elements(
+            adm, afe_element, common_definitions=common_definitions
+        )
 
 
 def _sort_block_formats(channelFormats):
@@ -1267,7 +1642,13 @@ def _set_default_rtimes(channelFormats):
                 )
 
 
-def load_axml_doc(adm, element, lookup_references=True, fix_block_format_durations=False):
+def load_axml_doc(
+    adm,
+    element,
+    lookup_references=True,
+    fix_block_format_durations=False,
+    get_main_elemtnts_handler=default_get_main_elements_handler,
+):
     """Load some axml into an ADM structure.
 
     This is a low-level function and doesn't deal with common definitions.
@@ -1282,8 +1663,12 @@ def load_axml_doc(adm, element, lookup_references=True, fix_block_format_duratio
             .. note::
                This is deprecated; use the functions in
                :mod:`ear.fileio.adm.timing_fixes` instead.
+        get_main_elemtnts_handler: function from Version to MainElementHandler,
+            used to override parsing functionality
     """
-    parse_audioFormatExtended(adm, element)
+    parse_audioFormatExtended(
+        adm, element, get_main_elemtnts_handler=get_main_elemtnts_handler
+    )
 
     if lookup_references:
         adm.lazy_lookup_references()
@@ -1356,58 +1741,25 @@ def parse_file(axmlfile, **kwargs):
     return adm
 
 
-@attrs
-class AudioStreamFormatWrapper(object):
-    """Wrapper around an audioStreamFormat which adds audioTrackFormat references."""
-
-    wrapped = attrib()
-    audioTrackFormats = attrib(default=Factory(list))
-
-    def __getattr__(self, name):
-        return getattr(self.wrapped, name)
-
-    @classmethod
-    def wrapped_audioStreamFormats(cls, adm):
-        from collections import OrderedDict
-        stream_formats = OrderedDict((id(stream_format), cls(stream_format))
-                                     for stream_format in adm.audioStreamFormats)
-
-        for track_format in adm.audioTrackFormats:
-            if track_format.audioStreamFormat is not None:
-                stream_format = track_format.audioStreamFormat
-                stream_formats[id(stream_format)].audioTrackFormats.append(track_format)
-
-        return list(stream_formats.values())
-
-
-def adm_to_xml(adm: ADM) -> lxml.etree._Element:
+def adm_to_xml(
+    adm: ADM, get_main_elemtnts_handler=default_get_main_elements_handler
+) -> lxml.etree._Element:
     """Generate an XML element corresponding to an ADM structure.
 
     This skips elements marked with is_common_definition
+
+    Parameters:
+        get_main_elemtnts_handler: function from Version to MainElementHandler,
+            used to override xml formatting
     """
-    audioStreamFormats = AudioStreamFormatWrapper.wrapped_audioStreamFormats(adm)
-
-    element_types = [
-        (programme_handler.to_xml, adm.audioProgrammes),
-        (content_handler.to_xml, adm.audioContents),
-        (object_handler.to_xml, adm.audioObjects),
-        (channel_format_handler.to_xml, adm.audioChannelFormats),
-        (pack_format_handler.to_xml, adm.audioPackFormats),
-        (stream_format_handler.to_xml, audioStreamFormats),
-        (track_format_handler.to_xml, adm.audioTrackFormats),
-        (track_uid_handler.to_xml, adm.audioTrackUIDs),
-    ]
-
     E = ElementMaker(namespace=default_ns, nsmap=default_nsmap)
     afx = E.audioFormatExtended()
 
     if adm.version is not None and not isinstance(adm.version, NoVersion):
         afx.attrib["version"] = VersionType.dumps(adm.version)
 
-    for to_xml, elements in element_types:
-        for element in elements:
-            if not element.is_common_definition:
-                to_xml(afx, element)
+    handler = get_main_elemtnts_handler(adm.version)
+    handler.add_elements_to_afx(adm, afx)
 
     return E.ebuCoreMain(
         E.coreMetadata(
