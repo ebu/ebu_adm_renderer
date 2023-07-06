@@ -481,6 +481,21 @@ type_handler = TypeAttribute(TypeDefinition, "typeDefinition", "typeLabel", "typ
 format_handler = TypeAttribute(FormatDefinition, "formatDefinition", "formatLabel", "format")
 
 
+def make_no_element_before_v2(parent_name, el_name, not_default):
+    """use where el_name is not supported in parent_name before v2"""
+
+    error_msg = f"{el_name} in {parent_name} is a BS.2076-2 feature"
+
+    def handle(kwargs, el):
+        raise ValueError(error_msg)
+
+    def to_xml(element, obj):
+        if not_default(obj):
+            raise ValueError(error_msg)
+
+    return CustomElement(el_name, handle, to_xml=to_xml)
+
+
 # gain
 
 
@@ -1096,6 +1111,19 @@ class MainElementHandler:
             v2=gain_element_v2,
         )
 
+    def make_gain_element_v2(self, element_name):
+        """use where gain is kept in a sub-element with a gainUnit attribute, but only in v2
+
+        TODO: element_name is only needed to make the error message make more
+        sense; include more of the hierarchy in error messages and remove this
+        """
+        return self.by_version(
+            v1=make_no_element_before_v2(
+                element_name, "gain", lambda obj: obj.gain != 1.0
+            ),
+            v2=gain_element_v2,
+        )
+
     def make_gain_attribute(self):
         return self.by_version(
             v1=gain_attribute_v1,
@@ -1184,6 +1212,7 @@ class MainElementHandler:
                     attr_name="audioTrackUIDs",
                     type=TrackUIDRefType,
                 ),
+                self.make_gain_element_v2("audioObject"),
             ],
         )
 

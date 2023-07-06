@@ -837,6 +837,24 @@ def test_silent_tracks(base):
     assert silent_atu is None
 
 
+def test_audioObject_gain(base):
+    [ao] = base.adm.audioObjects
+    assert ao.gain == 1.0
+
+    adm = base.adm_after_mods(
+        set_version(2),
+        add_children("//adm:audioObject", E.gain("0.5")),
+    )
+    [ao] = adm.audioObjects
+    assert ao.gain == 0.5
+
+    expected = "gain in audioObject is a BS.2076-2 feature"
+    with pytest.raises(ParseError, match=expected):
+        base.adm_after_mods(
+            add_children("//adm:audioObject", E.gain("0.5")),
+        )
+
+
 def test_track_stream_ref(base):
     """Check that the track->stream ref is established by a reference in either direction."""
     with pytest.warns(UserWarning, match=("audioTrackFormat AT_00011001_01 has no audioStreamFormatIDRef; "
