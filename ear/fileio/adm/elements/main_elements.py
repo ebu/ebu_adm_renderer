@@ -182,6 +182,7 @@ class AudioObject(ADMElement):
     audioComplementaryObjects = attrib(default=Factory(list), repr=False)
 
     gain = attrib(validator=instance_of(float), default=1.0)
+    mute = attrib(validator=instance_of(bool), default=False)
 
     audioPackFormatIDRef = attrib(default=None)
     audioTrackUIDRef = attrib(default=None)

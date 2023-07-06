@@ -1130,6 +1130,17 @@ class MainElementHandler:
             v2=gain_attribute_v2,
         )
 
+    def make_mute_element_v2(self, element_name):
+        return self.by_version(
+            v1=make_no_element_before_v2(element_name, "mute", lambda obj: obj.mute),
+            v2=AttrElement(
+                adm_name="mute",
+                arg_name="mute",
+                type=BoolType,
+                default=False,
+            ),
+        )
+
     # main elements
 
     def make_programme_handler(self):
@@ -1213,6 +1224,7 @@ class MainElementHandler:
                     type=TrackUIDRefType,
                 ),
                 self.make_gain_element_v2("audioObject"),
+                self.make_mute_element_v2("audioObject"),
             ],
         )
 

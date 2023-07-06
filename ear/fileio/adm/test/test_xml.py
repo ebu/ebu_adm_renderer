@@ -855,6 +855,24 @@ def test_audioObject_gain(base):
         )
 
 
+def test_audioObject_mute(base):
+    [ao] = base.adm.audioObjects
+    assert ao.mute is False
+
+    adm = base.adm_after_mods(
+        set_version(2),
+        add_children("//adm:audioObject", E.mute("1")),
+    )
+    [ao] = adm.audioObjects
+    assert ao.mute is True
+
+    expected = "mute in audioObject is a BS.2076-2 feature"
+    with pytest.raises(ParseError, match=expected):
+        base.adm_after_mods(
+            add_children("//adm:audioObject", E.mute("0")),
+        )
+
+
 def test_track_stream_ref(base):
     """Check that the track->stream ref is established by a reference in either direction."""
     with pytest.warns(UserWarning, match=("audioTrackFormat AT_00011001_01 has no audioStreamFormatIDRef; "
