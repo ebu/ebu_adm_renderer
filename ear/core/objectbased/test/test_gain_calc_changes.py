@@ -145,6 +145,36 @@ def generate_random_ObjectTypeMetadatas():
         yield generate_random_ObjectTypeMetadata()
 
 
+def load_jsonl_xz(file_name):
+    """load objects from a lzma-compressed newline-separated JSON (jsonl) file"""
+    from ....test.json import json_to_value
+    import json
+    import lzma
+
+    objects = []
+    with lzma.open(file_name, "rb") as f:
+        for line in f:
+            json_line = json.loads(line.decode("utf8"))
+            obj = json_to_value(json_line)
+            objects.append(obj)
+
+    return objects
+
+
+def dump_jsonl_xz(file_name, objects):
+    """dump objects to a lzma-compressed newline-separated JSON (jsonl) file"""
+    from ....test.json import value_to_json
+    import json
+    import lzma
+
+    with lzma.open(file_name, "wb") as f:
+        for obj in objects:
+            json_obj = value_to_json(obj, include_defaults=False)
+            json_line = json.dumps(json_obj, sort_keys=True, separators=(",", ":"))
+            f.write(json_line.encode("utf8"))
+            f.write(b"\n")
+
+
 @pytest.mark.no_cover
 def test_changes_random(layout, gain_calc):
     """Check that the result of the gain calculator with a selection of
@@ -153,33 +183,33 @@ def test_changes_random(layout, gain_calc):
     import py.path
     files_dir = py.path.local(__file__).dirpath() / "data" / "gain_calc_pvs"
 
-    import pickle
-    inputs_f = files_dir / "inputs.pickle"
-    outputs_f = files_dir / "outputs.npz"
+    inputs_f = files_dir / "inputs.jsonl.xz"
+    outputs_f = files_dir / "outputs.jsonl.xz"
 
     if inputs_f.check():
-        with open(str(inputs_f), 'rb') as f:
-            inputs = pickle.load(f)
+        inputs = load_jsonl_xz(str(inputs_f))
     else:
         inputs = list(generate_random_ObjectTypeMetadatas())
 
         inputs_f.dirpath().ensure_dir()
-        with open(str(inputs_f), 'wb') as f:
-            pickle.dump(inputs, f, protocol=2)
+        dump_jsonl_xz(str(inputs_f), inputs)
 
     pvs = [gain_calc.render(input) for input in inputs]
-    direct = np.array([pv.direct for pv in pvs])
-    diffuse = np.array([pv.diffuse for pv in pvs])
 
     if outputs_f.check():
-        loaded = np.load(str(outputs_f))
-        loaded_directs = loaded["direct"]
-        loaded_diffuses = loaded["diffuse"]
+        loaded = load_jsonl_xz(str(outputs_f))
 
-        for input, pv, loaded_direct, loaded_diffuse in zip(inputs, pvs, loaded_directs, loaded_diffuses):
-            npt.assert_allclose(pv.direct, loaded_direct, atol=1e-10, err_msg=repr(input))
-            npt.assert_allclose(pv.diffuse, loaded_diffuse, atol=1e-10, err_msg=repr(input))
+        for input, pv, expected in zip(inputs, pvs, loaded):
+            npt.assert_allclose(
+                pv.direct, expected["direct"], atol=1e-10, err_msg=repr(input)
+            )
+            npt.assert_allclose(
+                pv.diffuse, expected["diffuse"], atol=1e-10, err_msg=repr(input)
+            )
     else:
         outputs_f.dirpath().ensure_dir()
-        np.savez_compressed(str(outputs_f), direct=direct, diffuse=diffuse)
+        pvs_json = [
+            dict(direct=pv.direct.tolist(), diffuse=pv.diffuse.tolist()) for pv in pvs
+        ]
+        dump_jsonl_xz(str(outputs_f), pvs_json)
         pytest.skip("generated pv file for gain calc")
