@@ -10,6 +10,7 @@ from .. import allocentric
 from ...fileio.adm.elements import CartesianZone, PolarZone, ObjectCartesianPosition, ObjectPolarPosition
 from ..screen_scale import ScreenScaleHandler
 from ..screen_edge_lock import ScreenEdgeLockHandler
+from ..renderer_common import get_object_gain
 
 
 def coord_trans(position):
@@ -405,7 +406,7 @@ class GainCalc(object):
 
         gains = np.nan_to_num(gains)
 
-        gains *= block_format.gain
+        gains *= block_format.gain * get_object_gain(object_meta)
 
         # add in silent LFE channels
         gains_full = np.zeros(len(self.is_lfe))

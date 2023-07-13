@@ -396,6 +396,26 @@ def test_screen_edge_lock_right_no_screen(layout, gain_calc):
              direct_gains=[("M+000", 1.0)])
 
 
+def test_object_gain(layout, gain_calc):
+    run_test(
+        layout,
+        gain_calc,
+        dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0)),
+        extra_data=ExtraData(object_gain=0.5),
+        direct_gains=[("M+000", 0.5)],
+    )
+
+
+def test_object_mute(layout, gain_calc):
+    run_test(
+        layout,
+        gain_calc,
+        dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0)),
+        extra_data=ExtraData(object_mute=True),
+        direct_gains=[],
+    )
+
+
 def test_objectbased_extent(layout, gain_calc):
     block_formats = [
         AudioBlockFormatObjects(position=dict(azimuth=0, elevation=0, distance=1),
