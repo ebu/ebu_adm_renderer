@@ -251,6 +251,7 @@ class DirectSpeakersPanner(object):
         self._screen_edge_lock_handler = ScreenEdgeLockHandler(self.layout.screen, layout)
 
         self.pvs = np.eye(self.n_channels)
+        self.pvs.flags.writeable = False
 
         self.substitutions = {
             "LFE": "LFE1",
