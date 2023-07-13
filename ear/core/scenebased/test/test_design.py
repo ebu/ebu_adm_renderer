@@ -58,3 +58,17 @@ def test_gains(panner, type_metadata):
 
     decoder = panner.design(type_metadata)
     np.testing.assert_allclose(decoder, ref_decoder * gains, atol=1e-6)
+
+
+def test_object_gain(panner, type_metadata):
+    type_metadata.extra_data.object_gain = 0.5
+
+    decoder = panner.design(type_metadata)
+    np.testing.assert_allclose(decoder, ref_decoder * 0.5, atol=1e-6)
+
+
+def test_object_mute(panner, type_metadata):
+    type_metadata.extra_data.object_mute = True
+
+    decoder = panner.design(type_metadata)
+    np.testing.assert_allclose(decoder, np.zeros_like(ref_decoder), atol=1e-6)

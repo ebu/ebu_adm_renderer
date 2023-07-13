@@ -3,6 +3,7 @@ import warnings
 from .. import hoa
 from .. import point_source
 from ...options import OptionsHandler, Option, SubOptions
+from ..renderer_common import get_object_gain
 
 
 class HOADecoderDesign(object):
@@ -95,4 +96,6 @@ class HOADecoderDesign(object):
             K_v = hoa.sph_harm(n[:, np.newaxis], m[:, np.newaxis], az[np.newaxis], el[np.newaxis], norm=norm)
             decoder /= np.sqrt(np.mean(np.sum(np.dot(decoder, K_v) ** 2, axis=0)))
 
-        return decoder * type_metadata.gains
+        return decoder * (
+            np.array(type_metadata.gains) * get_object_gain(type_metadata)
+        )
