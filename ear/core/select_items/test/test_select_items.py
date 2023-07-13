@@ -466,6 +466,38 @@ def test_absoluteDisance_objects():
         select_rendering_items(builder.adm)
 
 
+def test_object_params():
+    builder = ADMBuilder()
+    builder.load_common_definitions()
+    builder.create_programme(audioProgrammeName="MyProgramme")
+    builder.create_content(audioContentName="MyContent")
+
+    obj = builder.create_item_objects(
+        0,
+        "obj",
+        block_formats=[
+            AudioBlockFormatObjects(position=ObjectPolarPosition(0.0, 0.0, 1.0)),
+        ],
+    )
+
+    # defaults
+    [item] = select_rendering_items(builder.adm)
+    extra_data = item.metadata_source.get_next_block().extra_data
+
+    assert extra_data.object_gain == 1.0
+    assert extra_data.object_mute is False
+
+    # non-default
+    obj.audio_object.gain = 1.5
+    obj.audio_object.mute = True
+
+    [item] = select_rendering_items(builder.adm)
+    extra_data = item.metadata_source.get_next_block().extra_data
+
+    assert extra_data.object_gain == 1.5
+    assert extra_data.object_mute is True
+
+
 def test_trackUID_channelFormat_reference():
     builder = ADMBuilder.for_version(2)
     programme = builder.create_programme(audioProgrammeName="MyProgramme")
