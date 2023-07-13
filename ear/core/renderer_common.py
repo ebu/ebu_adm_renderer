@@ -288,3 +288,10 @@ def is_lfe(frequency):
         if frequency.lowPass is not None or frequency.highPass is not None:
             warnings.warn("Not treating channel with frequency {!r} as LFE.".format(frequency))
         return False
+
+
+def get_object_gain(type_metadata):
+    """get the gain implied by the audioObject gain and mute parameters"""
+    extra_data = type_metadata.extra_data
+
+    return 0.0 if extra_data.object_mute else extra_data.object_gain
