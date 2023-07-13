@@ -1141,6 +1141,15 @@ class MainElementHandler:
             ),
         )
 
+    def make_v2_RefElement(self, parent_name, name, **kwargs):
+        """a RefElement which is only present in v2"""
+        return self.by_version(
+            v1=make_no_element_before_v2(
+                parent_name, name + "IDRef", lambda obj: getattr(obj, name) is not None
+            ),
+            v2=RefElement(name),
+        )
+
     # main elements
 
     def make_programme_handler(self):
@@ -1344,7 +1353,7 @@ class MainElementHandler:
                 Attribute(adm_name="sampleRate", arg_name="sampleRate", type=IntType),
                 Attribute(adm_name="bitDepth", arg_name="bitDepth", type=IntType),
                 RefElement("audioTrackFormat"),
-                RefElement("audioChannelFormat"),
+                self.make_v2_RefElement("audioTrackUID", "audioChannelFormat"),
                 RefElement("audioPackFormat"),
             ],
         )
