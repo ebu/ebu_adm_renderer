@@ -900,6 +900,24 @@ def test_track_stream_ref(base):
                                              formatDefinition="PCM", formatLabel="0001")))
 
 
+def test_atu_acf_ref(base):
+    mods = (
+        remove_children("//adm:audioTrackUID/adm:audioTrackFormatIDRef"),
+        add_children("//adm:audioTrackUID", E.audioChannelFormatIDRef("AC_00031001")),
+    )
+    adm = base.adm_after_mods(
+        set_version(2),
+        *mods,
+    )
+
+    assert adm["ATU_00000001"].audioChannelFormat is adm["AC_00031001"]
+    assert adm["ATU_00000001"].audioTrackFormat is None
+
+    expected = "audioChannelFormatIDRef in audioTrackUID is a BS.2076-2 feature"
+    with pytest.raises(ParseError, match=expected):
+        adm = base.adm_after_mods(*mods)
+
+
 def test_set_default_rtimes(base):
     """Check that the audioBlockFormats with a duration but no rtime are given an rtime,
     and a warning is issued.
