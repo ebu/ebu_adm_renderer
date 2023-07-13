@@ -385,4 +385,13 @@ def test_gain():
     layout = bs2051.get_layout("4+5+0")
     p = DirectSpeakersPanner(layout)
 
-    npt.assert_allclose(p.handle(tm_with_labels(["M+000"], gain=0.5)), direct_pv(layout, "M+000") * 0.5)
+    tm = tm_with_labels(["M+000"], gain=0.5)
+    npt.assert_allclose(p.handle(tm), direct_pv(layout, "M+000") * 0.5)
+    # make sure that internal state (pvs) is not modified
+    npt.assert_allclose(p.handle(tm), direct_pv(layout, "M+000") * 0.5)
+
+    tm.extra_data.object_gain = 0.5
+    npt.assert_allclose(p.handle(tm), direct_pv(layout, "M+000") * 0.25)
+
+    tm.extra_data.object_mute = True
+    npt.assert_allclose(p.handle(tm), np.zeros(len(layout.channels)))

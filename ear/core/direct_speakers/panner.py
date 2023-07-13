@@ -6,7 +6,7 @@ import warnings
 from ..geom import inside_angle_range
 from .. import point_source
 from .. import allocentric
-from ..renderer_common import is_lfe
+from ..renderer_common import get_object_gain, is_lfe
 from ...options import OptionsHandler, SubOptions, Option
 from ..screen_edge_lock import ScreenEdgeLockHandler
 from ...fileio.adm.elements import DirectSpeakerCartesianPosition, DirectSpeakerPolarPosition
@@ -390,8 +390,7 @@ class DirectSpeakersPanner(object):
 
     def handle(self, type_metadata):
         pvs = self._handle_without_gain(type_metadata)
-        pvs *= type_metadata.block_format.gain
-        return pvs
+        return pvs * type_metadata.block_format.gain * get_object_gain(type_metadata)
 
     def _handle_without_gain(self, type_metadata):
         tol = 1e-5
