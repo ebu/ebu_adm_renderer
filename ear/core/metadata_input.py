@@ -57,12 +57,17 @@ class ExtraData(object):
         reference_screen (CartesianScreen or PolarScreen): Reference screen from audioProgramme.
         channel_frequency (Frequency): Frequency information from audioChannelFormat.
         pack_absoluteDistance (float or None): absoluteDistance parameter from audioPackFormat.
+        object_gain (float): gain from audioObject or alternativeValueSet
+        object_mute (bool): mute from audioObject or alternativeValueSet
     """
     object_start = attrib(validator=optional(instance_of(Fraction)), default=None)
     object_duration = attrib(validator=optional(instance_of(Fraction)), default=None)
     reference_screen = attrib(default=default_screen)
     channel_frequency = attrib(validator=instance_of(Frequency), default=Factory(Frequency))
     pack_absoluteDistance = attrib(validator=optional(instance_of(float)), default=None)
+
+    object_gain = attrib(validator=instance_of(float), default=1.0)
+    object_mute = attrib(validator=instance_of(bool), default=False)
 
 
 @attrs(slots=True)
