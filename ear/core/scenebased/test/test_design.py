@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from ....fileio.adm.elements import PolarPositionOffset
 from ... import hoa, point_source
 from ...bs2051 import get_layout
 from ...metadata_input import HOATypeMetadata
@@ -72,3 +73,10 @@ def test_object_mute(panner, type_metadata):
 
     decoder = panner.design(type_metadata)
     np.testing.assert_allclose(decoder, np.zeros_like(ref_decoder), atol=1e-6)
+
+
+def test_object_positionOffset(panner, type_metadata):
+    type_metadata.extra_data.object_positionOffset = PolarPositionOffset(azimuth=30.0)
+
+    with pytest.raises(ValueError, match="positionOffset is not supported with HOA"):
+        panner.design(type_metadata)

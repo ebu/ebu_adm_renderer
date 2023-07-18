@@ -66,6 +66,11 @@ class HOADecoderDesign(object):
                 type_metadata.extra_data.channel_frequency.highPass is not None):
             warnings.warn("frequency information for HOA is not implemented; ignoring")
 
+        if type_metadata.extra_data.object_positionOffset is not None:
+            # it would be possible to apply azimuth offset properly, but not
+            # elevation or distance, and it's not clear what the use-case is
+            raise ValueError("positionOffset is not supported with HOA")
+
         n, m = np.array(type_metadata.orders), np.array(type_metadata.degrees)
 
         norm = hoa.norm_functions[type_metadata.normalization]
