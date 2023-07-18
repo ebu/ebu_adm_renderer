@@ -630,6 +630,9 @@ def _get_extra_data(state, pack_paths_channels=None):
                                                get_absoluteDistance),
         object_gain=state.audioObject.gain if state.audioObject is not None else 1.0,
         object_mute=state.audioObject.mute if state.audioObject is not None else False,
+        object_positionOffset=(
+            state.audioObject.positionOffset if state.audioObject is not None else None
+        ),
     )
 
 
