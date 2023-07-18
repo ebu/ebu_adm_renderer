@@ -1,4 +1,4 @@
-from attr import attrs, attrib, Factory
+from attr import attrs, attrib, evolve, Factory
 from attr.validators import instance_of, optional
 from ....common import PolarPositionMixin, CartesianPositionMixin, PolarPosition, CartesianPosition, cart, validate_range
 
@@ -217,3 +217,51 @@ class DirectSpeakerCartesianPosition(DirectSpeakerPosition, CartesianPositionMix
     def Z(self):
         """float: bottom-to-top position, from -1 to 1"""
         return self.bounded_Z.value
+
+
+class PositionOffset:
+    """representation of positionOffset elements in audioObject or alternativeValueSet"""
+
+    __slots__ = ()
+
+
+@attrs(slots=True)
+class PolarPositionOffset(PositionOffset):
+    """representation of a polar positionOffset"""
+
+    azimuth = attrib(default=0.0, validator=instance_of(float))
+    elevation = attrib(default=0.0, validator=instance_of(float))
+    distance = attrib(default=0.0, validator=instance_of(float))
+
+    def apply(self, pos):
+        if not isinstance(pos, ObjectPolarPosition):
+            raise ValueError(
+                "can only apply a polar position offset to a polar position"
+            )
+        return evolve(
+            pos,
+            azimuth=pos.azimuth + self.azimuth,
+            elevation=pos.elevation + self.elevation,
+            distance=pos.distance + self.distance,
+        )
+
+
+@attrs(slots=True)
+class CartesianPositionOffset(PositionOffset):
+    """representation of a cartesian positionOffset"""
+
+    X = attrib(default=0.0, validator=instance_of(float))
+    Y = attrib(default=0.0, validator=instance_of(float))
+    Z = attrib(default=0.0, validator=instance_of(float))
+
+    def apply(self, pos):
+        if not isinstance(pos, ObjectCartesianPosition):
+            raise ValueError(
+                "can only apply a cartesian position offset to a cartesian position"
+            )
+        return evolve(
+            pos,
+            X=pos.X + self.X,
+            Y=pos.Y + self.Y,
+            Z=pos.Z + self.Z,
+        )

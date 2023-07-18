@@ -4,6 +4,7 @@ from enum import Enum
 from fractions import Fraction
 from six import string_types
 
+from .geom import PositionOffset
 from ..exceptions import AdmError
 from ....common import CartesianScreen, PolarScreen, default_screen, list_of
 
@@ -167,6 +168,9 @@ class AudioObject(ADMElement):
         audioTrackUIDs (list[AudioTrackUID])
         audioObjects (list[AudioObject])
         audioComplementaryObjects (list[AudioObject])
+        gain (float)
+        mute (bool)
+        positionOffset (Optional[PositionOffset])
     """
 
     audioObjectName = attrib(default=None, validator=instance_of(string_types))
@@ -183,6 +187,9 @@ class AudioObject(ADMElement):
 
     gain = attrib(validator=instance_of(float), default=1.0)
     mute = attrib(validator=instance_of(bool), default=False)
+    positionOffset = attrib(
+        validator=optional(instance_of(PositionOffset)), default=None
+    )
 
     audioPackFormatIDRef = attrib(default=None)
     audioTrackUIDRef = attrib(default=None)
