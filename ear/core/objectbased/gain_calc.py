@@ -364,7 +364,13 @@ class GainCalc(object):
     def render(self, object_meta):
         block_format = object_meta.block_format
 
-        position = coord_trans(block_format.position)
+        position = block_format.position
+
+        positionOffset = object_meta.extra_data.object_positionOffset
+        if positionOffset is not None:
+            position = positionOffset.apply(position)
+
+        position = coord_trans(position)
 
         position = self.screen_scale_handler.handle(position, block_format.screenRef,
                                                     object_meta.extra_data.reference_screen,

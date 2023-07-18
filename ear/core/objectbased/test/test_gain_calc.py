@@ -3,8 +3,18 @@ import numpy as np
 import numpy.testing as npt
 from ... import bs2051
 from ..gain_calc import GainCalc
-from ....fileio.adm.elements import (AudioBlockFormatObjects, ChannelLock, ObjectDivergence,
-                                     CartesianZone, PolarZone, ScreenEdgeLock, ObjectPolarPosition, ObjectCartesianPosition)
+from ....fileio.adm.elements import (
+    AudioBlockFormatObjects,
+    ChannelLock,
+    ObjectDivergence,
+    CartesianZone,
+    PolarZone,
+    ScreenEdgeLock,
+    ObjectPolarPosition,
+    ObjectCartesianPosition,
+    CartesianPositionOffset,
+    PolarPositionOffset,
+)
 from ...metadata_input import ObjectTypeMetadata, ExtraData
 from ...geom import cart, elevation, PolarPosition
 from ....common import PolarScreen
@@ -413,6 +423,30 @@ def test_object_mute(layout, gain_calc):
         dict(position=dict(azimuth=0.0, elevation=0.0, distance=1.0)),
         extra_data=ExtraData(object_mute=True),
         direct_gains=[],
+    )
+
+
+def test_object_PolarPositionOffset(layout, gain_calc):
+    run_test(
+        layout,
+        gain_calc,
+        dict(position=dict(azimuth=10.0, elevation=5.0, distance=1.0)),
+        extra_data=ExtraData(
+            object_positionOffset=PolarPositionOffset(azimuth=20.0, elevation=25.0)
+        ),
+        direct_gains=[("U+030", 1.0)],
+    )
+
+
+def test_object_CartesianPositionOffset(layout, gain_calc):
+    run_test(
+        layout,
+        gain_calc,
+        dict(position=dict(X=0.1, Y=0.2, Z=0.3), cartesian=True),
+        extra_data=ExtraData(
+            object_positionOffset=CartesianPositionOffset(X=0.9, Y=0.8, Z=0.7)
+        ),
+        direct_gains=[("U-030", 1.0)],
     )
 
 
