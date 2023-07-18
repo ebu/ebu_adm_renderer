@@ -5,8 +5,17 @@ from ..panner import DirectSpeakersPanner
 from ...metadata_input import DirectSpeakersTypeMetadata, ExtraData
 from ....fileio.adm.adm import ADM
 from ....fileio.adm.common_definitions import load_common_definitions
-from ....fileio.adm.elements import AudioBlockFormatDirectSpeakers, BoundCoordinate, Frequency, ScreenEdgeLock
-from ....fileio.adm.elements import DirectSpeakerCartesianPosition, DirectSpeakerPolarPosition
+from ....fileio.adm.elements import (
+    AudioBlockFormatDirectSpeakers,
+    BoundCoordinate,
+    Frequency,
+    PolarPositionOffset,
+    ScreenEdgeLock,
+)
+from ....fileio.adm.elements import (
+    DirectSpeakerCartesianPosition,
+    DirectSpeakerPolarPosition,
+)
 from ... import bs2051
 from ...geom import cart
 
@@ -395,3 +404,16 @@ def test_gain():
 
     tm.extra_data.object_mute = True
     npt.assert_allclose(p.handle(tm), np.zeros(len(layout.channels)))
+
+
+def test_object_positionOffset():
+    layout = bs2051.get_layout("4+5+0")
+    p = DirectSpeakersPanner(layout)
+
+    tm = tm_with_labels(["M+000"])
+    tm.extra_data.object_positionOffset = PolarPositionOffset(azimuth=30.0)
+
+    with pytest.raises(
+        ValueError, match="positionOffset is not supported with DirectSpeakers"
+    ):
+        p.handle(tm)

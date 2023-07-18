@@ -395,6 +395,13 @@ class DirectSpeakersPanner(object):
     def _handle_without_gain(self, type_metadata):
         tol = 1e-5
 
+        if type_metadata.extra_data.object_positionOffset is not None:
+            # it's not clear how positionOffset would work, and wouldn't have
+            # any effect most of the time if a static down/upmix matrix or a
+            # speakerLabel is used. there isn't an obvious use-case for it, so
+            # disallow it for now
+            raise ValueError("positionOffset is not supported with DirectSpeakers")
+
         block_format = type_metadata.block_format
 
         if isinstance(block_format.position, DirectSpeakerPolarPosition):
