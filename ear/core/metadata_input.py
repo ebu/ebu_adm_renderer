@@ -3,9 +3,18 @@ from attr.validators import instance_of, optional
 from fractions import Fraction
 from typing import Optional
 from ..common import list_of, default_screen
-from ..fileio.adm.elements import (AudioProgramme, AudioContent, AudioObject, AudioPackFormat,
-                                   AudioChannelFormat, AudioBlockFormatObjects, AudioBlockFormatDirectSpeakers,
-                                   MatrixCoefficient, Frequency)
+from ..fileio.adm.elements import (
+    AudioProgramme,
+    AudioContent,
+    AudioObject,
+    AudioPackFormat,
+    AudioChannelFormat,
+    AudioBlockFormatObjects,
+    AudioBlockFormatDirectSpeakers,
+    MatrixCoefficient,
+    Frequency,
+    PositionOffset,
+)
 
 
 class MetadataSource(object):
@@ -59,6 +68,7 @@ class ExtraData(object):
         pack_absoluteDistance (float or None): absoluteDistance parameter from audioPackFormat.
         object_gain (float): gain from audioObject or alternativeValueSet
         object_mute (bool): mute from audioObject or alternativeValueSet
+        object_positionOffset (Optional[PositionOffset]): positionOffset from audioObject or alternativeValueSet
     """
     object_start = attrib(validator=optional(instance_of(Fraction)), default=None)
     object_duration = attrib(validator=optional(instance_of(Fraction)), default=None)
@@ -68,6 +78,9 @@ class ExtraData(object):
 
     object_gain = attrib(validator=instance_of(float), default=1.0)
     object_mute = attrib(validator=instance_of(bool), default=False)
+    object_positionOffset = attrib(
+        validator=optional(instance_of(PositionOffset)), default=None
+    )
 
 
 @attrs(slots=True)
