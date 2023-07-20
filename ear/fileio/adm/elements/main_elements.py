@@ -72,6 +72,29 @@ class LoudnessMetadata(object):
 
 
 @attrs(slots=True)
+class AlternativeValueSet(object):
+    """ADM alternativeValueSet
+
+    used in audioObjects and referenced in audioProgramme and audioContents
+
+    Attributes:
+        id (Optional[str]): ADM ID attribute
+        gain (Optional[float])
+        mute (Optional[bool])
+        positionOffset (Optional[PositionOffset])
+        audioObjectInteraction (Optional[AudioObjectInteraction])
+    """
+
+    id = attrib(default=None)
+
+    gain = attrib(validator=optional(instance_of(float)), default=None)
+    mute = attrib(validator=optional(instance_of(bool)), default=None)
+    positionOffset = attrib(
+        validator=optional(instance_of(PositionOffset)), default=None
+    )
+
+
+@attrs(slots=True)
 class ADMElement(object):
     """base class for top-level ADM elements
 
@@ -105,6 +128,7 @@ class AudioProgramme(ADMElement):
             via audioContentIDRef
         referenceScreen (Optional[Union[CartesianScreen, PolarScreen]])
         loudnessMetadata (list[LoudnessMetadata])
+        alternativeValueSets (list[AlternativeValueSet]): referenced alternativeValueSets
     """
 
     audioProgrammeName = attrib(default=None, validator=instance_of(string_types))
@@ -119,6 +143,12 @@ class AudioProgramme(ADMElement):
     referenceScreen = attrib(validator=optional(instance_of((CartesianScreen, PolarScreen))),
                              default=default_screen)
     loudnessMetadata = attrib(default=Factory(list), validator=list_of(LoudnessMetadata))
+
+    alternativeValueSets = attrib(
+        validator=list_of(AlternativeValueSet), default=Factory(list)
+    )
+
+    alternativeValueSetIDRef = attrib(default=None)
 
     def lazy_lookup_references(self, adm):
         if self.audioContentIDRef is not None:
@@ -136,6 +166,7 @@ class AudioContent(ADMElement):
         loudnessMetadata (list[LoudnessMetadata])
         dialogue (Optional[int])
         audioObjects (list[AudioObject])
+        alternativeValueSets (list[AlternativeValueSet]): referenced alternativeValueSets
     """
 
     audioContentName = attrib(default=None, validator=instance_of(string_types))
@@ -145,6 +176,12 @@ class AudioContent(ADMElement):
     audioObjects = attrib(default=Factory(list), repr=False)
 
     audioObjectIDRef = attrib(default=None)
+
+    alternativeValueSets = attrib(
+        validator=list_of(AlternativeValueSet), default=Factory(list)
+    )
+
+    alternativeValueSetIDRef = attrib(default=None)
 
     def lazy_lookup_references(self, adm):
         if self.audioObjectIDRef is not None:
@@ -171,6 +208,8 @@ class AudioObject(ADMElement):
         gain (float)
         mute (bool)
         positionOffset (Optional[PositionOffset])
+        alternativeValueSets (list[AlternativeValueSet])
+        audioObjectInteraction (Optional[AudioObjectInteraction])
     """
 
     audioObjectName = attrib(default=None, validator=instance_of(string_types))
@@ -189,6 +228,10 @@ class AudioObject(ADMElement):
     mute = attrib(validator=instance_of(bool), default=False)
     positionOffset = attrib(
         validator=optional(instance_of(PositionOffset)), default=None
+    )
+
+    alternativeValueSets = attrib(
+        validator=list_of(AlternativeValueSet), default=Factory(list)
     )
 
     audioPackFormatIDRef = attrib(default=None)

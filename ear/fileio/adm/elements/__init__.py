@@ -27,6 +27,7 @@ from .geom import (
     ScreenEdgeLock,
 )
 from .main_elements import (
+    AlternativeValueSet,
     AudioChannelFormat,
     AudioContent,
     AudioObject,
