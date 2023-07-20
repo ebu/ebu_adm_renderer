@@ -29,6 +29,9 @@ def generate_ids(adm):
     for id, element in enumerate(adm.audioObjects, 0x1001):
         element.id = "AO_{id:04X}".format(id=id)
 
+        for avs_id, avs in enumerate(element.alternativeValueSets, 0x1):
+            avs.id = "AVS_{id:04X}_{avs_id:04X}".format(id=id, avs_id=avs_id)
+
     for id, element in enumerate(non_common(adm.audioPackFormats), 0x1001):
         element.id = "AP_{type.value:04X}{id:04X}".format(id=id, type=element.type)
 
