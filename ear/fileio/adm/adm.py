@@ -75,6 +75,31 @@ class ADM(object):
         for element in self.elements:
             element.lazy_lookup_references(self)
 
+        self._lazy_lookup_alternativeValueSets()
+
+    def _lazy_lookup_alternativeValueSets(self):
+        avs_by_id = {}
+        for audioObject in self.audioObjects:
+            for avs in audioObject.alternativeValueSets:
+                if avs.id is not None:
+                    id_upper = avs.id.upper()
+                    if id_upper in avs_by_id:
+                        raise AdmIDError(f"duplicate objects with id={avs.id}")
+                    avs_by_id[id_upper] = avs
+
+        def get_avs(avs_id):
+            try:
+                return avs_by_id[avs_id.upper()]
+            except KeyError:
+                raise KeyError(f"unknown alternativeValueSet {avs_id}")
+
+        for element in chain(self.audioProgrammes, self.audioContents):
+            if element.alternativeValueSetIDRef is not None:
+                element.alternativeValueSets = [
+                    get_avs(avs_id) for avs_id in element.alternativeValueSetIDRef
+                ]
+                element.alternativeValueSetIDRef = None
+
     def validate(self):
         """Validate all elements, raising an exception if an error is found.
 
