@@ -11,29 +11,38 @@ from six import viewkeys, iteritems, reraise
 
 from .adm import ADM
 from .elements import (
-    AudioBlockFormatObjects, AudioBlockFormatDirectSpeakers, AudioBlockFormatBinaural, AudioBlockFormatHoa, AudioBlockFormatMatrix,
-    ChannelLock, BoundCoordinate, JumpPosition, ObjectDivergence, CartesianZone, PolarZone, ScreenEdgeLock, MatrixCoefficient)
-from .elements import (
-    AudioProgramme,
+    AlternativeValueSet,
+    AudioBlockFormatBinaural,
+    AudioBlockFormatDirectSpeakers,
+    AudioBlockFormatHoa,
+    AudioBlockFormatMatrix,
+    AudioBlockFormatObjects,
+    AudioChannelFormat,
     AudioContent,
     AudioObject,
-    AudioChannelFormat,
     AudioPackFormat,
+    AudioProgramme,
     AudioStreamFormat,
     AudioTrackFormat,
     AudioTrackUID,
-    FormatDefinition,
-    TypeDefinition,
-    Frequency,
-    LoudnessMetadata,
-)
-from .elements.geom import (
-    DirectSpeakerPolarPosition,
-    DirectSpeakerCartesianPosition,
-    ObjectPolarPosition,
-    ObjectCartesianPosition,
+    BoundCoordinate,
     CartesianPositionOffset,
+    CartesianZone,
+    ChannelLock,
+    DirectSpeakerCartesianPosition,
+    DirectSpeakerPolarPosition,
+    FormatDefinition,
+    Frequency,
+    JumpPosition,
+    LoudnessMetadata,
+    MatrixCoefficient,
+    ObjectCartesianPosition,
+    ObjectDivergence,
+    ObjectPolarPosition,
     PolarPositionOffset,
+    PolarZone,
+    ScreenEdgeLock,
+    TypeDefinition,
 )
 from .elements.version import parse_version, BS2076Version, NoVersion, Version
 from .time_format import parse_time, unparse_time
@@ -548,6 +557,13 @@ def handle_gain_element_v1(kwargs, el):
 
 def gain_to_xml(element, obj):
     if obj.gain != 1.0:
+        new_el = element.makeelement(QName(default_ns, "gain"))
+        new_el.text = FloatType.dumps(obj.gain)
+        element.append(new_el)
+
+
+def optional_gain_to_xml(element, obj):
+    if obj.gain is not None:
         new_el = element.makeelement(QName(default_ns, "gain"))
         new_el.text = FloatType.dumps(obj.gain)
         element.append(new_el)
@@ -1231,6 +1247,22 @@ class MainElementHandler:
             v2=RefElement(name),
         )
 
+    def make_alternativeValueSet_handler(self):
+        return ElementParser(
+            AlternativeValueSet,
+            "alternativeValueSet",
+            [
+                Attribute(
+                    adm_name="alternativeValueSetID", arg_name="id", required=True
+                ),
+                CustomElement(
+                    "gain", handle_gain_element_v2, to_xml=optional_gain_to_xml
+                ),
+                AttrElement(adm_name="mute", arg_name="mute", type=BoolType),
+                position_offset_handler,
+            ],
+        )
+
     # main elements
 
     def make_programme_handler(self):
@@ -1262,6 +1294,14 @@ class MainElementHandler:
                 RefList("audioContent"),
                 screen_handler.as_handler("referenceScreen", default=default_screen),
                 self.loudness_handler.as_list_handler("loudnessMetadata"),
+                self.by_version(
+                    v1=make_no_element_before_v2(
+                        "audioProgramme",
+                        "alternativeValueSetIDRef",
+                        lambda obj: obj.alternativeValueSets,
+                    ),
+                    v2=RefList("alternativeValueSet"),
+                ),
             ],
         )
 
@@ -1282,6 +1322,14 @@ class MainElementHandler:
                 AttrElement(adm_name="dialogue", arg_name="dialogue", type=IntType),
                 RefList("audioObject"),
                 self.loudness_handler.as_list_handler("loudnessMetadata"),
+                self.by_version(
+                    v1=make_no_element_before_v2(
+                        "audioContent",
+                        "alternativeValueSetIDRef",
+                        lambda obj: obj.alternativeValueSets,
+                    ),
+                    v2=RefList("alternativeValueSet"),
+                ),
             ],
         )
 
@@ -1322,6 +1370,16 @@ class MainElementHandler:
                         lambda obj: obj.positionOffset is not None,
                     ),
                     v2=position_offset_handler,
+                ),
+                self.by_version(
+                    v1=make_no_element_before_v2(
+                        "audioObject",
+                        "alternativeValueSet",
+                        lambda obj: obj.alternativeValueSets,
+                    ),
+                    v2=self.make_alternativeValueSet_handler().as_list_handler(
+                        "alternativeValueSets"
+                    ),
                 ),
             ],
         )

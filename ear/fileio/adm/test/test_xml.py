@@ -5,7 +5,7 @@ import pytest
 import re
 from copy import deepcopy
 from ..xml import parse_string, adm_to_xml, ParseError
-from ..exceptions import AdmError
+from ..exceptions import AdmError, AdmIDError
 from ..elements import (
     AudioBlockFormatBinaural,
     CartesianZone,
@@ -956,6 +956,129 @@ def test_audioObject_positionOffset(base):
             add_children(
                 "//adm:audioObject",
                 E.positionOffset("20"),
+            ),
+        )
+
+
+def test_audioObject_alternativeValueSet_positionOffset(base):
+    adm = base.adm_after_mods(
+        set_version(2),
+        add_children(
+            "//adm:audioObject",
+            # empty
+            E.alternativeValueSet(
+                alternativeValueSetID="AVS_1001_0001",
+            ),
+            # full
+            E.alternativeValueSet(
+                E.gain("0.5"),
+                E.mute("1"),
+                E.positionOffset("10.0", coordinate="azimuth"),
+                E.positionOffset("20.0", coordinate="elevation"),
+                E.positionOffset("0.25", coordinate="distance"),
+                alternativeValueSetID="AVS_1001_0002",
+            ),
+        ),
+    )
+    [ao] = adm.audioObjects
+    [avs_default, avs_full] = ao.alternativeValueSets
+
+    assert avs_default.id == "AVS_1001_0001"
+    assert avs_default.gain is None
+    assert avs_default.mute is None
+    assert avs_default.positionOffset is None
+
+    assert avs_full.id == "AVS_1001_0002"
+    assert avs_full.gain == 0.5
+    assert avs_full.mute is True
+    assert avs_full.positionOffset == PolarPositionOffset(
+        azimuth=10.0, elevation=20.0, distance=0.25
+    )
+
+    expected = "alternativeValueSet in audioObject is a BS.2076-2 feature"
+    with pytest.raises(ParseError, match=expected):
+        base.adm_after_mods(
+            add_children(
+                "//adm:audioObject",
+                E.alternativeValueSet(
+                    alternativeValueSetID="AVS_1001_0001",
+                ),
+            )
+        )
+
+
+def test_audioObject_alternativeValueSet_references(base):
+    adm = base.adm_after_mods(
+        set_version(2),
+        add_children(
+            "//adm:audioObject",
+            E.alternativeValueSet(
+                alternativeValueSetID="AVS_1001_0001",
+            ),
+        ),
+        add_children(
+            "//adm:audioProgramme",
+            E.alternativeValueSetIDRef("AVS_1001_0001"),
+        ),
+        add_children(
+            "//adm:audioContent",
+            E.alternativeValueSetIDRef("AVS_1001_0001"),
+        ),
+    )
+
+    [ao] = adm.audioObjects
+    [avs] = ao.alternativeValueSets
+
+    [ap] = adm.audioProgrammes
+    [ap_avs_ref] = ap.alternativeValueSets
+    assert ap_avs_ref is avs
+
+    [ac] = adm.audioContents
+    [ac_avs_ref] = ac.alternativeValueSets
+    assert ac_avs_ref is avs
+
+
+def test_audioObject_alternativeValueSet_only_dash2(base):
+    expected = "alternativeValueSetIDRef in audioProgramme is a BS.2076-2 feature"
+    with pytest.raises(ParseError, match=expected):
+        base.adm_after_mods(
+            add_children(
+                "//adm:audioProgramme", E.alternativeValueSetIDRef("AVS_1001_0001")
+            )
+        )
+
+
+def test_audioObject_alternativeValueSet_duplicate(base):
+    expected = "duplicate objects with id=AVS_1001_0001"
+    with pytest.raises(AdmIDError, match=expected):
+        base.adm_after_mods(
+            set_version(2),
+            add_children(
+                "//adm:audioObject",
+                E.alternativeValueSet(
+                    alternativeValueSetID="AVS_1001_0001",
+                ),
+                E.alternativeValueSet(
+                    alternativeValueSetID="AVS_1001_0001",
+                ),
+            ),
+        )
+
+
+def test_audioObject_alternativeValueSet_unknown(base):
+    expected = "unknown alternativeValueSet AVS_1001_0002"
+    with pytest.raises(KeyError, match=expected):
+        base.adm_after_mods(
+            set_version(2),
+            add_children(
+                "//adm:audioObject",
+                E.alternativeValueSet(
+                    alternativeValueSetID="AVS_1001_0001",
+                ),
+            ),
+            add_children(
+                "//adm:audioContent",
+                E.alternativeValueSetIDRef("AVS_1001_0002"),
             ),
         )
 
