@@ -134,7 +134,7 @@ class AudioContent(ADMElement):
         audioContentLanguage (Optional[str])
         loudnessMetadata (list[LoudnessMetadata])
         dialogue (Optional[int])
-        audioObject (list[AudioObject])
+        audioObjects (list[AudioObject])
     """
 
     audioContentName = attrib(default=None, validator=instance_of(string_types))
