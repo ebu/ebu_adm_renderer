@@ -1,9 +1,16 @@
 from fractions import Fraction
 import pytest
 from ....fileio.adm.builder import ADMBuilder
-from ....fileio.adm.elements import (TypeDefinition, Frequency,
-                                     AudioBlockFormatHoa, AudioBlockFormatObjects,
-                                     ObjectPolarPosition, ObjectCartesianPosition)
+from ....fileio.adm.elements import (
+    AlternativeValueSet,
+    AudioBlockFormatHoa,
+    AudioBlockFormatObjects,
+    Frequency,
+    ObjectCartesianPosition,
+    ObjectPolarPosition,
+    PolarPositionOffset,
+    TypeDefinition,
+)
 from ....fileio.adm.elements.version import NoVersion
 from ....fileio.adm.exceptions import AdmError
 from ....fileio.adm.generate_ids import generate_ids
@@ -41,6 +48,34 @@ def test_object_loop_exception():
     check_select_items_raises(
         builder,
         "loop detected in audioObjects: .*$")
+
+
+@pytest.mark.parametrize(
+    "param_name,adm_name,value",
+    [
+        ("start", "start", Fraction(1)),
+        ("duration", "duration", Fraction(1)),
+        ("gain", "gain", 0.5),
+        ("mute", "mute", True),
+        ("positionOffset", "positionOffset", PolarPositionOffset(azimuth=20.0)),
+        ("alternativeValueSets", "alternativeValueSet", [AlternativeValueSet()]),
+    ],
+)
+def test_object_parameters_in_leaves(param_name, adm_name, value):
+    builder = ADMBuilder()
+    programme = builder.create_programme(audioProgrammeName="programme")
+    content = builder.create_content(audioContentName="content", parent=programme)
+    parent_object = builder.create_object(audioObjectName="object 1", parent=content)
+    builder.create_item_objects(track_index=1, name="object 2", parent=parent_object)
+
+    setattr(parent_object, param_name, value)
+
+    check_select_items_raises(
+        builder,
+        "audioObject {parent_object.id} has both audioObject references and {adm_name}",
+        parent_object=parent_object,
+        adm_name=adm_name,
+    )
 
 
 def test_pack_loop_exception():

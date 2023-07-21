@@ -44,6 +44,35 @@ def _validate_object_loops(adm):
     return _validate_loops("audioObjects", adm.audioObjects, lambda audioObject: audioObject.audioObjects)
 
 
+def _validate_object_parameters_in_leaves(adm):
+    for obj in adm.audioObjects:
+        if obj.audioObjects:
+            if obj.start is not None:
+                raise AdmError(
+                    f"audioObject {obj.id} has both audioObject references and start"
+                )
+            if obj.duration is not None:
+                raise AdmError(
+                    f"audioObject {obj.id} has both audioObject references and duration"
+                )
+            if obj.gain != 1.0:
+                raise AdmError(
+                    f"audioObject {obj.id} has both audioObject references and gain"
+                )
+            if obj.mute:
+                raise AdmError(
+                    f"audioObject {obj.id} has both audioObject references and mute"
+                )
+            if obj.positionOffset is not None:
+                raise AdmError(
+                    f"audioObject {obj.id} has both audioObject references and positionOffset"
+                )
+            if obj.alternativeValueSets:
+                raise AdmError(
+                    f"audioObject {obj.id} has both audioObject references and alternativeValueSet"
+                )
+
+
 def _validate_pack_channel_multitree(adm):
     """Check that audioPackFormat->audioPackFormat and
     audioPackFormat->audioChannelFormat references form a multitree; from each
@@ -423,6 +452,7 @@ def _validate_track_uid_track_or_channel_ref(adm):
 def validate_structure(adm):
     adm.validate()
     _validate_object_loops(adm)
+    _validate_object_parameters_in_leaves(adm)
     _validate_pack_channel_types(adm)
     _validate_pack_subpack_types(adm)
     _validate_pack_channel_multitree(adm)
