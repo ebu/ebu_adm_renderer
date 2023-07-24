@@ -714,3 +714,103 @@ def test_audioTrackUID_to_channel_version(version):
         builder,
         r"audioTrackUID \(or CHNA entry\) to audioChannelFormat references are not valid before BS.2076-2",
     )
+
+
+def test_bad_avs_ref():
+    """test exceptions when an alternativeValueSetIDRef does not point to an
+    alternativeValueSet in in a child audioObject
+    """
+    builder = ADMBuilder()
+    programme_1 = builder.create_programme(audioProgrammeName="programme 1")
+    content_1 = builder.create_content(audioContentName="content 1", parent=programme_1)
+    item_1 = builder.create_item_objects(
+        track_index=1, name="object 1", parent=content_1
+    )
+
+    programme_2 = builder.create_programme(audioProgrammeName="programme 2")
+    content_2 = builder.create_content(audioContentName="content 2", parent=programme_2)
+    builder.create_item_objects(track_index=2, name="object 2", parent=content_2)
+
+    avs = AlternativeValueSet()
+    item_1.audio_object.alternativeValueSets = [avs]
+
+    programme_2.alternativeValueSets = [avs]
+    check_select_items_raises(
+        builder,
+        "{programme_2.id} references {avs.id}, which is not in one of its constituent audioObjects",
+        programme_2=programme_2,
+        avs=avs,
+    )
+
+    programme_2.alternativeValueSets = []
+    content_2.alternativeValueSets = [avs]
+    check_select_items_raises(
+        builder,
+        "{content_2.id} references {avs.id}, which is not in one of its constituent audioObjects",
+        content_2=content_2,
+        avs=avs,
+    )
+
+
+def test_conflicting_avs_ref():
+    """test errors when alternativeValueSetIDRefs conflict"""
+    builder = ADMBuilder()
+    programme = builder.create_programme(audioProgrammeName="programme")
+    content = builder.create_content(audioContentName="content", parent=programme)
+    item = builder.create_item_objects(track_index=1, name="object", parent=content)
+
+    avs_1 = AlternativeValueSet()
+    avs_2 = AlternativeValueSet()
+    item.audio_object.alternativeValueSets = [avs_1, avs_2]
+
+    programme.alternativeValueSets = [avs_1, avs_2]
+    check_select_items_raises(
+        builder,
+        "multiple alternativeValueSets referenced in {item.audio_object.id}: "
+        "{avs_1.id} referenced from {programme.id}, and {avs_2.id} referenced from {programme.id}",
+        programme=programme,
+        item=item,
+        avs_1=avs_1,
+        avs_2=avs_2,
+    )
+
+    programme.alternativeValueSets = [avs_1]
+    content.alternativeValueSets = [avs_2]
+    check_select_items_raises(
+        builder,
+        "multiple alternativeValueSets referenced in {item.audio_object.id}: "
+        "{avs_1.id} referenced from {programme.id}, and {avs_2.id} referenced from {content.id}",
+        programme=programme,
+        content=content,
+        item=item,
+        avs_1=avs_1,
+        avs_2=avs_2,
+    )
+
+
+def test_duplicate_avs():
+    """test errors when alternativeValueSetIDRefs are duplicated in audioProgramme or audioContent"""
+    builder = ADMBuilder()
+    programme = builder.create_programme(audioProgrammeName="programme")
+    content = builder.create_content(audioContentName="content", parent=programme)
+    item = builder.create_item_objects(track_index=1, name="object", parent=content)
+
+    avs = AlternativeValueSet()
+    item.audio_object.alternativeValueSets = [avs]
+
+    programme.alternativeValueSets = [avs, avs]
+    check_select_items_raises(
+        builder,
+        "duplicate references to {avs.id} in {programme.id}",
+        avs=avs,
+        programme=programme,
+    )
+
+    programme.alternativeValueSets = []
+    content.alternativeValueSets = [avs, avs]
+    check_select_items_raises(
+        builder,
+        "duplicate references to {avs.id} in {content.id}",
+        avs=avs,
+        content=content,
+    )
