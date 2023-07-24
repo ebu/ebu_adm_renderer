@@ -612,28 +612,27 @@ def _get_extra_data(state, pack_paths_channels=None):
     def get_absoluteDistance(audioPackFormat_path, audioChannelFormat):
         return get_path_param(audioPackFormat_path, "absoluteDistance")
 
-    return ExtraData(
-        object_start=(state.audioObject.start
-                      if state.audioObject is not None
-                      else None),
-        object_duration=(state.audioObject.duration
-                         if state.audioObject is not None
-                         else None),
-        reference_screen=(state.audioProgramme.referenceScreen
-                          if state.audioProgramme is not None
-                          else default_screen),
-        channel_frequency=(state.audioChannelFormat.frequency
-                           if state.audioChannelFormat is not None
-                           else Frequency()),
-        pack_absoluteDistance=get_single_param(pack_paths_channels,
-                                               "absoluteDistance",
-                                               get_absoluteDistance),
-        object_gain=state.audioObject.gain if state.audioObject is not None else 1.0,
-        object_mute=state.audioObject.mute if state.audioObject is not None else False,
-        object_positionOffset=(
-            state.audioObject.positionOffset if state.audioObject is not None else None
-        ),
+    extra_data = ExtraData()
+
+    if state.audioProgramme is not None:
+        extra_data.reference_screen = state.audioProgramme.referenceScreen
+
+    if state.audioChannelFormat is not None:
+        extra_data.channel_frequency = state.audioChannelFormat.frequency
+
+    extra_data.pack_absoluteDistance = get_single_param(
+        pack_paths_channels, "absoluteDistance", get_absoluteDistance
     )
+
+    if state.audioObject is not None:
+        extra_data.object_start = state.audioObject.start
+        extra_data.object_duration = state.audioObject.duration
+
+        extra_data.object_gain = state.audioObject.gain
+        extra_data.object_mute = state.audioObject.mute
+        extra_data.object_positionOffset = state.audioObject.positionOffset
+
+    return extra_data
 
 
 def _get_pack_format_path(audioPackFormat, audioChannelFormat):
