@@ -590,6 +590,27 @@ def _get_adm_path(state):
     )
 
 
+def _get_alternativeValueSet(state):
+    """get the referenced AlternativeValueSet, or None"""
+    audioObject = state.audioObject
+    if audioObject is None:
+        return
+
+    selected_avs = None
+    for referring_obj in (state.audioProgramme, state.audioContent):
+        if referring_obj is None:
+            continue
+        for avs in referring_obj.alternativeValueSets:
+            if in_by_id(avs, audioObject.alternativeValueSets):
+                # already checked in validation
+                assert (
+                    selected_avs is None or selected_avs is avs
+                ), "more than one active alternativeValueSet"
+                selected_avs = avs
+
+    return selected_avs
+
+
 def _get_extra_data(state, pack_paths_channels=None):
     """Get an ExtraData object for this track/channel with extra information
     from the programme/object/channel needed for rendering.
@@ -631,6 +652,16 @@ def _get_extra_data(state, pack_paths_channels=None):
         extra_data.object_gain = state.audioObject.gain
         extra_data.object_mute = state.audioObject.mute
         extra_data.object_positionOffset = state.audioObject.positionOffset
+
+    avs = _get_alternativeValueSet(state)
+    if avs is not None:
+        if avs.gain is not None:
+            extra_data.object_gain = avs.gain
+        if avs.mute is not None:
+            extra_data.object_mute = avs.mute
+        if avs.positionOffset is not None:
+            # TODO: currently if positionOffset is defined, the whole value is overridden
+            extra_data.object_positionOffset = avs.positionOffset
 
     return extra_data
 

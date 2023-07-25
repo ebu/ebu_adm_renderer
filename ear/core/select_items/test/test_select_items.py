@@ -2,7 +2,13 @@ import pytest
 from ....fileio.adm.builder import ADMBuilder
 from ....fileio.adm.generate_ids import generate_ids
 from .. import select_rendering_items
-from ....fileio.adm.elements import AudioBlockFormatObjects, ObjectPolarPosition, TypeDefinition
+from ....fileio.adm.elements import (
+    AlternativeValueSet,
+    AudioBlockFormatObjects,
+    ObjectPolarPosition,
+    PolarPositionOffset,
+    TypeDefinition,
+)
 from ....fileio.adm.exceptions import AdmError
 from ...metadata_input import DirectTrackSpec, SilentTrackSpec
 
@@ -496,6 +502,67 @@ def test_object_params():
 
     assert extra_data.object_gain == 1.5
     assert extra_data.object_mute is True
+
+
+def test_alternativeValueSet():
+    builder = ADMBuilder()
+    builder.load_common_definitions()
+    programme = builder.create_programme(audioProgrammeName="MyProgramme")
+    content = builder.create_content(audioContentName="MyContent")
+
+    obj = builder.create_item_objects(
+        0,
+        "obj",
+        block_formats=[
+            AudioBlockFormatObjects(position=ObjectPolarPosition(0.0, 0.0, 1.0)),
+        ],
+    )
+
+    avs = AlternativeValueSet(
+        gain=1.5, mute=True, positionOffset=PolarPositionOffset(azimuth=20.0)
+    )
+    obj.audio_object.alternativeValueSets = [avs]
+    obj.audio_object.positionOffset = PolarPositionOffset(elevation=10.0)
+
+    def check_avs_used(extra_data):
+        assert extra_data.object_gain == avs.gain
+        assert extra_data.object_mute == avs.mute
+        assert extra_data.object_positionOffset == avs.positionOffset
+
+    def check_avs_not_used(extra_data):
+        assert extra_data.object_gain == 1.0
+        assert extra_data.object_mute is False
+        assert extra_data.object_positionOffset == obj.audio_object.positionOffset
+
+    # not referenced
+    [item] = select_rendering_items(builder.adm)
+    extra_data = item.metadata_source.get_next_block().extra_data
+
+    check_avs_not_used(extra_data)
+
+    # programme reference
+    programme.alternativeValueSets = [avs]
+    content.alternativeValueSets = []
+    [item] = select_rendering_items(builder.adm)
+    extra_data = item.metadata_source.get_next_block().extra_data
+
+    check_avs_used(extra_data)
+
+    # content reference
+    programme.alternativeValueSets = []
+    content.alternativeValueSets = [avs]
+    [item] = select_rendering_items(builder.adm)
+    extra_data = item.metadata_source.get_next_block().extra_data
+
+    check_avs_used(extra_data)
+
+    # referenced from both
+    programme.alternativeValueSets = [avs]
+    content.alternativeValueSets = [avs]
+    [item] = select_rendering_items(builder.adm)
+    extra_data = item.metadata_source.get_next_block().extra_data
+
+    check_avs_used(extra_data)
 
 
 def test_trackUID_channelFormat_reference():
