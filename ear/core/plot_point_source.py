@@ -58,7 +58,7 @@ def plot_triangulation(point_source_panner):
     import mpl_toolkits.mplot3d.art3d  # noqa
 
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d', aspect=1)
+    ax = fig.add_subplot(111, projection='3d', aspect='equal')
 
     if isinstance(point_source_panner, point_source.PointSourcePannerDownmix):
         point_source_panner = point_source_panner.psp
