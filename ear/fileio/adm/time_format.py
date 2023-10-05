@@ -11,10 +11,8 @@ _TIME_RE = re.compile(r"""
     :                    # :
     (?P<second>          # second decimal consisting of:
         \d{1,2}          #   two digits
-        (?:              #   then optionally
-            \.           #     a dot
-            \d*          #     and any number of digits
-        )
+        \.               #   a dot
+        \d+              #   and at least one digit
     )
     \Z                   # end
 """, re.VERBOSE)

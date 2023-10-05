@@ -4,6 +4,19 @@ import pytest
 
 
 @pytest.mark.parametrize(
+    "time_str",
+    [
+        "1.0",
+        "0:0:0.",
+        "0:0:0",
+    ],
+)
+def test_parse_invalid(time_str):
+    with pytest.raises(ValueError):
+        parse_time(time_str)
+
+
+@pytest.mark.parametrize(
     "time,expected",
     [
         (Fraction(1), "00:00:01.0"),
