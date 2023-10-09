@@ -13,7 +13,7 @@ ENV=$(mktemp -d env.XXXXX)
 python -m venv $ENV
 source $ENV/bin/activate
 
-pip install --use-feature=2020-resolver $REQUIREMENTS
+pip install $REQUIREMENTS
 pip freeze | grep -v '^-' > requirements.txt
 
 deactivate
