@@ -97,6 +97,24 @@ Common Types
 .. autoclass:: ear.fileio.adm.elements.ScreenEdgeLock
    :members:
 
+Timing
+~~~~~~
+
+In general, times and durations are stored as a fractional number of seconds,
+represented by :class:`fractions.Fraction`.
+
+In order to represent fractional ADM times, :class:`time_format.FractionalTime`, a subclass
+of :class:`fractions.Fraction`, is used, while decimal times are represented by
+:class:`fractions.Fraction`.
+
+.. autoclass:: ear.fileio.adm.time_format.FractionalTime
+   :members:
+
+.. autofunction:: ear.fileio.adm.time_format.parse_time
+
+.. autofunction:: ear.fileio.adm.time_format.unparse_time
+
+
 audioBlockFormat types
 ~~~~~~~~~~~~~~~~~~~~~~
 
