@@ -45,7 +45,7 @@ from .elements import (
     TypeDefinition,
 )
 from .elements.version import parse_version, BS2076Version, NoVersion, Version
-from .time_format import parse_time, unparse_time
+from .time_format import parse_time, parse_time_v1, unparse_time
 from ...common import PolarPosition, CartesianPosition, CartesianScreen, PolarScreen
 
 
@@ -144,7 +144,10 @@ IntType = TypeConvert(int, str)
 FloatType = TypeConvert(float, "{:.5f}".format)  # noqa: P103
 SecondsType = TypeConvert(Fraction, lambda t: "{:07.5f}".format(float(t)))
 BoolType = TypeConvert(load_bool, "{:d}".format)  # noqa: P103
-TimeType = TypeConvert(parse_time, unparse_time)
+TimeTypeV1 = TypeConvert(
+    parse_time_v1, lambda t: unparse_time(t, allow_fractional=False)
+)
+TimeType = TypeConvert(parse_time, lambda t: unparse_time(t, allow_fractional=True))
 RefType = TypeConvert(loads=None,
                       dumps=lambda data: data.id)
 VersionType = TypeConvert(loads=parse_version, dumps=str)
@@ -1238,6 +1241,12 @@ class MainElementHandler:
             ),
         )
 
+    def make_time_type(self):
+        return self.by_version(
+            v1=TimeTypeV1,
+            v2=TimeType,
+        )
+
     def make_v2_RefElement(self, parent_name, name, **kwargs):
         """a RefElement which is only present in v2"""
         return self.by_version(
@@ -1284,8 +1293,10 @@ class MainElementHandler:
                 Attribute(
                     adm_name="audioProgrammeLanguage", arg_name="audioProgrammeLanguage"
                 ),
-                Attribute(adm_name="start", arg_name="start", type=TimeType),
-                Attribute(adm_name="end", arg_name="end", type=TimeType),
+                Attribute(
+                    adm_name="start", arg_name="start", type=self.make_time_type()
+                ),
+                Attribute(adm_name="end", arg_name="end", type=self.make_time_type()),
                 Attribute(
                     adm_name="maxDuckingDepth",
                     arg_name="maxDuckingDepth",
@@ -1344,8 +1355,12 @@ class MainElementHandler:
                     arg_name="audioObjectName",
                     required=True,
                 ),
-                Attribute(adm_name="start", arg_name="start", type=TimeType),
-                Attribute(adm_name="duration", arg_name="duration", type=TimeType),
+                Attribute(
+                    adm_name="start", arg_name="start", type=self.make_time_type()
+                ),
+                Attribute(
+                    adm_name="duration", arg_name="duration", type=self.make_time_type()
+                ),
                 Attribute(adm_name="dialogue", arg_name="dialogue", type=IntType),
                 Attribute(adm_name="importance", arg_name="importance", type=IntType),
                 Attribute(adm_name="interact", arg_name="interact", type=BoolType),
@@ -1564,8 +1579,10 @@ class MainElementHandler:
     def make_block_format_props(self):
         return [
             Attribute(adm_name="audioBlockFormatID", arg_name="id", required=True),
-            Attribute(adm_name="rtime", arg_name="rtime", type=TimeType),
-            Attribute(adm_name="duration", arg_name="duration", type=TimeType),
+            Attribute(adm_name="rtime", arg_name="rtime", type=self.make_time_type()),
+            Attribute(
+                adm_name="duration", arg_name="duration", type=self.make_time_type()
+            ),
             self.make_gain_element(),
         ]
 

@@ -15,6 +15,9 @@ from ..elements import (
 )
 from ..elements.version import BS2076Version, NoVersion
 from ....common import CartesianPosition, PolarPosition, CartesianScreen, PolarScreen
+from .test_time_format import time_equal
+from ..time_format import FractionalTime
+
 
 ns = "urn:ebu:metadata-schema:ebuCore_2015"
 nsmap = dict(adm=ns)
@@ -841,6 +844,31 @@ def test_silent_tracks(base):
 
     assert real_atu is adm.audioTrackUIDs[0]
     assert silent_atu is None
+
+
+def test_audioObject_time(base):
+    [ao] = base.adm.audioObjects
+    assert time_equal(ao.start, Fraction(0, 1))
+    assert time_equal(ao.duration, Fraction(12, 1))
+
+    adm = base.adm_after_mods(
+        set_version(2),
+    )
+    [ao] = adm.audioObjects
+    assert time_equal(ao.start, Fraction(0, 1))
+    assert time_equal(ao.duration, Fraction(12, 1))
+
+    adm = base.adm_after_mods(
+        set_version(2),
+        set_attrs(
+            "//adm:audioObject",
+            start="00:00:00.0S48000",
+            duration="00:00:12.0S48000",
+        ),
+    )
+    [ao] = adm.audioObjects
+    assert time_equal(ao.start, FractionalTime(0, 48000))
+    assert time_equal(ao.duration, FractionalTime(12 * 48000, 48000))
 
 
 def test_audioObject_gain(base):
