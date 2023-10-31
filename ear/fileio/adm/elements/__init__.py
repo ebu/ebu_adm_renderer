@@ -15,14 +15,18 @@ from .block_formats import (
 )
 from .geom import (
     BoundCoordinate,
+    CartesianPositionInteractionRange,
     CartesianPositionOffset,
     DirectSpeakerCartesianPosition,
     DirectSpeakerPolarPosition,
     DirectSpeakerPosition,
+    InteractionRange,
     ObjectCartesianPosition,
     ObjectPolarPosition,
     ObjectPosition,
+    PolarPositionInteractionRange,
     PolarPositionOffset,
+    PositionInteractionRange,
     PositionOffset,
     ScreenEdgeLock,
 )
@@ -31,6 +35,7 @@ from .main_elements import (
     AudioChannelFormat,
     AudioContent,
     AudioObject,
+    AudioObjectInteraction,
     AudioPackFormat,
     AudioProgramme,
     AudioStreamFormat,

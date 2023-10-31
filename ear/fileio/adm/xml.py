@@ -20,12 +20,14 @@ from .elements import (
     AudioChannelFormat,
     AudioContent,
     AudioObject,
+    AudioObjectInteraction,
     AudioPackFormat,
     AudioProgramme,
     AudioStreamFormat,
     AudioTrackFormat,
     AudioTrackUID,
     BoundCoordinate,
+    CartesianPositionInteractionRange,
     CartesianPositionOffset,
     CartesianZone,
     ChannelLock,
@@ -33,12 +35,14 @@ from .elements import (
     DirectSpeakerPolarPosition,
     FormatDefinition,
     Frequency,
+    InteractionRange,
     JumpPosition,
     LoudnessMetadata,
     MatrixCoefficient,
     ObjectCartesianPosition,
     ObjectDivergence,
     ObjectPolarPosition,
+    PolarPositionInteractionRange,
     PolarPositionOffset,
     PolarZone,
     ScreenEdgeLock,
@@ -1256,6 +1260,168 @@ class MainElementHandler:
             v2=RefElement(name),
         )
 
+    def make_gainInteractionRange_handler(self):
+        def parse_gain_el_v1(el):
+            if "gainUnit" in el.attrib:
+                raise ValueError("gainUnit is a BS.2076-2 feature")
+            return FloatType.loads(text(el))
+
+        def parse_gain_el_v2(el):
+            gainUnit = el.attrib.get("gainUnit", "linear")
+
+            return parse_gain(text(el), gainUnit)
+
+        parse_gain_el = self.by_version(
+            v1=parse_gain_el_v1,
+            v2=parse_gain_el_v2,
+        )
+
+        def handle_gainInteractionRange(kwargs, element):
+            gains = {}
+            for sub_element in xpath(element, "{ns}gainInteractionRange"):
+                try:
+                    bound = sub_element.attrib["bound"]
+                except KeyError:
+                    raise ValueError("missing bound attr")
+
+                if bound not in ("min", "max"):
+                    raise ValueError(f"bound {bound!r} is not 'min' or 'max'")
+
+                if bound in gains:
+                    raise ValueError("bound {bound!r} specified multiple times")
+
+                gains[bound] = parse_gain_el(sub_element)
+
+            if gains:
+                kwargs["gainInteractionRange"] = InteractionRange(**gains)
+
+        def gainInteractionRange_to_xml(element, obj):
+            if obj.gainInteractionRange is not None:
+                for bound, value in (
+                    ("min", obj.gainInteractionRange.min),
+                    ("max", obj.gainInteractionRange.max),
+                ):
+                    if value is not None:
+                        new_el = element.makeelement(
+                            QName(default_ns, "gainInteractionRange")
+                        )
+                        new_el.text = FloatType.dumps(value)
+                        new_el.attrib["bound"] = bound
+                        element.append(new_el)
+
+        return GenericElement(
+            handler=handle_gainInteractionRange,
+            to_xml=gainInteractionRange_to_xml,
+        )
+
+    def make_positionInteractionRange_handler(self):
+        def handle_positionInteractionRange(kwargs, element):
+            coordinates = {}
+
+            for sub_element in xpath(element, "{ns}positionInteractionRange"):
+                try:
+                    bound = sub_element.attrib["bound"]
+                except KeyError:
+                    raise ValueError("missing bound attr")
+
+                if bound not in ("min", "max"):
+                    raise ValueError(f"bound {bound!r} is not 'min' or 'max'")
+
+                try:
+                    coordinate = sub_element.attrib["coordinate"]
+                except KeyError:
+                    raise ValueError("missing coordinate attr")
+
+                coordinate_args = coordinates.setdefault(coordinate, {})
+
+                if bound in coordinate_args:
+                    raise ValueError(
+                        f"positionInteractionRange with duplicate coordinate {coordinate!r} and bound {bound!r}"
+                    )
+
+                coordinate_args[bound] = FloatType.loads(text(sub_element))
+
+            if coordinates.keys() <= {"azimuth", "elevation", "distance"}:
+                CoordType = PolarPositionInteractionRange
+            elif coordinates.keys() <= {"X", "Y", "Z"}:
+                CoordType = CartesianPositionInteractionRange
+            else:
+                found = ",".join(sorted(coordinates))
+                raise ValueError(
+                    f"found positionInteractionRange elements with coordinates {{{found}}}, "
+                    f"but expected {{azimuth,elevation,distance}}, {{X,Y,Z}}, or some subset"
+                )
+
+            if coordinates:
+                kwargs["positionInteractionRange"] = CoordType(
+                    **{
+                        coord: InteractionRange(**bounds)
+                        for coord, bounds in coordinates.items()
+                    }
+                )
+
+        def positionInteractionRange_to_xml(element, obj):
+            pos = obj.positionInteractionRange
+            if pos is None:
+                return
+            elif isinstance(pos, PolarPositionInteractionRange):
+                coords = (
+                    ("azimuth", pos.azimuth),
+                    ("elevation", pos.elevation),
+                    ("distance", pos.distance),
+                )
+            elif isinstance(pos, CartesianPositionInteractionRange):
+                coords = (
+                    ("X", pos.X),
+                    ("Y", pos.Y),
+                    ("Z", pos.Z),
+                )
+            else:
+                raise ValueError(
+                    "positionInteractionRange is not PolarPositionInteractionRange "
+                    "or CartesianPositionInteractionRange"
+                )
+
+            for coord, bounds in coords:
+                for bound, value in ("min", bounds.min), ("max", bounds.max):
+                    if value is not None:
+                        new_el = element.makeelement(
+                            QName(default_ns, "positionInteractionRange")
+                        )
+                        new_el.text = FloatType.dumps(value)
+                        new_el.attrib["bound"] = bound
+                        new_el.attrib["coordinate"] = coord
+                        element.append(new_el)
+
+        return GenericElement(
+            handler=handle_positionInteractionRange,
+            to_xml=positionInteractionRange_to_xml,
+        )
+
+    def make_audioObjectInteraction_handler(self):
+        return ElementParser(
+            AudioObjectInteraction,
+            "audioObjectInteraction",
+            [
+                Attribute(
+                    adm_name="onOffInteract",
+                    arg_name="onOffInteract",
+                    type=BoolType,
+                    required=True,
+                ),
+                Attribute(
+                    adm_name="gainInteract", arg_name="gainInteract", type=BoolType
+                ),
+                Attribute(
+                    adm_name="positionInteract",
+                    arg_name="positionInteract",
+                    type=BoolType,
+                ),
+                self.make_gainInteractionRange_handler(),
+                self.make_positionInteractionRange_handler(),
+            ],
+        )
+
     def make_alternativeValueSet_handler(self):
         return ElementParser(
             AlternativeValueSet,
@@ -1395,6 +1561,9 @@ class MainElementHandler:
                     v2=self.make_alternativeValueSet_handler().as_list_handler(
                         "alternativeValueSets"
                     ),
+                ),
+                self.make_audioObjectInteraction_handler().as_handler(
+                    "audioObjectInteraction"
                 ),
             ],
         )

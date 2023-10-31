@@ -265,3 +265,66 @@ class CartesianPositionOffset(PositionOffset):
             Y=pos.Y + self.Y,
             Z=pos.Z + self.Z,
         )
+
+
+@attrs(slots=True)
+class InteractionRange(object):
+    """a minimum and maximum bound for a single number
+
+    Attributes:
+        min (Optional[float]): lower bound
+        max (Optional[float]): upper bound
+    """
+
+    min = attrib(validator=optional(instance_of(float)), default=None)
+    max = attrib(validator=optional(instance_of(float)), default=None)
+
+
+class PositionInteractionRange:
+    """representation of a set of positionInteractionRange elements, for either
+    Cartesian or polar coordinates
+    """
+
+    __slots__ = ()
+
+
+@attrs(slots=True)
+class PolarPositionInteractionRange(PositionInteractionRange):
+    """polar positionInteractionRange elements
+
+    Attributes:
+        azimuth (InteractionRange): upper and lower bound for azimuth
+        elevation (InteractionRange): upper and lower bound for elevation
+        distance (InteractionRange): upper and lower bound for distance
+    """
+
+    azimuth = attrib(
+        validator=instance_of(InteractionRange), default=Factory(InteractionRange)
+    )
+    elevation = attrib(
+        validator=instance_of(InteractionRange), default=Factory(InteractionRange)
+    )
+    distance = attrib(
+        validator=instance_of(InteractionRange), default=Factory(InteractionRange)
+    )
+
+
+@attrs(slots=True)
+class CartesianPositionInteractionRange(PositionInteractionRange):
+    """Cartesian positionInteractionRange elements
+
+    Attributes:
+        X (InteractionRange): upper and lower bound for X
+        Y (InteractionRange): upper and lower bound for Y
+        Z (InteractionRange): upper and lower bound for Z
+    """
+
+    X = attrib(
+        validator=instance_of(InteractionRange), default=Factory(InteractionRange)
+    )
+    Y = attrib(
+        validator=instance_of(InteractionRange), default=Factory(InteractionRange)
+    )
+    Z = attrib(
+        validator=instance_of(InteractionRange), default=Factory(InteractionRange)
+    )

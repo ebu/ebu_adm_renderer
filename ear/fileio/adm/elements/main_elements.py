@@ -4,7 +4,7 @@ from enum import Enum
 from fractions import Fraction
 from six import string_types
 
-from .geom import PositionOffset
+from .geom import PositionOffset, InteractionRange, PositionInteractionRange
 from ..exceptions import AdmError
 from ....common import CartesianScreen, PolarScreen, default_screen, list_of
 
@@ -69,6 +69,31 @@ class LoudnessMetadata(object):
     maxMomentary = attrib(default=None, validator=optional(instance_of(float)))
     maxShortTerm = attrib(default=None, validator=optional(instance_of(float)))
     dialogueLoudness = attrib(default=None, validator=optional(instance_of(float)))
+
+
+@attrs(slots=True)
+class AudioObjectInteraction(object):
+    """ADM audioObjectInteraction element
+
+    Attributes:
+        onOffInteract (bool)
+        gainInteract (Optional[bool])
+        positionInteract (Optional[bool])
+        gainInteractionRange (Optional[InteractionRange])
+        positionInteractionRange (Optional[PositionInteractionRange])
+    """
+
+    onOffInteract = attrib(validator=instance_of(bool), default=False)
+    gainInteract = attrib(validator=optional(instance_of(bool)), default=None)
+    positionInteract = attrib(validator=optional(instance_of(bool)), default=None)
+
+    gainInteractionRange = attrib(
+        validator=optional(instance_of(InteractionRange)), default=None
+    )
+
+    positionInteractionRange = attrib(
+        validator=optional(instance_of(PositionInteractionRange)), default=None
+    )
 
 
 @attrs(slots=True)
@@ -232,6 +257,10 @@ class AudioObject(ADMElement):
 
     alternativeValueSets = attrib(
         validator=list_of(AlternativeValueSet), default=Factory(list)
+    )
+
+    audioObjectInteraction = attrib(
+        validator=optional(instance_of(AudioObjectInteraction)), default=None
     )
 
     audioPackFormatIDRef = attrib(default=None)

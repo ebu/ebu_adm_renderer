@@ -12,6 +12,9 @@ from ..elements import (
     CartesianPositionOffset,
     PolarZone,
     PolarPositionOffset,
+    CartesianPositionInteractionRange,
+    PolarPositionInteractionRange,
+    InteractionRange,
 )
 from ..elements.version import BS2076Version, NoVersion
 from ....common import CartesianPosition, PolarPosition, CartesianScreen, PolarScreen
@@ -1107,6 +1110,215 @@ def test_audioObject_alternativeValueSet_unknown(base):
             add_children(
                 "//adm:audioContent",
                 E.alternativeValueSetIDRef("AVS_1001_0002"),
+            ),
+        )
+
+
+def test_audioObject_audioObjectInteraction_none(base):
+    [ao] = base.adm.audioObjects
+    assert ao.audioObjectInteraction is None
+
+
+def test_audioObject_audioObjectInteraction_minimal(base):
+    adm = base.adm_after_mods(
+        add_children(
+            "//adm:audioObject",
+            E.audioObjectInteraction(
+                onOffInteract="1",
+            ),
+        ),
+    )
+    [ao] = adm.audioObjects
+    aoi = ao.audioObjectInteraction
+    assert aoi is not None
+    assert aoi.onOffInteract is True
+    assert aoi.gainInteract is None
+    assert aoi.positionInteract is None
+    assert aoi.gainInteractionRange is None
+    assert aoi.positionInteractionRange is None
+
+
+def test_audioObject_audioObjectInteraction_flags(base):
+    adm = base.adm_after_mods(
+        add_children(
+            "//adm:audioObject",
+            E.audioObjectInteraction(
+                onOffInteract="0",
+                gainInteract="1",
+                positionInteract="1",
+            ),
+        ),
+    )
+    [ao] = adm.audioObjects
+    aoi = ao.audioObjectInteraction
+    assert aoi is not None
+    assert aoi.onOffInteract is False
+    assert aoi.gainInteract is True
+    assert aoi.positionInteract is True
+    assert aoi.gainInteractionRange is None
+    assert aoi.positionInteractionRange is None
+
+
+def test_audioObject_audioObjectInteraction_gains(base):
+    adm = base.adm_after_mods(
+        set_version(2),
+        add_children(
+            "//adm:audioObject",
+            E.audioObjectInteraction(
+                E.gainInteractionRange("0.5", bound="min"),
+                E.gainInteractionRange("20.0", bound="max", gainUnit="dB"),
+                onOffInteract="0",
+            ),
+        ),
+    )
+    [ao] = adm.audioObjects
+    aoi = ao.audioObjectInteraction
+    assert aoi is not None
+    assert aoi.gainInteractionRange is not None
+    assert aoi.gainInteractionRange.min == 0.5
+    assert aoi.gainInteractionRange.max == 10.0
+    assert aoi.positionInteractionRange is None
+
+
+def test_audioObject_audioObjectInteraction_gains_partial(base):
+    adm = base.adm_after_mods(
+        add_children(
+            "//adm:audioObject",
+            E.audioObjectInteraction(
+                E.gainInteractionRange("0.5", bound="min"),
+                onOffInteract="0",
+            ),
+        ),
+    )
+    [ao] = adm.audioObjects
+    aoi = ao.audioObjectInteraction
+    assert aoi is not None
+    assert aoi.gainInteractionRange is not None
+    assert aoi.gainInteractionRange.min == 0.5
+    assert aoi.gainInteractionRange.max is None
+    assert aoi.positionInteractionRange is None
+
+
+def test_audioObject_audioObjectInteraction_polar_position_full(base):
+    adm = base.adm_after_mods(
+        add_children(
+            "//adm:audioObject",
+            E.audioObjectInteraction(
+                E.positionInteractionRange("-20.0", coordinate="azimuth", bound="min"),
+                E.positionInteractionRange("20.0", coordinate="azimuth", bound="max"),
+                E.positionInteractionRange(
+                    "-30.0", coordinate="elevation", bound="min"
+                ),
+                E.positionInteractionRange("30.0", coordinate="elevation", bound="max"),
+                E.positionInteractionRange("0.5", coordinate="distance", bound="min"),
+                E.positionInteractionRange("1.5", coordinate="distance", bound="max"),
+                onOffInteract="0",
+            ),
+        ),
+    )
+    [ao] = adm.audioObjects
+    aoi = ao.audioObjectInteraction
+    assert aoi is not None
+
+    pos = aoi.positionInteractionRange
+    assert pos == PolarPositionInteractionRange(
+        azimuth=InteractionRange(min=-20.0, max=20.0),
+        elevation=InteractionRange(min=-30.0, max=30.0),
+        distance=InteractionRange(min=0.5, max=1.5),
+    )
+
+
+def test_audioObject_audioObjectInteraction_polar_position_partial(base):
+    adm = base.adm_after_mods(
+        add_children(
+            "//adm:audioObject",
+            E.audioObjectInteraction(
+                E.positionInteractionRange("-20.0", coordinate="azimuth", bound="min"),
+                E.positionInteractionRange("20.0", coordinate="azimuth", bound="max"),
+                E.positionInteractionRange(
+                    "-30.0", coordinate="elevation", bound="min"
+                ),
+                onOffInteract="0",
+            ),
+        ),
+    )
+    [ao] = adm.audioObjects
+    aoi = ao.audioObjectInteraction
+    assert aoi is not None
+
+    pos = aoi.positionInteractionRange
+    assert pos == PolarPositionInteractionRange(
+        azimuth=InteractionRange(min=-20.0, max=20.0),
+        elevation=InteractionRange(min=-30.0),
+    )
+
+
+def test_audioObject_audioObjectInteraction_cartesian_position_full(base):
+    adm = base.adm_after_mods(
+        add_children(
+            "//adm:audioObject",
+            E.audioObjectInteraction(
+                E.positionInteractionRange("-0.1", coordinate="X", bound="min"),
+                E.positionInteractionRange("0.1", coordinate="X", bound="max"),
+                E.positionInteractionRange("-0.2", coordinate="Y", bound="min"),
+                E.positionInteractionRange("0.2", coordinate="Y", bound="max"),
+                E.positionInteractionRange("-0.3", coordinate="Z", bound="min"),
+                E.positionInteractionRange("0.3", coordinate="Z", bound="max"),
+                onOffInteract="0",
+            ),
+        ),
+    )
+    [ao] = adm.audioObjects
+    aoi = ao.audioObjectInteraction
+    assert aoi is not None
+
+    pos = aoi.positionInteractionRange
+    assert pos == CartesianPositionInteractionRange(
+        X=InteractionRange(min=-0.1, max=0.1),
+        Y=InteractionRange(min=-0.2, max=0.2),
+        Z=InteractionRange(min=-0.3, max=0.3),
+    )
+
+
+def test_audioObject_audioObjectInteraction_missing(base):
+    with pytest.raises(ParseError, match="missing items: onOffInteract"):
+        base.adm_after_mods(
+            add_children(
+                "//adm:audioObject",
+                E.audioObjectInteraction(),
+            ),
+        )
+
+
+def test_audioObject_audioObjectInteraction_gainUnit_v2(base):
+    with pytest.raises(ParseError, match="gainUnit is a BS.2076-2 feature"):
+        base.adm_after_mods(
+            set_version(1),
+            add_children(
+                "//adm:audioObject",
+                E.audioObjectInteraction(
+                    E.gainInteractionRange("20.0", bound="max", gainUnit="dB"),
+                ),
+            ),
+        )
+
+
+def test_audioObject_audioObjectInteraction_position_error(base):
+    expected = (
+        "found positionInteractionRange elements with coordinates {X,azimuth}, "
+        "but expected {azimuth,elevation,distance}, {X,Y,Z}, or some subset"
+    )
+    with pytest.raises(ParseError, match=expected):
+        base.adm_after_mods(
+            add_children(
+                "//adm:audioObject",
+                E.audioObjectInteraction(
+                    E.positionInteractionRange(
+                        "-20.0", coordinate="azimuth", bound="min"
+                    ),
+                    E.positionInteractionRange("0.0", coordinate="X", bound="min"),
+                    onOffInteract="0",
+                ),
             ),
         )
 
