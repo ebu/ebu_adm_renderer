@@ -58,7 +58,7 @@ def text(element):
 
 @attrs(eq=False)
 class ParseError(Exception):
-    """Represents an error that occured while processing a piece of xml."""
+    """Represents an error that occurred while processing a piece of xml."""
     exception = attrib()
     element = attrib()
     attr_name = attrib(default=None)
