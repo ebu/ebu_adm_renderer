@@ -1435,6 +1435,9 @@ class MainElementHandler:
                 ),
                 AttrElement(adm_name="mute", arg_name="mute", type=BoolType),
                 position_offset_handler,
+                self.make_audioObjectInteraction_handler().as_handler(
+                    "audioObjectInteraction"
+                ),
             ],
         )
 

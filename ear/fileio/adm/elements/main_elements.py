@@ -117,6 +117,9 @@ class AlternativeValueSet(object):
     positionOffset = attrib(
         validator=optional(instance_of(PositionOffset)), default=None
     )
+    audioObjectInteraction = attrib(
+        validator=optional(instance_of(AudioObjectInteraction)), default=None
+    )
 
 
 @attrs(slots=True)

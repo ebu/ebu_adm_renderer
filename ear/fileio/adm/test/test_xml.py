@@ -8,6 +8,7 @@ from ..xml import parse_string, adm_to_xml, ParseError
 from ..exceptions import AdmError, AdmIDError
 from ..elements import (
     AudioBlockFormatBinaural,
+    AudioObjectInteraction,
     CartesianZone,
     CartesianPositionOffset,
     PolarZone,
@@ -1036,6 +1037,36 @@ def test_audioObject_alternativeValueSet_positionOffset(base):
                 ),
             )
         )
+
+
+def test_audioObject_alternativeValueSet_interact(base):
+    adm = base.adm_after_mods(
+        set_version(2),
+        add_children(
+            "//adm:audioObject",
+            # no interact
+            E.alternativeValueSet(
+                alternativeValueSetID="AVS_1001_0001",
+            ),
+            # interaction specified
+            E.alternativeValueSet(
+                E.audioObjectInteraction(
+                    onOffInteract="1",
+                ),
+                alternativeValueSetID="AVS_1001_0002",
+            ),
+        ),
+    )
+    [ao] = adm.audioObjects
+    [avs_no_interact, avs_interact] = ao.alternativeValueSets
+
+    assert avs_no_interact.id == "AVS_1001_0001"
+    assert avs_no_interact.audioObjectInteraction is None
+
+    assert avs_interact.id == "AVS_1001_0002"
+    assert avs_interact.audioObjectInteraction == AudioObjectInteraction(
+        onOffInteract=True,
+    )
 
 
 def test_audioObject_alternativeValueSet_references(base):
