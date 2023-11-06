@@ -9,6 +9,7 @@ from ....fileio.adm.elements import (
     PolarPositionOffset,
     TypeDefinition,
 )
+from ....fileio.adm.elements.version import BS2076Version
 from ....fileio.adm.exceptions import AdmError
 from ...metadata_input import DirectTrackSpec, SilentTrackSpec
 
@@ -473,7 +474,7 @@ def test_absoluteDisance_objects():
 
 
 def test_object_params():
-    builder = ADMBuilder()
+    builder = ADMBuilder.for_version(2)
     builder.load_common_definitions()
     builder.create_programme(audioProgrammeName="MyProgramme")
     builder.create_content(audioContentName="MyContent")
@@ -492,6 +493,7 @@ def test_object_params():
 
     assert extra_data.object_gain == 1.0
     assert extra_data.object_mute is False
+    assert extra_data.document_version == BS2076Version(2)
 
     # non-default
     obj.audio_object.gain = 1.5

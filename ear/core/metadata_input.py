@@ -15,6 +15,7 @@ from ..fileio.adm.elements import (
     Frequency,
     PositionOffset,
 )
+from ..fileio.adm.elements.version import version_validator
 
 
 class MetadataSource(object):
@@ -69,6 +70,7 @@ class ExtraData(object):
         object_gain (float): gain from audioObject or alternativeValueSet
         object_mute (bool): mute from audioObject or alternativeValueSet
         object_positionOffset (Optional[PositionOffset]): positionOffset from audioObject or alternativeValueSet
+        document_version (Version): version from AXML document
     """
     object_start = attrib(validator=optional(instance_of(Fraction)), default=None)
     object_duration = attrib(validator=optional(instance_of(Fraction)), default=None)
@@ -81,6 +83,8 @@ class ExtraData(object):
     object_positionOffset = attrib(
         validator=optional(instance_of(PositionOffset)), default=None
     )
+
+    document_version = attrib(validator=version_validator, default=None)
 
 
 @attrs(slots=True)

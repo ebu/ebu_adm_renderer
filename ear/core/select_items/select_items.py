@@ -635,6 +635,8 @@ def _get_extra_data(state, pack_paths_channels=None):
 
     extra_data = ExtraData()
 
+    extra_data.document_version = state.adm.version
+
     if state.audioProgramme is not None:
         extra_data.reference_screen = state.audioProgramme.referenceScreen
 
