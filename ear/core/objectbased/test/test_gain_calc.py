@@ -1,6 +1,7 @@
 from attr import evolve
 import numpy as np
 import numpy.testing as npt
+import pytest
 from ... import bs2051
 from ..gain_calc import GainCalc
 from ....fileio.adm.elements import (
@@ -14,6 +15,10 @@ from ....fileio.adm.elements import (
     ObjectCartesianPosition,
     CartesianPositionOffset,
     PolarPositionOffset,
+)
+from ....fileio.adm.elements.version import (
+    BS2076Version,
+    NoVersion,
 )
 from ...metadata_input import ObjectTypeMetadata, ExtraData
 from ...geom import cart, elevation, PolarPosition
@@ -254,6 +259,37 @@ def test_diverge_azimuth_elevation(layout, gain_calc):
              dict(position=dict(azimuth=70.0, elevation=elevation(cart(40, 30, 1) * [0, 1, 1]), distance=1.0),
                   objectDivergence=ObjectDivergence(1.0, azimuthRange=np.degrees(np.arcsin(cart(-40, 30, 1)[0])))),
              direct_gains=[("U+030", np.sqrt(0.5)), ("U+110", np.sqrt(0.5))])
+
+
+@pytest.mark.parametrize(
+    "version,default",
+    [
+        (NoVersion(), 45.0),
+        (BS2076Version(1), 45.0),
+        (BS2076Version(2), 0.0),
+    ],
+)
+def test_diverge_default(gain_calc, version, default):
+    extra_data = ExtraData(document_version=version)
+
+    position = dict(azimuth=0.0, elevation=0.0, distance=1.0)
+    block_format_specified = AudioBlockFormatObjects(
+        position=position, objectDivergence=ObjectDivergence(0.5, azimuthRange=default)
+    )
+    block_format_default = AudioBlockFormatObjects(
+        position=position, objectDivergence=ObjectDivergence(0.5)
+    )
+
+    gains_specified = gain_calc.render(
+        ObjectTypeMetadata(block_format=block_format_specified, extra_data=extra_data)
+    )
+    with pytest.warns(UserWarning):
+        gains_default = gain_calc.render(
+            ObjectTypeMetadata(block_format=block_format_default, extra_data=extra_data)
+        )
+
+    npt.assert_allclose(gains_default.direct, gains_specified.direct, atol=1e-10)
+    npt.assert_allclose(gains_default.diffuse, gains_specified.diffuse, atol=1e-10)
 
 
 def test_zone_front(layout, gain_calc):

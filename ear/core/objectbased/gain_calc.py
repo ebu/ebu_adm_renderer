@@ -8,6 +8,7 @@ from ..geom import azimuth, elevation, cart, inside_angle_range, local_coordinat
 from .zone import ZoneExclusionDownmix
 from .. import allocentric
 from ...fileio.adm.elements import CartesianZone, PolarZone, ObjectCartesianPosition, ObjectPolarPosition
+from ...fileio.adm.elements.version import version_at_least
 from ..screen_scale import ScreenScaleHandler
 from ..screen_edge_lock import ScreenEdgeLockHandler
 from ..renderer_common import get_object_gain
@@ -139,7 +140,7 @@ class AlloChannelLockHandler(ChannelLockHandlerBase):
         return np.sqrt(np.sum(w * (position - channel_positions) ** 2, axis=1))
 
 
-def diverge(position, objectDivergence, cartesian):
+def diverge(position, objectDivergence, cartesian, document_version):
     """Implement object divergence by duplicating and modifying source
     directions.
 
@@ -147,6 +148,7 @@ def diverge(position, objectDivergence, cartesian):
         position (array of length 3): Cartesian source position
         objectDivergence (fileio.adm.elements.ObjectDivergence): object divergence information
         cartesian (bool): Block format 'cartesian' flag.
+        document_version (Version): version from AXML document
 
     Returns:
         array of length n: gain for each position
@@ -184,9 +186,13 @@ def diverge(position, objectDivergence, cartesian):
             if objectDivergence.positionRange is not None:
                 warnings.warn("positionRange specified for blockFormat in polar mode; using polar divergence")
 
-            azimuthRange = (objectDivergence.azimuthRange
-                            if objectDivergence.azimuthRange is not None
-                            else 45.0)
+            azimuthRange = objectDivergence.azimuthRange
+            if azimuthRange is None:
+                warnings.warn(
+                    "objectDivergence azimuthRange default changed between BS.2076-1 and -2, "
+                    "so should be specified explicitly"
+                )
+                azimuthRange = 0.0 if version_at_least(document_version, 2) else 45.0
 
             distance = np.linalg.norm(position)
             p_l, p_r = cart(azimuthRange, 0, distance), cart(-azimuthRange, 0, distance)
@@ -400,7 +406,13 @@ class GainCalc(object):
 
             extent_pan = self.polar_extent_panner.handle
 
-        diverged_gains, diverged_positions = diverge(position, block_format.objectDivergence, block_format.cartesian)
+        document_version = object_meta.extra_data.document_version
+        diverged_gains, diverged_positions = diverge(
+            position,
+            block_format.objectDivergence,
+            block_format.cartesian,
+            document_version,
+        )
 
         gains_for_each_pos = np.apply_along_axis(extent_pan, 1, diverged_positions,
                                                  block_format.width, block_format.height, block_format.depth)
