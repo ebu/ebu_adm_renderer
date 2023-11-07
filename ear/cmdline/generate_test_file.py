@@ -9,6 +9,7 @@ from ..fileio.adm.elements import (
     ObjectDivergence,
 )
 from ..fileio.adm.elements import AudioBlockFormatDirectSpeakers, BoundCoordinate, DirectSpeakerPolarPosition
+from ..fileio.adm.elements.version import parse_version
 from ..fileio.adm.chna import populate_chna_chunk
 from ..fileio.adm.generate_ids import generate_ids
 from ..fileio.adm.xml import adm_to_xml
@@ -162,7 +163,8 @@ def load_test_file_adm(filename):
     with open(filename) as f:
         yaml = load_yaml(f)
 
-    builder = ADMBuilder()
+    version = parse_version(yaml.get("version", None))
+    builder = ADMBuilder.for_version(version)
 
     builder.create_programme(
         audioProgrammeName=yaml.get("name", "unnamed"),
