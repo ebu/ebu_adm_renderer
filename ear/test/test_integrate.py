@@ -107,6 +107,28 @@ def test_render_adapt(tmpdir):
     npt.assert_allclose(samples, expected, atol=1e-6)
 
 
+def test_render_v2(tmpdir):
+    """check that a v2 ADM is parsed correctly and has the correct default divergence applied"""
+    meta_file = os.path.join(files_dir, "test_v2_meta.yaml")
+    bwf_file = str(tmpdir / "test_v2_bwf.wav")
+
+    args = ["ear-utils", "make_test_bwf", "-m", meta_file, "-i", wav_file, bwf_file]
+    assert subprocess.call(args) == 0
+
+    rendered_file = str(tmpdir / "test_v2_render.wav")
+    args = ["ear-render", "-s", "0+5+0", bwf_file, rendered_file]
+    assert subprocess.call(args) == 0
+
+    samples, sr = soundfile.read(rendered_file)
+
+    expected_in = generate_samples()[:, 0]
+
+    expected = np.zeros((len(expected_in), 6))
+    expected[:, 2] = expected_in
+
+    npt.assert_allclose(samples, expected, atol=1e-6)
+
+
 @pytest.mark.parametrize("order", [1, 2])
 @pytest.mark.parametrize("chna_only", [False, True])
 def test_hoa(tmpdir, order, chna_only):
