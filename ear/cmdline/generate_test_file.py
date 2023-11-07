@@ -2,7 +2,12 @@ import lxml.etree
 from ..compatibility import load_yaml
 from ..core import layout
 from ..fileio.adm.builder import ADMBuilder
-from ..fileio.adm.elements import AudioBlockFormatObjects, JumpPosition, Frequency
+from ..fileio.adm.elements import (
+    AudioBlockFormatObjects,
+    JumpPosition,
+    Frequency,
+    ObjectDivergence,
+)
 from ..fileio.adm.elements import AudioBlockFormatDirectSpeakers, BoundCoordinate, DirectSpeakerPolarPosition
 from ..fileio.adm.chna import populate_chna_chunk
 from ..fileio.adm.generate_ids import generate_ids
@@ -87,6 +92,9 @@ def load_block_objects(block):
 
     if "jumpPosition" in block:
         kwargs["jumpPosition"] = load_jump_position(block["jumpPosition"])
+
+    if "objectDivergence" in block:
+        kwargs["objectDivergence"] = ObjectDivergence(**block["objectDivergence"])
 
     for attr in ["position", "gain"]:
         if attr in block:
