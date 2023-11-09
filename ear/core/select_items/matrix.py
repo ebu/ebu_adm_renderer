@@ -15,7 +15,7 @@ def type_of(apf):
     packs just have inputPackFormat and decode packs just have
     outputPackFormat.
 
-    These aren't the only attributes that cane be used to determine the type --
+    These aren't the only attributes that can be used to determine the type --
     it would be just as valid to look at the encode/decode relationship, but
     this is easiest, so validate the rest of the metadata against this.
     """
