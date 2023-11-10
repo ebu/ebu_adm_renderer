@@ -190,6 +190,19 @@ class MixTrackSpec(TrackSpec):
     input_tracks = attrib(validator=list_of(TrackSpec))
 
 
+@attrs(slots=True)
+class GainTrackSpec(TrackSpec):
+    """Track that applies a gain to a single input track
+
+    Attributes:
+        input_track (TrackSpec): track spec to obtain samples from
+        gain (float): gain to apply
+    """
+
+    input_track = attrib(validator=instance_of(TrackSpec))
+    gain = attrib(validator=instance_of(float))
+
+
 #################################################
 # type metadata and rendering items for each type
 #################################################

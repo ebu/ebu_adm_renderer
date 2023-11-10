@@ -4,7 +4,14 @@ import numpy as np
 import math
 from multipledispatch import Dispatcher
 from .delay import Delay
-from .metadata_input import TrackSpec, DirectTrackSpec, SilentTrackSpec, MatrixCoefficientTrackSpec, MixTrackSpec
+from .metadata_input import (
+    TrackSpec,
+    DirectTrackSpec,
+    SilentTrackSpec,
+    MatrixCoefficientTrackSpec,
+    MixTrackSpec,
+    GainTrackSpec,
+)
 
 
 class TrackProcessorBase(object):
@@ -196,3 +203,28 @@ class MatrixCoefficientProcessor(TrackProcessorBase):
             samples = self.delay.process(samples[:, np.newaxis])[:, 0]
 
         return samples
+
+
+# gain
+
+
+@_simplify_track_spec.register(GainTrackSpec)
+def _simplify_gain(track_spec):
+    input_track = _simplify_track_spec(track_spec.input_track)
+
+    if track_spec.gain == 1.0:
+        return input_track
+    else:
+        return evolve(track_spec, input_track=input_track)
+
+
+@_track_spec_processor.register(GainTrackSpec)
+class GainProcessor(TrackProcessorBase):
+    def __init__(self, track_spec):
+        self.input_processor = _track_spec_processor(track_spec.input_track)
+        self.gain = track_spec.gain
+
+    def process(self, sample_rate, input_samples):
+        samples = self.input_processor.process(sample_rate, input_samples)
+
+        return samples * self.gain

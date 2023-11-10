@@ -1,7 +1,14 @@
 import numpy as np
+import numpy.testing as npt
 import pytest
 from ...fileio.adm.elements import AudioChannelFormat, MatrixCoefficient, TypeDefinition
-from ..metadata_input import SilentTrackSpec, DirectTrackSpec, MatrixCoefficientTrackSpec, MixTrackSpec
+from ..metadata_input import (
+    SilentTrackSpec,
+    DirectTrackSpec,
+    MatrixCoefficientTrackSpec,
+    MixTrackSpec,
+    GainTrackSpec,
+)
 from ..track_processor import TrackProcessor, MultiTrackProcessor
 
 
@@ -69,6 +76,18 @@ def test_matrix_coeff_delay(sample_rate, delay, expected_delay):
                                 p.process(sample_rate, input_samples[50:])))
 
     assert np.all(processed == expected)
+
+
+@pytest.mark.parametrize("gain", [1.0, 0.5])
+def test_gain(gain):
+    input_samples = np.random.random((100, 10))
+
+    p = TrackProcessor(GainTrackSpec(DirectTrackSpec(0), gain))
+
+    processed = p.process(48000, input_samples)
+    expected = input_samples[:, 0] * gain
+
+    npt.assert_allclose(processed, expected, atol=1e-6)
 
 
 def test_simplify_sum_silence():
