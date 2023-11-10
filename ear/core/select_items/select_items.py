@@ -22,7 +22,8 @@ from ..metadata_input import (ExtraData, ADMPath, MetadataSourceIter,
                               DirectSpeakersRenderingItem, HOATypeMetadata,
                               HOARenderingItem, ImportanceData, TrackSpec,
                               DirectTrackSpec, SilentTrackSpec,
-                              MatrixCoefficientTrackSpec, MixTrackSpec
+                              MatrixCoefficientTrackSpec, MixTrackSpec,
+                              GainTrackSpec,
                               )
 
 
@@ -385,9 +386,15 @@ class _PackAllocator(object):
                 # coefficients to the track specs of their input channels and
                 # mix them together
                 [block_format] = channel_format.audioBlockFormats
-                return MixTrackSpec([
-                    MatrixCoefficientTrackSpec(get_track_spec(coeff.inputChannelFormat), coeff)
-                    for coeff in block_format.matrix])
+
+                matrix_track_specs = [
+                    MatrixCoefficientTrackSpec(
+                        get_track_spec(coeff.inputChannelFormat), coeff
+                    )
+                    for coeff in block_format.matrix
+                ]
+                mixed = MixTrackSpec(matrix_track_specs)
+                return GainTrackSpec(mixed, block_format.gain)
 
             def get_channel_allocation(matrix_channel):
                 [block_format] = matrix_channel.audioBlockFormats

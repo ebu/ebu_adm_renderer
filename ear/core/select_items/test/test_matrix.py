@@ -7,8 +7,19 @@ from ....fileio.adm.elements import (
     TypeDefinition,
 )
 from ....fileio.adm.generate_ids import generate_ids
-from ...metadata_input import DirectTrackSpec, MatrixCoefficientTrackSpec, MixTrackSpec
+from ...metadata_input import (
+    DirectTrackSpec,
+    GainTrackSpec,
+    MatrixCoefficientTrackSpec,
+    MixTrackSpec,
+)
 from .. import select_rendering_items
+
+
+def gain_and_mix(gain, *track_specs):
+    """mix track_specs and apply GainTrackSpec; this is the typical structure
+    produced for matrix"""
+    return GainTrackSpec(MixTrackSpec(list(track_specs)), gain)
 
 
 @pytest.mark.parametrize("usage", ["direct", "pre_applied", "mono"])
@@ -34,6 +45,7 @@ def test_openhouse(usage):
         outputPackFormat=treo_pack,
     )
 
+    # block format gains here don't make sense, they are just for testing
     mc1 = MatrixCoefficient(inputChannelFormat=builder.adm["AC_00010003"], gain=0.3)
     channel_left = builder.create_channel(
         matrix_pack,
@@ -41,7 +53,9 @@ def test_openhouse(usage):
         type=TypeDefinition.Matrix,
         audioBlockFormats=[
             AudioBlockFormatMatrix(
-                outputChannelFormat=builder.adm["AC_00010001"], matrix=[mc1]
+                outputChannelFormat=builder.adm["AC_00010001"],
+                matrix=[mc1],
+                gain=1.5,
             )
         ],
     )
@@ -53,7 +67,9 @@ def test_openhouse(usage):
         type=TypeDefinition.Matrix,
         audioBlockFormats=[
             AudioBlockFormatMatrix(
-                outputChannelFormat=builder.adm["AC_00010002"], matrix=[mc2]
+                outputChannelFormat=builder.adm["AC_00010002"],
+                matrix=[mc2],
+                gain=2.5,
             )
         ],
     )
@@ -65,7 +81,9 @@ def test_openhouse(usage):
         type=TypeDefinition.Matrix,
         audioBlockFormats=[
             AudioBlockFormatMatrix(
-                outputChannelFormat=builder.adm["AC_00010003"], matrix=[mc3]
+                outputChannelFormat=builder.adm["AC_00010003"],
+                matrix=[mc3],
+                gain=3.5,
             )
         ],
     )
@@ -113,15 +131,15 @@ def test_openhouse(usage):
         expected = [
             (
                 "AC_00010001",
-                MixTrackSpec([MatrixCoefficientTrackSpec(DirectTrackSpec(0), mc1)]),
+                gain_and_mix(1.5, MatrixCoefficientTrackSpec(DirectTrackSpec(0), mc1)),
             ),
             (
                 "AC_00010002",
-                MixTrackSpec([MatrixCoefficientTrackSpec(DirectTrackSpec(0), mc2)]),
+                gain_and_mix(2.5, MatrixCoefficientTrackSpec(DirectTrackSpec(0), mc2)),
             ),
             (
                 "AC_00010003",
-                MixTrackSpec([MatrixCoefficientTrackSpec(DirectTrackSpec(0), mc3)]),
+                gain_and_mix(3.5, MatrixCoefficientTrackSpec(DirectTrackSpec(0), mc3)),
             ),
         ]
     elif usage == "pre_applied":
@@ -180,6 +198,7 @@ class EncodeDecodeBuilder(ADMBuilder):
         self.left_channel = self.adm["AC_00010001"]
         self.right_channel = self.adm["AC_00010002"]
 
+        # block format gains here don't make sense, they are just for testing
         self.encode_pack = self.create_pack(
             audioPackFormatName="m/s encode",
             type=TypeDefinition.Matrix,
@@ -197,7 +216,8 @@ class EncodeDecodeBuilder(ADMBuilder):
                         MatrixCoefficient(
                             inputChannelFormat=self.right_channel, gain=0.5**0.5
                         ),
-                    ]
+                    ],
+                    gain=1.5,
                 )
             ],
         )
@@ -213,7 +233,8 @@ class EncodeDecodeBuilder(ADMBuilder):
                         MatrixCoefficient(
                             inputChannelFormat=self.right_channel, gain=0.5**0.5
                         ),
-                    ]
+                    ],
+                    gain=2.5,
                 )
             ],
         )
@@ -237,6 +258,7 @@ class EncodeDecodeBuilder(ADMBuilder):
                             inputChannelFormat=self.encode_side, gain=-(0.5**0.5)
                         ),
                     ],
+                    gain=3.5,
                 )
             ],
         )
@@ -254,6 +276,7 @@ class EncodeDecodeBuilder(ADMBuilder):
                             inputChannelFormat=self.encode_side, gain=0.5**0.5
                         ),
                     ],
+                    gain=4.5,
                 )
             ],
         )
@@ -326,28 +349,26 @@ def test_encode_decode(usage):
         expected = [
             (
                 builder.left_channel.id,
-                MixTrackSpec(
-                    [
-                        MatrixCoefficientTrackSpec(
-                            DirectTrackSpec(0), matrix(builder.decode_left)[0]
-                        ),
-                        MatrixCoefficientTrackSpec(
-                            DirectTrackSpec(1), matrix(builder.decode_left)[1]
-                        ),
-                    ]
+                gain_and_mix(
+                    3.5,
+                    MatrixCoefficientTrackSpec(
+                        DirectTrackSpec(0), matrix(builder.decode_left)[0]
+                    ),
+                    MatrixCoefficientTrackSpec(
+                        DirectTrackSpec(1), matrix(builder.decode_left)[1]
+                    ),
                 ),
             ),
             (
                 builder.right_channel.id,
-                MixTrackSpec(
-                    [
-                        MatrixCoefficientTrackSpec(
-                            DirectTrackSpec(0), matrix(builder.decode_right)[0]
-                        ),
-                        MatrixCoefficientTrackSpec(
-                            DirectTrackSpec(1), matrix(builder.decode_right)[1]
-                        ),
-                    ]
+                gain_and_mix(
+                    4.5,
+                    MatrixCoefficientTrackSpec(
+                        DirectTrackSpec(0), matrix(builder.decode_right)[0]
+                    ),
+                    MatrixCoefficientTrackSpec(
+                        DirectTrackSpec(1), matrix(builder.decode_right)[1]
+                    ),
                 ),
             ),
         ]
@@ -408,53 +429,41 @@ def test_encode_decode(usage):
         input_ts = [DirectTrackSpec(0), DirectTrackSpec(1)]
 
         encoded_ts = [
-            MixTrackSpec(
-                [
-                    MatrixCoefficientTrackSpec(
-                        input_ts[0], matrix(builder.encode_mid)[0]
-                    ),
-                    MatrixCoefficientTrackSpec(
-                        input_ts[1], matrix(builder.encode_mid)[1]
-                    ),
-                ]
+            gain_and_mix(
+                1.5,
+                MatrixCoefficientTrackSpec(input_ts[0], matrix(builder.encode_mid)[0]),
+                MatrixCoefficientTrackSpec(input_ts[1], matrix(builder.encode_mid)[1]),
             ),
-            MixTrackSpec(
-                [
-                    MatrixCoefficientTrackSpec(
-                        input_ts[0], matrix(builder.encode_side)[0]
-                    ),
-                    MatrixCoefficientTrackSpec(
-                        input_ts[1], matrix(builder.encode_side)[1]
-                    ),
-                ]
+            gain_and_mix(
+                2.5,
+                MatrixCoefficientTrackSpec(input_ts[0], matrix(builder.encode_side)[0]),
+                MatrixCoefficientTrackSpec(input_ts[1], matrix(builder.encode_side)[1]),
             ),
         ]
 
         expected = [
             (
                 builder.left_channel.id,
-                MixTrackSpec(
-                    [
-                        MatrixCoefficientTrackSpec(
-                            encoded_ts[0], matrix(builder.decode_left)[0]
-                        ),
-                        MatrixCoefficientTrackSpec(
-                            encoded_ts[1], matrix(builder.decode_left)[1]
-                        ),
-                    ]
+                gain_and_mix(
+                    3.5,
+                    MatrixCoefficientTrackSpec(
+                        encoded_ts[0], matrix(builder.decode_left)[0]
+                    ),
+                    MatrixCoefficientTrackSpec(
+                        encoded_ts[1], matrix(builder.decode_left)[1]
+                    ),
                 ),
             ),
             (
                 builder.right_channel.id,
-                MixTrackSpec(
-                    [
-                        MatrixCoefficientTrackSpec(
-                            encoded_ts[0], matrix(builder.decode_right)[0]
-                        ),
-                        MatrixCoefficientTrackSpec(
-                            encoded_ts[1], matrix(builder.decode_right)[1]
-                        ),
-                    ]
+                gain_and_mix(
+                    4.5,
+                    MatrixCoefficientTrackSpec(
+                        encoded_ts[0], matrix(builder.decode_right)[0]
+                    ),
+                    MatrixCoefficientTrackSpec(
+                        encoded_ts[1], matrix(builder.decode_right)[1]
+                    ),
                 ),
             ),
         ]
