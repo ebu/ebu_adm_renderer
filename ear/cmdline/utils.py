@@ -124,7 +124,7 @@ def make_parser():
         subparser.set_defaults(command=replace_axml_command)
 
     def add_regenerate_command():
-        subparser = subparsers.add_parser("regenerate", help="read and write an ADM BWF file, regnerating the ADM and CHNA")
+        subparser = subparsers.add_parser("regenerate", help="read and write an ADM BWF file, regenerating the ADM and CHNA")
         subparser.add_argument("input", help="input bwf file")
         subparser.add_argument("output", help="output bwf file")
         subparser.add_argument("--enable-block-duration-fix", action="store_true",
