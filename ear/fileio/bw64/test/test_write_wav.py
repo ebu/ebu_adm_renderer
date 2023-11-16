@@ -19,6 +19,10 @@ def test_rect_16bit(tmpdir):
         assert outfile.channels == 1
         assert outfile.sampleRate == 48000
         assert outfile.bitdepth == 16
+        # TODO: convert FormatInfoChunk to attrs to make equality work (same in test_wav.py)
+        assert outfile.formatInfo.sampleRate == fmtInfo.sampleRate
+        assert outfile.formatInfo.channelCount == fmtInfo.channelCount
+        assert outfile.formatInfo.bitsPerSample == fmtInfo.bitsPerSample
         outfile.write(samples)
 
     with openBw64(filename) as infile:

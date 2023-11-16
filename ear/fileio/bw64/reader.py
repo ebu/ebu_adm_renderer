@@ -96,6 +96,10 @@ class Bw64Reader(object):
         """number of bits per sample"""
         return self._formatInfo.bitsPerSample
 
+    @property
+    def formatInfo(self):
+        return self._formatInfo
+
     def seek(self, offset, whence=0):
         frameOffset = offset * self._formatInfo.blockAlignment
         chunkIndex = self._chunks[b'data']

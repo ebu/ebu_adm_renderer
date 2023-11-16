@@ -78,6 +78,10 @@ class Bw64Writer(object):
         return self._formatInfo.bitsPerSample
 
     @property
+    def formatInfo(self):
+        return self._formatInfo
+
+    @property
     def chna(self):
         return self._chna
 

@@ -99,6 +99,11 @@ class Bw64AdmReader(object):
         return self._bw64.bitdepth
 
     @property
+    def formatInfo(self):
+        """format info chunk data"""
+        return self._bw64.formatInfo
+
+    @property
     def selected_items(self):
         """list of ear.core.metadata_input.RenderingItem: default list of
         rendering items"""

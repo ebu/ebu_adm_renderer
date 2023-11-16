@@ -19,6 +19,9 @@ def test_rect_16bit(datafiles):
         assert infile.sampleRate == 44100
         assert infile.channels == 2
         assert infile.bitdepth == 16
+        assert infile.formatInfo.sampleRate == 44100
+        assert infile.formatInfo.channelCount == 2
+        assert infile.formatInfo.bitsPerSample == 16
         assert infile.chna is None
         assert infile.axml is None
         assert infile.bext is None
