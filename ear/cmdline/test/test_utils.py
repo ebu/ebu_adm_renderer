@@ -3,6 +3,7 @@ import pytest
 import subprocess
 import sys
 from ...test.test_integrate import bwf_file
+from ...fileio import openBw64
 
 
 def test_dump_axml(tmpdir):
@@ -20,7 +21,6 @@ def test_dump_axml(tmpdir):
 def test_dump_chna(tmpdir):
     filename = str(tmpdir / 'test_chna.wav')
 
-    from ...fileio import openBw64
     from ...fileio.bw64.chunks import ChnaChunk, AudioID
 
     chna = ChnaChunk()
@@ -44,8 +44,6 @@ def test_replace_axml_basic(tmpdir):
     filename_axml = str(tmpdir / 'test_replace_axml_new_axml.xml')
     filename_out = str(tmpdir / 'test_replace_axml_out.wav')
 
-    from ...fileio import openBw64
-
     axml_in = b'axml'
     axml_out = b'axml2'
 
@@ -66,7 +64,6 @@ def test_replace_axml_regenerate(tmpdir):
     filename_axml = str(tmpdir / 'test_replace_axml_new_axml.xml')
     filename_out = str(tmpdir / 'test_replace_axml_out.wav')
 
-    from ...fileio import openBw64
     with openBw64(bwf_file, 'r') as f:
         axml_a = f.axml
         assert f.chna.audioIDs[-1].trackIndex == 4
