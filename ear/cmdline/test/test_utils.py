@@ -105,6 +105,44 @@ def test_regenerate(tmpdir):
     sys.version_info < (3, 6),
     reason="output may vary on platforms where dictionaries are not ordered",
 )
+def test_regenerate_version(tmpdir):
+    bwf_out = str(tmpdir / "test_regenerate_v2_out.wav")
+    bwf_expected = str(tmpdir / "test_regenerate_out_expected.wav")
+
+    with openBw64(bwf_file, "r") as f_in:
+        # consider saving the whole axml if there are more changes
+        axml = f_in.axml.replace(
+            b"<audioFormatExtended", b'<audioFormatExtended version="ITU-R_BS.2076-2"'
+        )
+
+        with openBw64(
+            bwf_expected,
+            "w",
+            formatInfo=f_in.formatInfo,
+            axml=axml,
+            chna=f_in.chna,
+        ) as f_out:
+            for block in f_in.iter_sample_blocks(1024):
+                f_out.write(block)
+
+    args = [
+        "ear-utils",
+        "-d",
+        "regenerate",
+        "--enable-block-duration-fix",
+        "--set-version=2",
+        bwf_file,
+        bwf_out,
+    ]
+    assert subprocess.check_call(args) == 0
+
+    assert open(bwf_out, "rb").read() == open(bwf_expected, "rb").read()
+
+
+@pytest.mark.xfail(
+    sys.version_info < (3, 6),
+    reason="output may vary on platforms where dictionaries are not ordered",
+)
 def test_rewrite(tmpdir):
     bwf_out = str(tmpdir / "test_rewrite_out.wav")
 

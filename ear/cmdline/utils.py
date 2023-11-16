@@ -3,7 +3,7 @@ import argparse
 import logging
 import sys
 from ..compatibility import write_bytes_to_stdout
-from ..fileio import openBw64, openBw64Adm
+from ..fileio import openBw64
 from ..fileio.bw64.chunks import FormatInfoChunk, ChnaChunk
 import warnings
 from . import ambix_to_bwf
@@ -48,26 +48,66 @@ def replace_axml_command(args):
                     outfile.write(samples)
 
 
+def _set_axml_version(element, version_str: int):
+    """find the audioFormatExtended element in element and set the version
+
+    version_str may contain an integer or a full version number
+    """
+    from ..fileio.adm.xml import find_audioFormatExtended
+    from ..fileio.adm.elements.version import BS2076Version, parse_version
+
+    afe_element = find_audioFormatExtended(element)
+
+    version_int = None
+    try:
+        version_int = int(version_str)
+    except ValueError:
+        pass
+
+    if version_int is not None:
+        version = BS2076Version(version_int)
+    else:
+        version = parse_version(version_str)
+
+    afe_element.attrib["version"] = str(version)
+
+
 def regenerate_command(args):
     from ..fileio.adm import xml as adm_xml
     from ..fileio.adm import chna as adm_chna
     from ..fileio.adm import timing_fixes
+    from ..fileio.adm.adm import ADM
+    from ..fileio.adm.chna import load_chna_chunk
+    from ..fileio.adm.common_definitions import load_common_definitions
     import lxml.etree
 
-    with openBw64Adm(args.input) as infile:
+    with openBw64(args.input) as infile:
         formatInfo = FormatInfoChunk(channelCount=infile.channels,
                                      sampleRate=infile.sampleRate,
                                      bitsPerSample=infile.bitdepth)
-        infile.adm.validate()
+
+        adm = ADM()
+        load_common_definitions(adm)
+
+        if infile.axml is not None:
+            element = lxml.etree.fromstring(infile.axml)
+            if args.set_version:
+                _set_axml_version(element, args.set_version)
+
+            adm_xml.load_axml_doc(adm, element)
+
+        load_chna_chunk(adm, infile.chna)
+
+        adm.validate()
 
         if args.enable_block_duration_fix:
-            timing_fixes.fix_blockFormat_timings(infile.adm)
+            timing_fixes.fix_blockFormat_timings(adm)
 
-        xml = adm_xml.adm_to_xml(infile.adm)
+        xml = adm_xml.adm_to_xml(adm)
         axml = lxml.etree.tostring(xml, pretty_print=True)
 
         chna = ChnaChunk()
-        adm_chna.populate_chna_chunk(chna, infile.adm)
+        adm_chna.populate_chna_chunk(chna, adm)
 
         with openBw64(args.output, 'w', formatInfo=formatInfo,
                       axml=axml, chna=chna) as outfile:
@@ -129,6 +169,10 @@ def make_parser():
         subparser.add_argument("output", help="output bwf file")
         subparser.add_argument("--enable-block-duration-fix", action="store_true",
                                help="automatically try to fix faulty block format durations")
+        subparser.add_argument(
+            "--set-version",
+            help="set AXML version tag, either an integer version number or full version string",
+        )
         subparser.set_defaults(command=regenerate_command)
 
     def add_rewrite_command():
