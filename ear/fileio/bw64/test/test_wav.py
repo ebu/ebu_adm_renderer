@@ -2,7 +2,8 @@ from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 import pytest
 import os
-from ... import openBw64
+from ... import openBw64, openBw64Adm
+from ....test.test_integrate import bwf_file
 
 FIXTURE_DIR = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
@@ -195,3 +196,18 @@ def test_24bit_missing_padding(datafiles):
     with pytest.warns(UserWarning, match="data chunk is missing padding byte"):
         with openBw64(path):
             pass
+
+
+def test_openBw64Adm():
+    with openBw64Adm(bwf_file) as infile:
+        assert infile.sampleRate == 48000
+        assert infile.channels == 4
+        assert infile.bitdepth == 24
+        assert infile.formatInfo.sampleRate == 48000
+        assert infile.formatInfo.channelCount == 4
+        assert infile.formatInfo.bitsPerSample == 24
+        assert infile.chna is not None
+
+        assert infile.adm is not None
+        assert len(infile.adm.audioProgrammes) == 1  # loaded axml
+        assert infile.adm.audioTrackUIDs[0].trackIndex == 1  # loaded chna
