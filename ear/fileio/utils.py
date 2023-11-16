@@ -121,8 +121,7 @@ class Bw64AdmReader(object):
             where nsamples is <= blockSize, and nchannels is the number of
             channels
         """
-        while(self._bw64.tell() != len(self._bw64)):
-            yield self._bw64.read(blockSize)
+        return self._bw64.iter_sample_blocks(blockSize)
 
     def _parse_adm(self):
         adm = ADM()

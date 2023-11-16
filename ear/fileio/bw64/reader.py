@@ -139,6 +139,20 @@ class Bw64Reader(object):
         return ((self._buffer.tell() - self._chunks[b'data'].position.data) //
                 self._formatInfo.blockAlignment)
 
+    def iter_sample_blocks(self, blockSize):
+        """Read blocks of samples from the file.
+
+        Parameters:
+            blockSize(int): number of samples to read at a time
+
+        Yields:
+            np.ndarray of float: sample blocks of shape (nsamples, nchannels),
+            where nsamples is <= blockSize, and nchannels is the number of
+            channels
+        """
+        while self.tell() != len(self):
+            yield self.read(blockSize)
+
     def __len__(self):
         """ Returns number of frames """
         if (self._ds64):
