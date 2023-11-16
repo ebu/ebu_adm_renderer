@@ -2,15 +2,18 @@ import lxml.etree
 from lxml.builder import ElementMaker
 from fractions import Fraction
 import pytest
+import py.path
 import re
 from copy import deepcopy
 from ..xml import parse_string, adm_to_xml, ParseError
 from ..exceptions import AdmError, AdmIDError
 from ..elements import (
     AudioBlockFormatBinaural,
+    AudioBlockFormatObjects,
     AudioObjectInteraction,
     CartesianZone,
     CartesianPositionOffset,
+    ObjectPolarPosition,
     PolarZone,
     PolarPositionOffset,
     CartesianPositionInteractionRange,
@@ -21,6 +24,8 @@ from ..elements.version import BS2076Version, NoVersion
 from ....common import CartesianPosition, PolarPosition, CartesianScreen, PolarScreen
 from .test_time_format import time_equal
 from ..time_format import FractionalTime
+from ..builder import ADMBuilder
+from ..generate_ids import generate_ids
 
 
 ns = "urn:ebu:metadata-schema:ebuCore_2015"
@@ -1464,3 +1469,40 @@ def test_round_trip_base(base):
 
 def test_round_trip_matrix(base_mat):
     check_round_trip(base_mat.adm)
+
+
+@pytest.mark.parametrize("version", [1, 2])
+def test_defaults(version):
+    """test that a basic adm structure results in the expected xml
+
+    this is mostly intended to catch default values accidentally being added to the xml
+
+    if this is failing for a good reason, delete the defaults_v1 and v2 files,
+    and re-run the test suite to regenerate them
+    """
+    builder = ADMBuilder.for_version(version)
+
+    builder.create_programme(audioProgrammeName="programme")
+    builder.create_content(audioContentName="content")
+
+    block_formats = [
+        AudioBlockFormatObjects(
+            position=ObjectPolarPosition(azimuth=0.0, elevation=0.0, distance=1.0),
+        ),
+    ]
+    builder.create_item_objects(0, "MyObject 1", block_formats=block_formats)
+
+    generate_ids(builder.adm)
+    xml = adm_to_xml(builder.adm)
+    xml_str = lxml.etree.tostring(xml, encoding=str, pretty_print=True)
+
+    this_dir = py.path.local(__file__).dirpath()
+    defaults_file = this_dir / "test_adm_files" / f"defaults_v{version}.xml"
+
+    if defaults_file.check():
+        with open(defaults_file) as f:
+            assert f.read() == xml_str
+    else:
+        with open(defaults_file, "w") as f:
+            f.write(xml_str)
+        pytest.skip("generated defaults file")
