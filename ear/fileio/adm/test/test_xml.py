@@ -1440,6 +1440,7 @@ def as_dict(inst):
 
 
 def check_round_trip(adm):
+    """check that turning adm into xml, then parsing, results in the original adm"""
     import attr
 
     xml = adm_to_xml(adm)
