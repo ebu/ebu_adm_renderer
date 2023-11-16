@@ -1994,6 +1994,17 @@ def default_get_main_elements_handler(version: Version) -> MainElementHandler:
         raise NotImplementedError(f"ADM version '{version!s}' is not supported")
 
 
+def find_audioFormatExtended(element: lxml.etree._Element):
+    """find the audioFormatExtended tag"""
+    afe_elements = list(xpath(element, "//{ns}audioFormatExtended"))
+    if len(afe_elements) == 0:
+        raise ValueError("no audioFormatExtended elements found")
+    elif len(afe_elements) > 1:
+        raise ValueError("multiple audioFormatExtended elements found")
+    else:
+        return afe_elements[0]
+
+
 def parse_audioFormatExtended(
     adm: ADM,
     element: lxml.etree._Element,
@@ -2003,21 +2014,13 @@ def parse_audioFormatExtended(
     """find the audioFormatExtended tag, and add information from it (including
     sub-elements) to adm
     """
-    afe_elements = list(xpath(element, "//{ns}audioFormatExtended"))
-    if len(afe_elements) == 0:
-        raise ValueError("no audioFormatExtended elements found")
-    elif len(afe_elements) > 1:
-        raise ValueError("multiple audioFormatExtended elements found")
-    else:
-        afe_element = afe_elements[0]
+    afe_element = find_audioFormatExtended(element)
 
-        if not common_definitions:
-            adm.version = VersionType.loads(afe_element.attrib.get("version"))
+    if not common_definitions:
+        adm.version = VersionType.loads(afe_element.attrib.get("version"))
 
-        handler = get_main_elemtnts_handler(adm.version)
-        handler.parse_adm_elements(
-            adm, afe_element, common_definitions=common_definitions
-        )
+    handler = get_main_elemtnts_handler(adm.version)
+    handler.parse_adm_elements(adm, afe_element, common_definitions=common_definitions)
 
 
 def _sort_block_formats(channelFormats):
