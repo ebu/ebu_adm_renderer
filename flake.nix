@@ -13,7 +13,7 @@
           packages.ear = python3.pkgs.buildPythonPackage rec {
             name = "ear";
             src = ./.;
-            propagatedBuildInputs = with python3.pkgs; [ numpy scipy enum34 six attrs multipledispatch lxml pyyaml setuptools ];
+            propagatedBuildInputs = with python3.pkgs; [ numpy scipy six attrs multipledispatch lxml pyyaml setuptools ];
 
             doCheck = true;
             nativeCheckInputs = with python3.pkgs; [ pytest pytestCheckHook pytest-cov pytest-datafiles soundfile ];
