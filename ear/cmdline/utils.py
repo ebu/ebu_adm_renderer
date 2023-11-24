@@ -4,7 +4,7 @@ import logging
 import sys
 from ..compatibility import write_bytes_to_stdout
 from ..fileio import openBw64
-from ..fileio.bw64.chunks import FormatInfoChunk, ChnaChunk
+from ..fileio.bw64.chunks import ChnaChunk
 import warnings
 from . import ambix_to_bwf
 from . import generate_test_file
@@ -23,9 +23,6 @@ def replace_axml_command(args):
         axml = axml_file.read()
 
         with openBw64(args.input) as infile:
-            formatInfo = FormatInfoChunk(channelCount=infile.channels,
-                                         sampleRate=infile.sampleRate,
-                                         bitsPerSample=infile.bitdepth)
             if args.gen_chna:
                 adm = adm_xml.parse_string(axml)
                 adm_chna.guess_track_indices(adm)
@@ -39,8 +36,9 @@ def replace_axml_command(args):
                                   "not have a CHNA chunk. Either specify '-g', or use an input " +
                                   "file with a CHNA chunk.")
 
-            with openBw64(args.output, 'w', formatInfo=formatInfo,
-                          axml=axml, chna=chna) as outfile:
+            with openBw64(
+                args.output, "w", formatInfo=infile.formatInfo, axml=axml, chna=chna
+            ) as outfile:
                 while True:
                     samples = infile.read(2048)
                     if not len(samples):
@@ -82,10 +80,6 @@ def regenerate_command(args):
     import lxml.etree
 
     with openBw64(args.input) as infile:
-        formatInfo = FormatInfoChunk(channelCount=infile.channels,
-                                     sampleRate=infile.sampleRate,
-                                     bitsPerSample=infile.bitdepth)
-
         adm = ADM()
         load_common_definitions(adm)
 
@@ -109,20 +103,22 @@ def regenerate_command(args):
         chna = ChnaChunk()
         adm_chna.populate_chna_chunk(chna, adm)
 
-        with openBw64(args.output, 'w', formatInfo=formatInfo,
-                      axml=axml, chna=chna) as outfile:
+        with openBw64(
+            args.output, "w", formatInfo=infile.formatInfo, axml=axml, chna=chna
+        ) as outfile:
             for samples in infile.iter_sample_blocks(2048):
                 outfile.write(samples)
 
 
 def rewrite_command(args):
     with openBw64(args.input) as infile:
-        formatInfo = FormatInfoChunk(channelCount=infile.channels,
-                                     sampleRate=infile.sampleRate,
-                                     bitsPerSample=infile.bitdepth)
-
-        with openBw64(args.output, 'w', formatInfo=formatInfo,
-                      axml=infile.axml, chna=infile.chna) as outfile:
+        with openBw64(
+            args.output,
+            "w",
+            formatInfo=infile.formatInfo,
+            axml=infile.axml,
+            chna=infile.chna,
+        ) as outfile:
             while True:
                 samples = infile.read(2048)
                 if not len(samples):

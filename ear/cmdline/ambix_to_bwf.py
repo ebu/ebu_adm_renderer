@@ -8,7 +8,7 @@ from ..fileio.adm.chna import populate_chna_chunk
 from ..fileio.adm.generate_ids import generate_ids
 from ..fileio.adm.xml import adm_to_xml
 from ..fileio import openBw64
-from ..fileio.bw64.chunks import ChnaChunk, FormatInfoChunk
+from ..fileio.bw64.chunks import ChnaChunk
 
 
 def add_args(subparsers):
@@ -105,15 +105,8 @@ def ambix_to_bwf(args):
         chna = ChnaChunk()
         populate_chna_chunk(chna, adm)
 
-        fmtInfo = FormatInfoChunk(
-            formatTag=1,
-            channelCount=infile.channels,
-            sampleRate=infile.sampleRate,
-            bitsPerSample=infile.bitdepth,
-        )
-
         with openBw64(
-            args.output, "w", chna=chna, formatInfo=fmtInfo, axml=axml
+            args.output, "w", chna=chna, formatInfo=infile.formatInfo, axml=axml
         ) as outfile:
             while True:
                 samples = infile.read(1024)
