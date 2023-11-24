@@ -1,10 +1,15 @@
 import pytest
+from ....common import PolarPosition, PolarScreen
 from ....fileio.adm.builder import ADMBuilder
 from ....fileio.adm.generate_ids import generate_ids
 from .. import select_rendering_items
 from ....fileio.adm.elements import (
     AlternativeValueSet,
+    AudioBlockFormatDirectSpeakers,
     AudioBlockFormatObjects,
+    BoundCoordinate,
+    DirectSpeakerPolarPosition,
+    Frequency,
     ObjectPolarPosition,
     PolarPositionOffset,
     TypeDefinition,
@@ -12,6 +17,7 @@ from ....fileio.adm.elements import (
 from ....fileio.adm.elements.version import BS2076Version
 from ....fileio.adm.exceptions import AdmError
 from ...metadata_input import DirectTrackSpec, SilentTrackSpec
+from fractions import Fraction
 
 
 def test_basic():
@@ -493,17 +499,68 @@ def test_object_params():
 
     assert extra_data.object_gain == 1.0
     assert extra_data.object_mute is False
-    assert extra_data.document_version == BS2076Version(2)
+    assert extra_data.object_start is None
+    assert extra_data.object_duration is None
 
     # non-default
     obj.audio_object.gain = 1.5
     obj.audio_object.mute = True
+    obj.audio_object.start = Fraction(1)
+    obj.audio_object.duration = Fraction(2)
 
     [item] = select_rendering_items(builder.adm)
     extra_data = item.metadata_source.get_next_block().extra_data
 
     assert extra_data.object_gain == 1.5
     assert extra_data.object_mute is True
+    assert extra_data.object_start == Fraction(1)
+    assert extra_data.object_duration == Fraction(2)
+
+
+def test_extra_data():
+    """ExtraData content not in other tests"""
+    builder = ADMBuilder.for_version(2)
+    builder.load_common_definitions()
+    prog = builder.create_programme(audioProgrammeName="MyProgramme")
+    builder.create_content(audioContentName="MyContent")
+
+    obj = builder.create_item_direct_speakers(
+        0,
+        "obj",
+        block_formats=[
+            AudioBlockFormatDirectSpeakers(
+                position=DirectSpeakerPolarPosition(
+                    bounded_azimuth=BoundCoordinate(0.0),
+                    bounded_elevation=BoundCoordinate(0.0),
+                ),
+                speakerLabel=["LFE1"],
+            ),
+        ],
+    )
+
+    # defaults
+    [item] = select_rendering_items(builder.adm)
+    extra_data = item.metadata_source.get_next_block().extra_data
+
+    assert extra_data.document_version == BS2076Version(2)
+    assert extra_data.channel_frequency == Frequency()
+    assert extra_data.reference_screen == prog.referenceScreen
+
+    # non-default
+    obj.channel_format.frequency = Frequency(lowPass=120.0)
+
+    screen = PolarScreen(
+        aspectRatio=1.0,
+        centrePosition=PolarPosition(azimuth=0.0, elevation=0.0, distance=1.0),
+        widthAzimuth=58.0,
+    )
+    prog.referenceScreen = screen
+
+    [item] = select_rendering_items(builder.adm)
+    extra_data = item.metadata_source.get_next_block().extra_data
+
+    assert extra_data.channel_frequency == Frequency(lowPass=120.0)
+    assert extra_data.reference_screen == screen
 
 
 def test_alternativeValueSet():
