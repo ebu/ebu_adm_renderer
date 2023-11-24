@@ -9,10 +9,12 @@ from ..core.metadata_processing import preprocess_rendering_items, convert_objec
 from ..core.select_items import select_rendering_items
 from ..fileio import openBw64, openBw64Adm
 from ..fileio.adm.elements import AudioProgramme, AudioObject
+from ..fileio.adm.elements.version import version_at_least
 from ..fileio.bw64.chunks import FormatInfoChunk
 from ..fileio.adm import timing_fixes
 import logging
 from .error_handler import error_handler
+import warnings
 
 
 logging.basicConfig()
@@ -195,6 +197,10 @@ class OfflineRenderDriver(object):
         output_monitor = PeakMonitor(n_channels)
 
         with openBw64Adm(input_file) as infile:
+            if version_at_least(infile.adm.version, 2):
+                warnings.warn(
+                    f"rendering of files with version {infile.adm.version} is not standardised"
+                )
             infile.adm.validate()
             timing_fixes.check_blockFormat_timings(
                 infile.adm, fix=self.enable_block_duration_fix
