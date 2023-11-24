@@ -13,6 +13,7 @@
 ### Added
 
 - Preliminary support for BS.2076-2 structures. Until this is standardised, a warning will be emitted when rendering files with this version. See [#59] and [#58].
+- `--set-version` to `ear-utils regenerate`. This can be used to fix files which use BS.2076-2 features but have no version tag.
 
 ## [2.1.0] - 2022-01-26
 
