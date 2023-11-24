@@ -13,7 +13,7 @@ speakers:
   position: {az: 45.0, el: -30.0, r: 1.0}
 - channel: 4
   names: M-110
-  position: {az: -90.0, el: 0.0, r: 1.0}
+  position: {az: -100.0, el: 0.0, r: 1.0}
 - channel: 6
   names: M+110
-  position: {az: 90.0, el: 0.0, r: 1.0}
+  position: {az: 100.0, el: 0.0, r: 1.0}
