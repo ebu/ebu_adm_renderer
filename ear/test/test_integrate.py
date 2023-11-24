@@ -54,7 +54,8 @@ def test_generate(tmpdir):
 def test_render(tmpdir):
     rendered_file = str(tmpdir / "test_bwf_render.wav")
     args = ['ear-render', '-d', '-s', '4+5+0', bwf_file, rendered_file]
-    assert subprocess.call(args) == 0
+    proc = subprocess.run(args, check=True, capture_output=True)
+    assert proc.stderr == b""
 
     samples, sr = soundfile.read(rendered_file)
 
@@ -95,7 +96,8 @@ def test_render_adapt(tmpdir):
 
     rendered_file = str(tmpdir / "test_adapt_bwf_render.wav")
     args = ['ear-render', '--layout', layout_file, '-s', '0+5+0', bwf_file, rendered_file]
-    assert subprocess.call(args) == 0
+    proc = subprocess.run(args, check=True, capture_output=True)
+    assert proc.stderr == b""
 
     samples, sr = soundfile.read(rendered_file)
 
@@ -116,8 +118,18 @@ def test_render_v2(tmpdir):
     assert subprocess.call(args) == 0
 
     rendered_file = str(tmpdir / "test_v2_render.wav")
-    args = ["ear-render", "-s", "0+5+0", bwf_file, rendered_file]
-    assert subprocess.call(args) == 0
+    args = ["ear-render", "-d", "-s", "0+5+0", bwf_file, rendered_file]
+    proc = subprocess.run(args, check=True, capture_output=True)
+
+    warn_v2, warn_diverge = [line for line in proc.stderr.split(b"\n") if line.strip()]
+    assert (
+        b"rendering of files with version ITU-R_BS.2076-2 is not standardised"
+        in warn_v2
+    )
+    assert (
+        b"objectDivergence azimuthRange default changed between BS.2076-1 and -2"
+        in warn_diverge
+    )
 
     samples, sr = soundfile.read(rendered_file)
 
@@ -170,7 +182,9 @@ def test_hoa(tmpdir, order, chna_only):
     assert subprocess.call(["ear-utils", "ambix_to_bwf"] + opts + [input_fname, bwf_fname]) == 0
 
     rendered_fname = str(tmpdir / "hoa_rendered.wav")
-    assert subprocess.call(["ear-render", "-d", "-s", "0+5+0", bwf_fname, rendered_fname]) == 0
+    args = ["ear-render", "-d", "-s", "0+5+0", bwf_fname, rendered_fname]
+    proc = subprocess.run(args, check=True, capture_output=True)
+    assert proc.stderr == b""
 
     rendered_samples, rendered_sr = soundfile.read(rendered_fname)
     assert rendered_sr == sr
@@ -288,9 +302,22 @@ def test_multi_programme_comp_object(tmpdir):
 
     samples = generate_samples()
 
-    for i, (args, expected_channel) in enumerate(conditions):
+    for i, (select_args, expected_channel) in enumerate(conditions):
         rendered_fname = str(tmpdir / "out_{i}.wav".format(i=i))
-        assert subprocess.call(["ear-render", "-d", "-s", "0+5+0", bwf_fname, rendered_fname] + args) == 0
+        args = [
+            "ear-render",
+            "-d",
+            "-s",
+            "0+5+0",
+            bwf_fname,
+            rendered_fname,
+        ] + select_args
+        proc = subprocess.run(args, check=True, capture_output=True)
+        if select_args:
+            assert proc.stderr == b""
+        else:
+            [warn_select] = [line for line in proc.stderr.split(b"\n") if line.strip()]
+            assert b"more than one audioProgramme" in warn_select
 
         rendered_samples, rendered_sr = soundfile.read(rendered_fname)
         assert rendered_sr == sr
