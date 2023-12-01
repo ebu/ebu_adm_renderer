@@ -14,10 +14,27 @@ from .elements import (
     AudioBlockFormatObjects, AudioBlockFormatDirectSpeakers, AudioBlockFormatBinaural, AudioBlockFormatHoa, AudioBlockFormatMatrix,
     ChannelLock, BoundCoordinate, JumpPosition, ObjectDivergence, CartesianZone, PolarZone, ScreenEdgeLock, MatrixCoefficient)
 from .elements import (
-    AudioProgramme, AudioContent, AudioObject, AudioChannelFormat, AudioPackFormat, AudioStreamFormat, AudioTrackFormat, AudioTrackUID,
-    FormatDefinition, TypeDefinition, Frequency, LoudnessMetadata)
-from .elements.geom import (DirectSpeakerPolarPosition, DirectSpeakerCartesianPosition,
-                            ObjectPolarPosition, ObjectCartesianPosition)
+    AudioProgramme,
+    AudioContent,
+    AudioObject,
+    AudioChannelFormat,
+    AudioPackFormat,
+    AudioStreamFormat,
+    AudioTrackFormat,
+    AudioTrackUID,
+    FormatDefinition,
+    TypeDefinition,
+    Frequency,
+    LoudnessMetadata,
+)
+from .elements.geom import (
+    DirectSpeakerPolarPosition,
+    DirectSpeakerCartesianPosition,
+    ObjectPolarPosition,
+    ObjectCartesianPosition,
+    CartesianPositionOffset,
+    PolarPositionOffset,
+)
 from .elements.version import parse_version, BS2076Version, NoVersion, Version
 from .time_format import parse_time, unparse_time
 from ...common import PolarPosition, CartesianPosition, CartesianScreen, PolarScreen
@@ -988,6 +1005,70 @@ screen_handler = ElementParser(make_screen, "audioProgrammeReferenceScreen", [
 ])
 
 
+# position offset
+
+
+def handle_position_offset(kwargs, element):
+    pos_kwargs = {}
+
+    for sub_element in xpath(element, "{ns}positionOffset"):
+        try:
+            coordinate = sub_element.attrib["coordinate"]
+        except KeyError:
+            raise ValueError("missing coordinate attr")
+        if coordinate in pos_kwargs:
+            raise ValueError(f"duplicate {coordinate} coordinates specified")
+
+        pos_kwargs[coordinate] = FloatType.loads(text(sub_element))
+
+    if not pos_kwargs:
+        return
+
+    coordinates = set(pos_kwargs.keys())
+
+    if coordinates <= {"azimuth", "elevation", "distance"}:
+        kwargs["positionOffset"] = PolarPositionOffset(**pos_kwargs)
+    elif coordinates <= {"X", "Y", "Z"}:
+        kwargs["positionOffset"] = CartesianPositionOffset(**pos_kwargs)
+    else:
+        found = ",".join(sorted(coordinates))
+        raise ValueError(
+            f"Found positionOffset coordinates {{{found}}}, but expected "
+            "{azimuth,elevation,distance} or {X,Y,Z}."
+        )
+
+
+def position_offset_to_xml(parent, obj):
+    pos = obj.positionOffset
+
+    if pos is None:
+        return
+
+    def dump_coordinate(coordinate, value):
+        if value != 0.0:
+            element = parent.makeelement(
+                QName(default_ns, "positionOffset"), coordinate=coordinate
+            )
+            element.text = FloatType.dumps(value)
+
+            parent.append(element)
+
+    if isinstance(pos, PolarPositionOffset):
+        dump_coordinate("azimuth", pos.azimuth)
+        dump_coordinate("elevation", pos.elevation)
+        dump_coordinate("distance", pos.distance)
+    elif isinstance(pos, CartesianPositionOffset):
+        dump_coordinate("X", pos.X)
+        dump_coordinate("Y", pos.Y)
+        dump_coordinate("Z", pos.Z)
+    else:
+        assert False, "unexpected type"  # pragma: no cover
+
+
+position_offset_handler = GenericElement(
+    handler=handle_position_offset, to_xml=position_offset_to_xml
+)
+
 # main elements
 
 
@@ -1234,6 +1315,14 @@ class MainElementHandler:
                 ),
                 self.make_gain_element_v2("audioObject"),
                 self.make_mute_element_v2("audioObject"),
+                self.by_version(
+                    v1=make_no_element_before_v2(
+                        "audioObject",
+                        "positionOffset",
+                        lambda obj: obj.positionOffset is not None,
+                    ),
+                    v2=position_offset_handler,
+                ),
             ],
         )
 

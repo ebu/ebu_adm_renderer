@@ -6,7 +6,13 @@ import re
 from copy import deepcopy
 from ..xml import parse_string, adm_to_xml, ParseError
 from ..exceptions import AdmError
-from ..elements import AudioBlockFormatBinaural, CartesianZone, PolarZone
+from ..elements import (
+    AudioBlockFormatBinaural,
+    CartesianZone,
+    CartesianPositionOffset,
+    PolarZone,
+    PolarPositionOffset,
+)
 from ..elements.version import BS2076Version, NoVersion
 from ....common import CartesianPosition, PolarPosition, CartesianScreen, PolarScreen
 
@@ -870,6 +876,87 @@ def test_audioObject_mute(base):
     with pytest.raises(ParseError, match=expected):
         base.adm_after_mods(
             add_children("//adm:audioObject", E.mute("0")),
+        )
+
+
+def test_audioObject_positionOffset(base):
+    [ao] = base.adm.audioObjects
+    assert ao.positionOffset is None
+
+    # full polar
+    adm = base.adm_after_mods(
+        set_version(2),
+        add_children(
+            "//adm:audioObject",
+            E.positionOffset("10", coordinate="azimuth"),
+            E.positionOffset("20", coordinate="elevation"),
+            E.positionOffset("3", coordinate="distance"),
+        ),
+    )
+    [ao] = adm.audioObjects
+    assert ao.positionOffset == PolarPositionOffset(
+        azimuth=10.0, elevation=20.0, distance=3.0
+    )
+
+    # partial polar
+    adm = base.adm_after_mods(
+        set_version(2),
+        add_children("//adm:audioObject", E.positionOffset("20", coordinate="azimuth")),
+    )
+    [ao] = adm.audioObjects
+    assert ao.positionOffset.azimuth == 20.0
+
+    # cartesian
+    adm = base.adm_after_mods(
+        set_version(2),
+        add_children(
+            "//adm:audioObject",
+            E.positionOffset("0.1", coordinate="X"),
+            E.positionOffset("0.2", coordinate="Y"),
+            E.positionOffset("0.3", coordinate="Z"),
+        ),
+    )
+    [ao] = adm.audioObjects
+    assert ao.positionOffset == CartesianPositionOffset(X=0.1, Y=0.2, Z=0.3)
+
+    expected = "positionOffset in audioObject is a BS.2076-2 feature"
+    with pytest.raises(ParseError, match=expected):
+        base.adm_after_mods(
+            add_children(
+                "//adm:audioObject", E.positionOffset("20", coordinate="azimuth")
+            ),
+        )
+
+    expected = "Found positionOffset coordinates {X,azimuth}, but expected {azimuth,elevation,distance} or {X,Y,Z}."
+    with pytest.raises(ParseError, match=expected):
+        base.adm_after_mods(
+            set_version(2),
+            add_children(
+                "//adm:audioObject",
+                E.positionOffset("20", coordinate="azimuth"),
+                E.positionOffset("0.5", coordinate="X"),
+            ),
+        )
+
+    expected = "duplicate azimuth coordinates specified"
+    with pytest.raises(ParseError, match=expected):
+        base.adm_after_mods(
+            set_version(2),
+            add_children(
+                "//adm:audioObject",
+                E.positionOffset("20", coordinate="azimuth"),
+                E.positionOffset("20", coordinate="azimuth"),
+            ),
+        )
+
+    expected = "missing coordinate attr"
+    with pytest.raises(ParseError, match=expected):
+        base.adm_after_mods(
+            set_version(2),
+            add_children(
+                "//adm:audioObject",
+                E.positionOffset("20"),
+            ),
         )
 
 
