@@ -14,6 +14,7 @@
             name = "ear";
             src = ./.;
             propagatedBuildInputs = with python3.pkgs; [ numpy scipy six attrs multipledispatch lxml pyyaml setuptools ];
+            pyproject = true;
 
             doCheck = true;
             nativeCheckInputs = with python3.pkgs; [ pytest pytestCheckHook pytest-cov pytest-datafiles soundfile ];
