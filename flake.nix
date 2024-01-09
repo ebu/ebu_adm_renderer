@@ -13,7 +13,8 @@
           packages.ear = python3.pkgs.buildPythonPackage rec {
             name = "ear";
             src = ./.;
-            propagatedBuildInputs = with python3.pkgs; [ numpy scipy six attrs multipledispatch lxml pyyaml setuptools ];
+            propagatedBuildInputs = with python3.pkgs; [ numpy scipy six attrs multipledispatch lxml pyyaml importlib-resources ];
+            nativeBuildInputs = with python3.pkgs; [ setuptools ];
             pyproject = true;
 
             doCheck = true;
@@ -43,7 +44,7 @@
               python3.pkgs.flake8
               python3.pkgs.ipython
             ];
-            nativeBuildInputs = [
+            nativeBuildInputs = attrs.nativeBuildInputs ++ [
               python3.pkgs.matplotlib
               python3.pkgs.flake8
               python3.pkgs.ipython

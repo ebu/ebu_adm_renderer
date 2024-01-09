@@ -130,8 +130,11 @@ def allrad_design(points, panning_func, n, m, norm=norm_SN3D, G_virt=None):
 def load_points(fname="data/Design_5200_100_random.dat"):
     """Load a spherical t-design from a file."""
     # see data/README.md
-    import pkg_resources
-    with pkg_resources.resource_stream(__name__, fname) as points_file:
+    import importlib_resources
+
+    path = importlib_resources.files("ear.core") / fname
+
+    with path.open() as points_file:
         data = np.loadtxt(points_file)
 
     if data.shape[1] == 2:

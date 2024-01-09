@@ -37,8 +37,11 @@ class BaseADM(object):
     """Base ADM to start tests from, with utilities for interacting with it."""
 
     def __init__(self, fname):
-        import pkg_resources
-        with pkg_resources.resource_stream(__name__, fname) as xml_file:
+        import importlib_resources
+
+        path = importlib_resources.files("ear.fileio.adm.test") / fname
+
+        with path.open() as xml_file:
             self.xml = lxml.etree.parse(xml_file)
 
         self.adm = parse_string(lxml.etree.tostring(self.xml))

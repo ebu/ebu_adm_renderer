@@ -4,10 +4,12 @@ from ..compatibility import load_yaml
 
 
 def _load_allo_positions():
-    import pkg_resources
+    import importlib_resources
 
     fname = "data/allo_positions.yaml"
-    with pkg_resources.resource_stream(__name__, fname) as layouts_file:
+    path = importlib_resources.files("ear.core") / fname
+
+    with path.open() as layouts_file:
         return load_yaml(layouts_file)
 
 

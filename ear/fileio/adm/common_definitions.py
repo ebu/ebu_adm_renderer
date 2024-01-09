@@ -1,4 +1,4 @@
-import pkg_resources
+import importlib_resources
 from .xml import parse_audioFormatExtended
 import lxml.etree
 
@@ -11,7 +11,9 @@ def load_common_definitions(adm):
         adm (ADM): ADM structure to add to.
     """
     fname = "data/2094_common_definitions.xml"
-    with pkg_resources.resource_stream(__name__, fname) as stream:
+    path = importlib_resources.files("ear.fileio.adm") / fname
+
+    with path.open() as stream:
         element = lxml.etree.parse(stream)
         parse_audioFormatExtended(adm, element, common_definitions=True)
         adm.lazy_lookup_references()

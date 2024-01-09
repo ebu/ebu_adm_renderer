@@ -22,6 +22,8 @@ setup(
         'lxml~=4.4',
         'six~=1.11',
         'multipledispatch~=0.5',
+        # required until 2024-10 when python 3.9 will be the minimum supported version
+        'importlib_resources>=5.0',
     ],
 
     extras_require={
