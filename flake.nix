@@ -33,6 +33,8 @@
               hash = "sha256-z0FzvkrSmC5bLrq34IvQ0nFz8kWewbHPZq7JKQ2oDM4=";
             };
             propagatedBuildInputs = with python3.pkgs; [ black toml isort ];
+            nativeBuildInputs = with python3.pkgs; [ setuptools ];
+            pyproject = true;
           };
 
           devShells.ear = packages.ear.overridePythonAttrs (attrs: {
