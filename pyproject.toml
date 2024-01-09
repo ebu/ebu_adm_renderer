@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ear"
+description = 'EBU ADM Renderer'
+version = '2.1.0'
+authors = [
+    {name = "EBU", email = "ear-admin@list.ebu.ch"},
+]
+license = {file = "LICENSE"}  # BSD-3-Clause-Clear
+requires-python = ">=3.7"
+dynamic = ["readme"]
+
+dependencies = [
+    'numpy~=1.14',
+    'scipy~=1.0',
+    'attrs>=22.2',
+    'PyYAML~=6.0',
+    'lxml~=4.4',
+    'six~=1.11',
+    'multipledispatch~=1.0',
+    # required until 2024-10 when python 3.9 will be the minimum supported version
+    'importlib_resources>=5.0',
+]
+
+[project.optional-dependencies]
+test = [
+    'pytest~=6.2',
+    'pytest-datafiles~=2.0',
+    'pytest-cov~=3.0',
+    'soundfile~=0.10',
+]
+dev = [
+    'flake8~=3.5',
+    'flake8-print~=3.1',
+    'flake8-string-format~=0.2',
+]
+
+[project.scripts]
+ear-render = "ear.cmdline.render_file:main"
+ear-utils = "ear.cmdline.utils:main"
+
+[tool.setuptools.packages.find]
+include = ["ear", "ear.*"]
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.md", "CHANGELOG.md"], content-type = "text/markdown"}
