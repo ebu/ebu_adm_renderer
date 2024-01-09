@@ -19,7 +19,7 @@
 
             doCheck = true;
             nativeCheckInputs = with python3.pkgs; [ pytest pytestCheckHook pytest-cov pytest-datafiles soundfile ];
-            pytestFlagsArray = [ "ear" ];
+            pytestFlagsArray = [ "ear" "-x" ];
             preCheck = ''
               export PATH="$PATH:$out/bin"
             '';
