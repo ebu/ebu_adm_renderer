@@ -49,10 +49,13 @@
               python3.pkgs.flake8
               python3.pkgs.ipython
               python3.pkgs.black
+              python3.pkgs.pip
               packages.darker
+              python3.pkgs.venvShellHook
             ];
+            venvDir = "./venv";
             postShellHook = ''
-              export PYTHONPATH=$(pwd):$PYTHONPATH
+              python -m pip install -e .
             '';
           });
           devShell = devShells.ear;
