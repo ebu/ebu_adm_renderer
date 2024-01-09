@@ -10,7 +10,7 @@ authors = [
     {name = "EBU", email = "ear-admin@list.ebu.ch"},
 ]
 license = {file = "LICENSE"}  # BSD-3-Clause-Clear
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dynamic = ["readme"]
 
 dependencies = [
