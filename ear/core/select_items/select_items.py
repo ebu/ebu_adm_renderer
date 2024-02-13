@@ -94,7 +94,7 @@ class _ItemSelectionState(object):
 def _select_programme(state, audio_programme=None):
     """Select an audioProgramme to render.
 
-    If audio_programme_id is provided, use that to make the selection,
+    If audio_programme is provided, use that to make the selection,
     otherwise select the only audioProgramme, or the one with the lowest id.
 
     Parameters:
