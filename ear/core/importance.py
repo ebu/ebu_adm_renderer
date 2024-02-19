@@ -1,4 +1,4 @@
-from .metadata_input import MetadataSource, HOARenderingItem, ObjectRenderingItem
+from .metadata_input import MetadataSource, HOARenderingItem
 
 
 def filter_by_importance(rendering_items,
@@ -92,7 +92,7 @@ class MetadataSourceImportanceFilter(MetadataSource):
 
 
 def mute_audioBlockFormat_by_importance(rendering_items, threshold):
-    """Adapt rendering items of type `ObjectRenderingItem` to emulate block format importance handling
+    """Adapt non-HOA rendering items to emulate block format importance handling
 
     This installs an `MetadataSourceImportanceFilter` with the given threshold
 
@@ -103,6 +103,6 @@ def mute_audioBlockFormat_by_importance(rendering_items, threshold):
     Yields: RenderingItem
     """
     for item in rendering_items:
-        if isinstance(item, ObjectRenderingItem):
+        if not isinstance(item, HOARenderingItem):
             item.metadata_source = MetadataSourceImportanceFilter(adapted_source=item.metadata_source, threshold=threshold)
         yield item
