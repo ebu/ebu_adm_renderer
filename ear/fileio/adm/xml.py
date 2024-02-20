@@ -1755,7 +1755,6 @@ class MainElementHandler:
             Attribute(
                 adm_name="duration", arg_name="duration", type=self.make_time_type()
             ),
-            self.make_gain_element(),
         ]
 
     def make_block_format_objects_handler(self):
@@ -1800,13 +1799,14 @@ class MainElementHandler:
                     type=BoolType,
                     default=False,
                 ),
+                zone_exclusion_handler.as_handler("zoneExclusion", default=[]),
+                self.make_gain_element(),
                 AttrElement(
                     adm_name="importance",
                     arg_name="importance",
                     type=IntType,
                     default=10,
                 ),
-                zone_exclusion_handler.as_handler("zoneExclusion", default=[]),
             ],
         )
 
@@ -1820,12 +1820,18 @@ class MainElementHandler:
                 GenericElement(
                     handler=handle_speaker_position, to_xml=speaker_position_to_xml
                 ),
+                self.make_gain_element_v2("DirectSpeakers audioBlockFormat"),
             ],
         )
 
     def make_block_format_binaural_handler(self):
         return ElementParser(
-            AudioBlockFormatBinaural, "audioBlockFormat", self.block_format_props
+            AudioBlockFormatBinaural,
+            "audioBlockFormat",
+            self.block_format_props
+            + [
+                self.make_gain_element_v2("Binaural audioBlockFormat"),
+            ],
         )
 
     def make_block_format_HOA_handler(self):
@@ -1844,6 +1850,7 @@ class MainElementHandler:
                     adm_name="nfcRefDist", arg_name="nfcRefDist", type=FloatType
                 ),
                 AttrElement(adm_name="screenRef", arg_name="screenRef", type=BoolType),
+                self.make_gain_element_v2("HOA audioBlockFormat"),
             ],
         )
 
@@ -1905,6 +1912,7 @@ class MainElementHandler:
                     parse_only=True,
                 ),
                 CustomElement("matrix", handle_matrix, to_xml=matrix_to_xml),
+                self.make_gain_element_v2("Matrix audioBlockFormat"),
             ],
         )
 
