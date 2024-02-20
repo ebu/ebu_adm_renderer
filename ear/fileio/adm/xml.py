@@ -1245,6 +1245,20 @@ class MainElementHandler:
             ),
         )
 
+    def make_default_importance_element_v2(self, element_name):
+        """for elements which have importance in a sub-element only in V2, with a default value"""
+        return self.by_version(
+            v1=make_no_element_before_v2(
+                element_name, "importance", lambda obj: obj.importance != 10
+            ),
+            v2=AttrElement(
+                adm_name="importance",
+                arg_name="importance",
+                type=IntType,
+                default=10,
+            ),
+        )
+
     def make_time_type(self):
         return self.by_version(
             v1=TimeTypeV1,
@@ -1821,6 +1835,9 @@ class MainElementHandler:
                     handler=handle_speaker_position, to_xml=speaker_position_to_xml
                 ),
                 self.make_gain_element_v2("DirectSpeakers audioBlockFormat"),
+                self.make_default_importance_element_v2(
+                    "DirectSpeakers audioBlockFormat"
+                ),
             ],
         )
 
@@ -1831,6 +1848,7 @@ class MainElementHandler:
             self.block_format_props
             + [
                 self.make_gain_element_v2("Binaural audioBlockFormat"),
+                self.make_default_importance_element_v2("Binaural audioBlockFormat"),
             ],
         )
 
@@ -1851,6 +1869,7 @@ class MainElementHandler:
                 ),
                 AttrElement(adm_name="screenRef", arg_name="screenRef", type=BoolType),
                 self.make_gain_element_v2("HOA audioBlockFormat"),
+                self.make_default_importance_element_v2("HOA audioBlockFormat"),
             ],
         )
 
@@ -1913,6 +1932,7 @@ class MainElementHandler:
                 ),
                 CustomElement("matrix", handle_matrix, to_xml=matrix_to_xml),
                 self.make_gain_element_v2("Matrix audioBlockFormat"),
+                self.make_default_importance_element_v2("Matrix audioBlockFormat"),
             ],
         )
 
