@@ -15,12 +15,14 @@ class AudioBlockFormat(object):
         rtime (Optional[fractions.Fraction])
         duration (Optional[fractions.Fraction])
         gain (float)
+        importance (int)
     """
 
     id = attrib(default=None)
     rtime = attrib(validator=optional(instance_of(Fraction)), default=None)
     duration = attrib(validator=optional(instance_of(Fraction)), default=None)
     gain = attrib(validator=instance_of(float), default=1.0)
+    importance = attrib(default=10, validator=instance_of(int))
 
     def lazy_lookup_references(self, adm):
         pass
@@ -195,7 +197,6 @@ class AudioBlockFormatObjects(AudioBlockFormat):
         objectDivergence (Optional[ObjectDivergence])
         jumpPosition (JumpPosition)
         screenRef (bool)
-        importance (int)
         zoneExclusion (list[Union[CartesianZone, PolarZone]])
     """
 
@@ -209,7 +210,6 @@ class AudioBlockFormatObjects(AudioBlockFormat):
     objectDivergence = attrib(default=None, validator=optional(instance_of(ObjectDivergence)))
     jumpPosition = attrib(default=Factory(JumpPosition))
     screenRef = attrib(converter=bool, default=False)
-    importance = attrib(default=10, validator=instance_of(int))
     zoneExclusion = attrib(default=Factory(list), validator=list_of((CartesianZone, PolarZone)))
 
 
