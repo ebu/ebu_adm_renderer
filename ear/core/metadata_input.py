@@ -288,6 +288,7 @@ class HOATypeMetadata(TypeMetadata):
         duration (fractions.Fraction or None): Duration of block.
         extra_data (ExtraData): Info from object and channels for all channels.
         gains (list of float): Gain for each input channel; defaults to 1.
+        importances (list of int): Importance for each input channel; defaults to 10.
     """
     orders = attrib(validator=list_of(int))
     degrees = attrib(validator=list_of(int))
@@ -300,10 +301,15 @@ class HOATypeMetadata(TypeMetadata):
     extra_data = attrib(validator=instance_of(ExtraData), default=Factory(ExtraData))
 
     gains = attrib(validator=list_of(float))
+    importances = attrib(validator=list_of(int))
 
     @gains.default
     def _(self):
         return [1.0] * len(self.orders)
+
+    @importances.default
+    def _(self):
+        return [10] * len(self.orders)
 
 
 @attrs(slots=True)
