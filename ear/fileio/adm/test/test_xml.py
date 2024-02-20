@@ -431,8 +431,9 @@ def test_zone(base):
 
 
 def test_directspeakers(base):
-    def with_children(*children):
+    def with_children(*children, version=2):
         return base.bf_after_mods(
+            set_version(version),
             set_attrs("//adm:audioChannelFormat", typeDefinition="DirectSpeakers", typeLabel="001"),
             remove_children("//adm:position"),
             add_children(bf_path,
@@ -524,6 +525,54 @@ def test_directspeakers(base):
                                      *map(E.speakerLabel, labels))
         assert block_format.speakerLabel == labels
 
+    # default gain and importance
+    block_format = with_children(
+        E.position("0", coordinate="azimuth"), E.position("0", coordinate="elevation")
+    )
+    assert block_format.gain == 1.0
+    assert block_format.importance == 10
+
+    # specify gain and importance
+    block_format = with_children(
+        E.position("0", coordinate="azimuth"),
+        E.position("0", coordinate="elevation"),
+        E.gain("0.5"),
+        E.importance("5"),
+    )
+    assert block_format.gain == 0.5
+    assert block_format.importance == 5
+
+    # dB gain
+    block_format = with_children(
+        E.position("0", coordinate="azimuth"),
+        E.position("0", coordinate="elevation"),
+        E.gain("-20", gainUnit="dB"),
+    )
+    assert block_format.gain == pytest.approx(0.1, rel=1e-6)
+
+    # v2 features
+    with pytest.raises(
+        ParseError,
+        match="gain in DirectSpeakers audioBlockFormat is a BS.2076-2 feature",
+    ):
+        with_children(
+            E.position("0", coordinate="azimuth"),
+            E.position("0", coordinate="elevation"),
+            E.gain("0.5"),
+            version=1,
+        )
+
+    with pytest.raises(
+        ParseError,
+        match="importance in DirectSpeakers audioBlockFormat is a BS.2076-2 feature",
+    ):
+        with_children(
+            E.position("0", coordinate="azimuth"),
+            E.position("0", coordinate="elevation"),
+            E.importance("5"),
+            version=1,
+        )
+
 
 def test_frequency(base):
     def cf_with_children(*children):
@@ -566,43 +615,84 @@ def test_binaural(base):
     block_format = base.bf_after_mods(*to_binaural)
     assert isinstance(block_format, AudioBlockFormatBinaural)
     assert block_format.gain == 1.0
+    assert block_format.importance == 10
 
     block_format = base.bf_after_mods(
-        *to_binaural, add_children(bf_path, E.gain("0.5"))
+        *to_binaural,
+        set_version(2),
+        add_children(bf_path, E.gain("0.5"), E.importance("5")),
     )
     assert block_format.gain == 0.5
+    assert block_format.importance == 5
+
+    with pytest.raises(
+        ParseError, match="gain in Binaural audioBlockFormat is a BS.2076-2 feature"
+    ):
+        base.bf_after_mods(*to_binaural, add_children(bf_path, E.gain("0.5")))
+    with pytest.raises(
+        ParseError,
+        match="importance in Binaural audioBlockFormat is a BS.2076-2 feature",
+    ):
+        base.bf_after_mods(*to_binaural, add_children(bf_path, E.importance("5")))
 
 
 def test_hoa(base):
-    def with_children(*children):
+    def hoa_bf(*mods):
         return base.bf_after_mods(
             set_attrs("//adm:audioChannelFormat", typeDefinition="HOA", typeLabel="004"),
             remove_children("//adm:position"),
-            add_children(bf_path, *children))
-
-    assert with_children(E.gain("0.5")).gain == 0.5
+            *mods,
+        )
 
     # normal usage
-    block_format = with_children(E.order("1"), E.degree("-1"))
+    block_format = hoa_bf(add_children(bf_path, E.order("1"), E.degree("-1")))
     assert block_format.equation is None
     assert block_format.order == 1
     assert block_format.degree == -1
     assert block_format.normalization is None
     assert block_format.nfcRefDist is None
     assert block_format.screenRef is None
+    assert block_format.gain == 1.0
+    assert block_format.importance == 10
 
     # explicit defaults
-    block_format = with_children(E.normalization("SN3D"), E.nfcRefDist("0.0"), E.screenRef("0"))
+    block_format = hoa_bf(
+        add_children(
+            bf_path, E.normalization("SN3D"), E.nfcRefDist("0.0"), E.screenRef("0")
+        )
+    )
     assert block_format.normalization == "SN3D"
     assert block_format.nfcRefDist == 0.0
     assert block_format.screenRef is False
 
     # specify everything
-    block_format = with_children(E.equation("eqn"), E.normalization("N3D"), E.nfcRefDist("0.5"), E.screenRef("1"))
+    block_format = hoa_bf(
+        add_children(
+            bf_path,
+            E.equation("eqn"),
+            E.normalization("N3D"),
+            E.nfcRefDist("0.5"),
+            E.screenRef("1"),
+        )
+    )
     assert block_format.equation == "eqn"
     assert block_format.normalization == "N3D"
     assert block_format.nfcRefDist == 0.5
     assert block_format.screenRef is True
+
+    # v2 attributes
+    assert hoa_bf(set_version(2), add_children(bf_path, E.gain("0.5"))).gain == 0.5
+    assert (
+        hoa_bf(set_version(2), add_children(bf_path, E.importance("5"))).importance == 5
+    )
+    with pytest.raises(
+        ParseError, match="gain in HOA audioBlockFormat is a BS.2076-2 feature"
+    ):
+        assert hoa_bf(add_children(bf_path, E.gain("0.5")))
+    with pytest.raises(
+        ParseError, match="importance in HOA audioBlockFormat is a BS.2076-2 feature"
+    ):
+        assert hoa_bf(add_children(bf_path, E.importance("5")))
 
 
 def test_hoa_pack(base):
@@ -679,6 +769,25 @@ def test_matrix_params(base_mat):
     assert [c.gainVar for c in bf.matrix] == ["gain", None, None]
     assert [c.phaseVar for c in bf.matrix] == [None, "phase", None]
     assert [c.delayVar for c in bf.matrix] == [None, None, "delay"]
+
+    mat_bf_path = "//*[@audioChannelFormatID='AC_00021003']//adm:audioBlockFormat"
+
+    adm = base_mat.adm_after_mods(
+        set_version(2),
+        add_children(mat_bf_path, E.gain("0.5"), E.importance("5")),
+    )
+    [bf] = adm.lookup_element("AC_00021003").audioBlockFormats
+    assert bf.gain == 0.5
+    assert bf.importance == 5
+
+    with pytest.raises(
+        ParseError, match="gain in Matrix audioBlockFormat is a BS.2076-2 feature"
+    ):
+        base_mat.adm_after_mods(add_children(mat_bf_path, E.gain("0.5")))
+    with pytest.raises(
+        ParseError, match="importance in Matrix audioBlockFormat is a BS.2076-2 feature"
+    ):
+        base_mat.adm_after_mods(add_children(mat_bf_path, E.importance("5")))
 
 
 def test_matrix_gain_db(base_mat):
