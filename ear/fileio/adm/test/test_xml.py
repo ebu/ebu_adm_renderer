@@ -238,6 +238,21 @@ def test_gain(base):
     with pytest.raises(ParseError, match=expected):
         base.bf_after_mods(add_children(bf_path, E.gain("20", gainUnit="dB")))
 
+    # various infinity representations
+    for neg_inf_rep in "-inf", "-INF", "-infinity", "-INFINITY", "-InFiNiTy":
+        assert (
+            base.bf_after_mods(
+                set_version(2),
+                add_children(bf_path, E.gain(neg_inf_rep, gainUnit="dB")),
+            ).gain
+            == 0.0
+        )
+
+    with pytest.raises(ParseError, match="'gain' must be finite, but inf is not"):
+        base.bf_after_mods(
+            set_version(2), add_children(bf_path, E.gain("inf", gainUnit="dB"))
+        )
+
 
 def test_extent(base):
     assert base.bf_after_mods().width == 0.0
