@@ -160,3 +160,24 @@ def test_hoa_gains():
     meta = item.metadata_source.get_next_block()
 
     assert meta.gains == gains
+
+
+def test_hoa_importances():
+    builder = HOABuilder()
+
+    importances = [1, 2, 3, 4]
+
+    for channel, importance in zip(builder.first_pack.audioChannelFormats, importances):
+        channel.audioBlockFormats[0].importance = importance
+
+    for i, track in enumerate(builder.first_tracks, 1):
+        builder.create_track_uid(
+            audioPackFormat=builder.first_pack, audioTrackFormat=track, trackIndex=i
+        )
+
+    generate_ids(builder.adm)
+
+    [item] = select_rendering_items(builder.adm)
+    meta = item.metadata_source.get_next_block()
+
+    assert meta.importances == importances

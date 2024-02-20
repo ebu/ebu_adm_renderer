@@ -734,8 +734,17 @@ def _get_RenderingItems_DirectSpeakers(state):
 
 def _get_RenderingItems_HOA(state):
     """Get a HOARenderingItem given an _ItemSelectionState."""
-    from .hoa import (get_nfcRefDist, get_screenRef, get_normalization,
-                      get_order, get_degree, get_rtime, get_duration, get_gain)
+    from .hoa import (
+        get_nfcRefDist,
+        get_screenRef,
+        get_normalization,
+        get_order,
+        get_degree,
+        get_rtime,
+        get_duration,
+        get_gain,
+        get_importance,
+    )
 
     states = list(_select_single_channel(state))
 
@@ -748,6 +757,7 @@ def _get_RenderingItems_HOA(state):
         orders=get_per_channel_param(pack_paths_channels, get_order),
         degrees=get_per_channel_param(pack_paths_channels, get_degree),
         gains=get_per_channel_param(pack_paths_channels, get_gain),
+        importances=get_per_channel_param(pack_paths_channels, get_importance),
         normalization=get_single_param(pack_paths_channels, "normalization", get_normalization),
         nfcRefDist=get_single_param(pack_paths_channels, "nfcRefDist", get_nfcRefDist),
         screenRef=get_single_param(pack_paths_channels, "screenRef", get_screenRef),
