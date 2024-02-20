@@ -1,7 +1,7 @@
 from attr import attrs, attrib, Factory, validate
 from attr.validators import instance_of, optional
 from fractions import Fraction
-from ....common import list_of
+from ....common import finite_float, list_of
 from .geom import convert_object_position, DirectSpeakerPosition, ObjectPosition
 from .main_elements import AudioChannelFormat, TypeDefinition
 
@@ -21,7 +21,7 @@ class AudioBlockFormat(object):
     id = attrib(default=None)
     rtime = attrib(validator=optional(instance_of(Fraction)), default=None)
     duration = attrib(validator=optional(instance_of(Fraction)), default=None)
-    gain = attrib(validator=instance_of(float), default=1.0)
+    gain = attrib(validator=finite_float(), default=1.0)
     importance = attrib(default=10, validator=instance_of(int))
 
     def lazy_lookup_references(self, adm):
@@ -57,11 +57,11 @@ class MatrixCoefficient(object):
 
     inputChannelFormat = attrib(default=None, validator=optional(instance_of(AudioChannelFormat)))
 
-    gain = attrib(default=None, validator=optional(instance_of(float)))
+    gain = attrib(default=None, validator=optional(finite_float()))
     gainVar = attrib(default=None, validator=optional(instance_of(str)))
-    phase = attrib(default=None, validator=optional(instance_of(float)))
+    phase = attrib(default=None, validator=optional(finite_float()))
     phaseVar = attrib(default=None, validator=optional(instance_of(str)))
-    delay = attrib(default=None, validator=optional(instance_of(float)))
+    delay = attrib(default=None, validator=optional(finite_float()))
     delayVar = attrib(default=None, validator=optional(instance_of(str)))
 
     inputChannelFormatIDRef = attrib(default=None)
@@ -113,7 +113,7 @@ class ChannelLock(object):
         maxDistance (Optional[float])
     """
 
-    maxDistance = attrib(default=None, validator=optional(instance_of(float)))
+    maxDistance = attrib(default=None, validator=optional(finite_float()))
 
 
 @attrs(slots=True)
@@ -126,9 +126,9 @@ class ObjectDivergence(object):
         positionRange (Optional[float])
     """
 
-    value = attrib(validator=instance_of(float))
-    azimuthRange = attrib(default=None, validator=optional(instance_of(float)))
-    positionRange = attrib(default=None, validator=optional(instance_of(float)))
+    value = attrib(validator=finite_float())
+    azimuthRange = attrib(default=None, validator=optional(finite_float()))
+    positionRange = attrib(default=None, validator=optional(finite_float()))
 
 
 @attrs(slots=True)
@@ -157,12 +157,12 @@ class CartesianZone(object):
         maxZ (float)
     """
 
-    minX = attrib(validator=instance_of(float))
-    minY = attrib(validator=instance_of(float))
-    minZ = attrib(validator=instance_of(float))
-    maxX = attrib(validator=instance_of(float))
-    maxY = attrib(validator=instance_of(float))
-    maxZ = attrib(validator=instance_of(float))
+    minX = attrib(validator=finite_float())
+    minY = attrib(validator=finite_float())
+    minZ = attrib(validator=finite_float())
+    maxX = attrib(validator=finite_float())
+    maxY = attrib(validator=finite_float())
+    maxZ = attrib(validator=finite_float())
 
 
 @attrs(slots=True)
@@ -176,10 +176,10 @@ class PolarZone(object):
         maxAzimuth (float)
     """
 
-    minElevation = attrib(validator=instance_of(float))
-    maxElevation = attrib(validator=instance_of(float))
-    minAzimuth = attrib(validator=instance_of(float))
-    maxAzimuth = attrib(validator=instance_of(float))
+    minElevation = attrib(validator=finite_float())
+    maxElevation = attrib(validator=finite_float())
+    minAzimuth = attrib(validator=finite_float())
+    maxAzimuth = attrib(validator=finite_float())
 
 
 @attrs(slots=True)
@@ -243,7 +243,7 @@ class AudioBlockFormatHoa(AudioBlockFormat):
     order = attrib(default=None, validator=optional(instance_of(int)))
     degree = attrib(default=None, validator=optional(instance_of(int)))
     normalization = attrib(default=None, validator=optional(instance_of(str)))
-    nfcRefDist = attrib(default=None, validator=optional(instance_of(float)))
+    nfcRefDist = attrib(default=None, validator=optional(finite_float()))
     screenRef = attrib(default=None, validator=optional(instance_of(bool)))
 
 

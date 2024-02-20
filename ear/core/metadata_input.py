@@ -2,7 +2,7 @@ from attr import attrib, attrs, Factory
 from attr.validators import instance_of, optional
 from fractions import Fraction
 from typing import Optional
-from ..common import list_of, default_screen
+from ..common import list_of, default_screen, finite_float
 from ..fileio.adm.elements import (
     AudioProgramme,
     AudioContent,
@@ -76,9 +76,9 @@ class ExtraData(object):
     object_duration = attrib(validator=optional(instance_of(Fraction)), default=None)
     reference_screen = attrib(default=default_screen)
     channel_frequency = attrib(validator=instance_of(Frequency), default=Factory(Frequency))
-    pack_absoluteDistance = attrib(validator=optional(instance_of(float)), default=None)
+    pack_absoluteDistance = attrib(validator=optional(finite_float()), default=None)
 
-    object_gain = attrib(validator=instance_of(float), default=1.0)
+    object_gain = attrib(validator=finite_float(), default=1.0)
     object_mute = attrib(validator=instance_of(bool), default=False)
     object_positionOffset = attrib(
         validator=optional(instance_of(PositionOffset)), default=None
@@ -200,7 +200,7 @@ class GainTrackSpec(TrackSpec):
     """
 
     input_track = attrib(validator=instance_of(TrackSpec))
-    gain = attrib(validator=instance_of(float))
+    gain = attrib(validator=finite_float())
 
 
 #################################################
@@ -292,7 +292,7 @@ class HOATypeMetadata(TypeMetadata):
     orders = attrib(validator=list_of(int))
     degrees = attrib(validator=list_of(int))
     normalization = attrib()
-    nfcRefDist = attrib(validator=optional(instance_of(float)), default=None)
+    nfcRefDist = attrib(validator=optional(finite_float()), default=None)
     screenRef = attrib(validator=instance_of(bool), default=False)
     rtime = attrib(default=None, validator=optional(instance_of(Fraction)))
     duration = attrib(default=None, validator=optional(instance_of(Fraction)))

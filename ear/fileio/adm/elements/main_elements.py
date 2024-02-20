@@ -6,7 +6,13 @@ from six import string_types
 
 from .geom import PositionOffset, InteractionRange, PositionInteractionRange
 from ..exceptions import AdmError
-from ....common import CartesianScreen, PolarScreen, default_screen, list_of
+from ....common import (
+    CartesianScreen,
+    PolarScreen,
+    default_screen,
+    finite_float,
+    list_of,
+)
 
 
 def _lookup_elements(adm, idRefs):
@@ -61,14 +67,18 @@ class LoudnessMetadata(object):
     """
 
     loudnessMethod = attrib(default=None, validator=optional(instance_of(string_types)))
-    loudnessRecType = attrib(default=None, validator=optional(instance_of(string_types)))
-    loudnessCorrectionType = attrib(default=None, validator=optional(instance_of(string_types)))
-    integratedLoudness = attrib(default=None, validator=optional(instance_of(float)))
-    loudnessRange = attrib(default=None, validator=optional(instance_of(float)))
-    maxTruePeak = attrib(default=None, validator=optional(instance_of(float)))
-    maxMomentary = attrib(default=None, validator=optional(instance_of(float)))
-    maxShortTerm = attrib(default=None, validator=optional(instance_of(float)))
-    dialogueLoudness = attrib(default=None, validator=optional(instance_of(float)))
+    loudnessRecType = attrib(
+        default=None, validator=optional(instance_of(string_types))
+    )
+    loudnessCorrectionType = attrib(
+        default=None, validator=optional(instance_of(string_types))
+    )
+    integratedLoudness = attrib(default=None, validator=optional(finite_float()))
+    loudnessRange = attrib(default=None, validator=optional(finite_float()))
+    maxTruePeak = attrib(default=None, validator=optional(finite_float()))
+    maxMomentary = attrib(default=None, validator=optional(finite_float()))
+    maxShortTerm = attrib(default=None, validator=optional(finite_float()))
+    dialogueLoudness = attrib(default=None, validator=optional(finite_float()))
 
 
 @attrs(slots=True)
@@ -112,7 +122,7 @@ class AlternativeValueSet(object):
 
     id = attrib(default=None)
 
-    gain = attrib(validator=optional(instance_of(float)), default=None)
+    gain = attrib(validator=optional(finite_float()), default=None)
     mute = attrib(validator=optional(instance_of(bool)), default=None)
     positionOffset = attrib(
         validator=optional(instance_of(PositionOffset)), default=None
@@ -252,7 +262,7 @@ class AudioObject(ADMElement):
     audioObjects = attrib(default=Factory(list), repr=False)
     audioComplementaryObjects = attrib(default=Factory(list), repr=False)
 
-    gain = attrib(validator=instance_of(float), default=1.0)
+    gain = attrib(validator=finite_float(), default=1.0)
     mute = attrib(validator=instance_of(bool), default=False)
     positionOffset = attrib(
         validator=optional(instance_of(PositionOffset)), default=None
@@ -326,7 +336,7 @@ class AudioPackFormat(ADMElement):
 
     # attributes for type==HOA
     normalization = attrib(default=None, validator=optional(instance_of(str)))
-    nfcRefDist = attrib(default=None, validator=optional(instance_of(float)))
+    nfcRefDist = attrib(default=None, validator=optional(finite_float()))
     screenRef = attrib(default=None, validator=optional(instance_of(bool)))
 
     audioChannelFormatIDRef = attrib(default=None)
@@ -377,8 +387,8 @@ class Frequency(object):
         highPass (Optional[float])
     """
 
-    lowPass = attrib(default=None, validator=optional(instance_of(float)))
-    highPass = attrib(default=None, validator=optional(instance_of(float)))
+    lowPass = attrib(default=None, validator=optional(finite_float()))
+    highPass = attrib(default=None, validator=optional(finite_float()))
 
 
 @attrs(slots=True)

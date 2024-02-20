@@ -1,6 +1,14 @@
 from attr import attrs, attrib, evolve, Factory
 from attr.validators import instance_of, optional
-from ....common import PolarPositionMixin, CartesianPositionMixin, PolarPosition, CartesianPosition, cart, validate_range
+from ....common import (
+    PolarPositionMixin,
+    CartesianPositionMixin,
+    PolarPosition,
+    CartesianPosition,
+    cart,
+    finite_float,
+    validate_range,
+)
 
 try:
     # moved in py3.3
@@ -124,9 +132,9 @@ class BoundCoordinate(object):
         max (Optional[float]): value for position element with ``bound="max"``
     """
 
-    value = attrib(validator=instance_of(float))
-    min = attrib(validator=optional(instance_of(float)), default=None)
-    max = attrib(validator=optional(instance_of(float)), default=None)
+    value = attrib(validator=finite_float())
+    min = attrib(validator=optional(finite_float()), default=None)
+    max = attrib(validator=optional(finite_float()), default=None)
 
 
 class DirectSpeakerPosition(object):
@@ -229,9 +237,9 @@ class PositionOffset:
 class PolarPositionOffset(PositionOffset):
     """representation of a polar positionOffset"""
 
-    azimuth = attrib(default=0.0, validator=instance_of(float))
-    elevation = attrib(default=0.0, validator=instance_of(float))
-    distance = attrib(default=0.0, validator=instance_of(float))
+    azimuth = attrib(default=0.0, validator=finite_float())
+    elevation = attrib(default=0.0, validator=finite_float())
+    distance = attrib(default=0.0, validator=finite_float())
 
     def apply(self, pos):
         if not isinstance(pos, ObjectPolarPosition):
@@ -250,9 +258,9 @@ class PolarPositionOffset(PositionOffset):
 class CartesianPositionOffset(PositionOffset):
     """representation of a cartesian positionOffset"""
 
-    X = attrib(default=0.0, validator=instance_of(float))
-    Y = attrib(default=0.0, validator=instance_of(float))
-    Z = attrib(default=0.0, validator=instance_of(float))
+    X = attrib(default=0.0, validator=finite_float())
+    Y = attrib(default=0.0, validator=finite_float())
+    Z = attrib(default=0.0, validator=finite_float())
 
     def apply(self, pos):
         if not isinstance(pos, ObjectCartesianPosition):
@@ -276,8 +284,8 @@ class InteractionRange(object):
         max (Optional[float]): upper bound
     """
 
-    min = attrib(validator=optional(instance_of(float)), default=None)
-    max = attrib(validator=optional(instance_of(float)), default=None)
+    min = attrib(validator=optional(finite_float()), default=None)
+    max = attrib(validator=optional(finite_float()), default=None)
 
 
 class PositionInteractionRange:

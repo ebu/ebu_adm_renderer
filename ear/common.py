@@ -232,9 +232,10 @@ class CartesianScreen(object):
         centrePosition (CartesianPosition): screenCentrePosition element
         widthX (float): screenWidth X attribute
     """
-    aspectRatio = attrib(validator=instance_of(float))
+
+    aspectRatio = attrib(validator=finite_float())
     centrePosition = attrib(validator=instance_of(CartesianPosition))
-    widthX = attrib(validator=instance_of(float))
+    widthX = attrib(validator=finite_float())
 
 
 @attrs(slots=True, frozen=True)
@@ -249,9 +250,10 @@ class PolarScreen(object):
         centrePosition (PolarPosition): screenCentrePosition element
         widthX (float): screenWidth azimuth attribute
     """
-    aspectRatio = attrib(validator=instance_of(float))
+
+    aspectRatio = attrib(validator=finite_float())
     centrePosition = attrib(validator=instance_of(PolarPosition))
-    widthAzimuth = attrib(validator=instance_of(float))
+    widthAzimuth = attrib(validator=finite_float())
 
 
 default_screen = PolarScreen(aspectRatio=1.78,
