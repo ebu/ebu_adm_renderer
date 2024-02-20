@@ -1,6 +1,8 @@
-from ..common import cart, PolarPosition
+from ..common import cart, PolarPosition, finite_float
 import numpy.testing as npt
 import numpy as np
+import pytest
+from attr import attrs, attrib
 
 
 def test_PolarPosition():
@@ -22,3 +24,18 @@ def test_cart():
     npt.assert_allclose(cart(0.0, 0.0, 2.0), np.array([0.0, 2.0, 0.0]))
     npt.assert_allclose(cart(45.0, 0.0, np.sqrt(2)), np.array([-1.0, 1.0, 0.0]))
     npt.assert_allclose(cart(0.0, 45.0, np.sqrt(2)), np.array([0.0, 1.0, 1.0]))
+
+
+def test_finite_float():
+    @attrs
+    class HasFiniteFloat:
+        x = attrib(validator=finite_float())
+
+    HasFiniteFloat(0.0)
+
+    with pytest.raises(TypeError):
+        HasFiniteFloat(0)
+
+    for value in float("inf"), float("-inf"), float("NaN"):
+        with pytest.raises(ValueError, match=f"'x' must be finite, but {value} is not"):
+            HasFiniteFloat(value)

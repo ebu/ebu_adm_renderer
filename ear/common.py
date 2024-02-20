@@ -1,5 +1,6 @@
 from attr import attrs, attrib
 from attr.validators import instance_of
+from math import isfinite
 import numpy as np
 
 
@@ -35,6 +36,20 @@ def list_of(type):
                             actual=item.__class__, item=item),
                     attr, type, item,
                 )
+
+    return f
+
+
+def finite_float():
+    """Attrs validator that checks for finite floats (i.e. not +-inf or NaN)."""
+    validate_float = instance_of(float)
+
+    def f(inst, attr, value):
+        validate_float(inst, attr, value)
+
+        if not isfinite(value):
+            raise ValueError(f"'{attr.name}' must be finite, but {value} is not")
+
     return f
 
 
