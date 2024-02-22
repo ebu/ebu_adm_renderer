@@ -9,7 +9,11 @@ from ..metadata_input import (
 from ..metadata_input import ObjectTypeMetadata
 from ..metadata_input import DirectTrackSpec
 from ...fileio.adm.elements import AudioBlockFormatObjects
-from ..importance import filter_by_importance, filter_audioObject_by_importance, filter_audioPackFormat_by_importance, MetadataSourceImportanceFilter
+from ..importance import (
+    filter_by_importance,
+    filter_audioObject_by_importance,
+    filter_audioPackFormat_by_importance,
+)
 from fractions import Fraction
 import pytest
 
@@ -115,25 +119,50 @@ type_metadatas = [
 ]
 
 
-@pytest.mark.parametrize('threshold,muted_indizes', [
-    (0, []),
-    (1, []),
-    (2, []),
-    (3, []),
-    (4, [5]),
-    (5, [2, 4, 5]),
-    (6, [2, 4, 5]),
-    (7, [2, 4, 5]),
-    (8, [2, 4, 5]),
-    (9, [2, 4, 5, 7]),
-    (10, [2, 4, 5, 7])
-])
-def test_importance_filter_source(threshold, muted_indizes):
+def get_blocks(metadata_source):
+    """get the blocks from a metadata_source as a list"""
+    blocks = []
+    while True:
+        block = metadata_source.get_next_block()
+        if block is None:
+            break
+        blocks.append(block)
+
+    return blocks
+
+
+def make_objects_type_metadata(**kwargs):
+    return ObjectTypeMetadata(
+        block_format=AudioBlockFormatObjects(
+            position={"azimuth": 0, "elevation": 0}, **kwargs
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    "make_type_metadata,make_rendering_item",
+    [
+        (make_objects_type_metadata, ObjectRenderingItem),
+    ],
+)
+def test_importance_filter_blocks_single_channel(make_type_metadata, make_rendering_item):
+    """check that blocks are modified to apply importance filtering for single-channel types"""
+    type_metadatas = [
+        make_type_metadata(rtime=Fraction(0)),
+        make_type_metadata(rtime=Fraction(1), importance=5),
+        make_type_metadata(rtime=Fraction(2), importance=6),
+    ]
+    expected = [
+        make_type_metadata(rtime=Fraction(0)),
+        make_type_metadata(rtime=Fraction(1), importance=5, gain=0.0),
+        make_type_metadata(rtime=Fraction(2), importance=6),
+    ]
+
     source = MetadataSourceIter(type_metadatas)
-    adapted = MetadataSourceImportanceFilter(source, threshold=threshold)
-    for idx in range(len(type_metadatas)):
-        block = adapted.get_next_block()
-        if idx in muted_indizes:
-            assert block.block_format.gain == 0.0
-        else:
-            assert block == type_metadatas[idx]
+    rendering_items = [
+        make_rendering_item(track_spec=DirectTrackSpec(1), metadata_source=source),
+    ]
+
+    rendering_items_out = filter_by_importance(rendering_items, 6)
+    [rendering_item_out] = rendering_items_out
+    assert get_blocks(rendering_item_out.metadata_source) == expected
