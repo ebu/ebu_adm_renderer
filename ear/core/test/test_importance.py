@@ -1,4 +1,11 @@
-from ..metadata_input import ObjectRenderingItem, HOARenderingItem, ImportanceData, MetadataSourceIter, MetadataSource
+from ..metadata_input import (
+    ObjectRenderingItem,
+    DirectSpeakersRenderingItem,
+    HOARenderingItem,
+    ImportanceData,
+    MetadataSourceIter,
+    MetadataSource,
+)
 from ..metadata_input import ObjectTypeMetadata
 from ..metadata_input import DirectTrackSpec
 from ...fileio.adm.elements import AudioBlockFormatObjects
@@ -25,14 +32,18 @@ def rendering_items():
                                           ],
                              track_specs=[DTS(8), DTS(9), DTS(10), DTS(11)],
                              metadata_source=dummySource),
+            DirectSpeakersRenderingItem(
+                importance=ImportanceData(audio_object=3, audio_pack_format=5),
+                track_spec=DTS(12),
+                metadata_source=dummySource),
             ]
 
 
 @pytest.mark.parametrize('threshold,expected_indizes', [
-    (0, [0, 1, 2, 3, 4, 5, 6, 7]),
-    (1, [0, 1, 2, 3, 4, 5, 6, 7]),
-    (2, [1, 2, 3, 4, 5, 6, 7]),
-    (3, [3, 4, 5, 6, 7]),
+    (0, [0, 1, 2, 3, 4, 5, 6, 7, 8]),
+    (1, [0, 1, 2, 3, 4, 5, 6, 7, 8]),
+    (2, [1, 2, 3, 4, 5, 6, 7, 8]),
+    (3, [3, 4, 5, 6, 7, 8]),
     (4, [4, 5, 6, 7]),
     (5, [4, 6, 7]),
     (6, [4, 6, 7]),
@@ -48,12 +59,12 @@ def test_importance_filter_objects(rendering_items, threshold, expected_indizes)
 
 
 @pytest.mark.parametrize('threshold,expected_indizes', [
-    (0, [0, 1, 2, 3, 4, 5, 6, 7]),
-    (1, [0, 1, 2, 3, 4, 5, 6, 7]),
-    (2, [0, 1, 2, 3, 4, 5, 6, 7]),
-    (3, [1, 2, 3, 5, 6, 7]),
-    (4, [2, 3, 5, 7]),
-    (5, [2, 3, 5, 7]),
+    (0, [0, 1, 2, 3, 4, 5, 6, 7, 8]),
+    (1, [0, 1, 2, 3, 4, 5, 6, 7, 8]),
+    (2, [0, 1, 2, 3, 4, 5, 6, 7, 8]),
+    (3, [1, 2, 3, 5, 6, 7, 8]),
+    (4, [2, 3, 5, 7, 8]),
+    (5, [2, 3, 5, 7, 8]),
     (6, [2, 3, 5]),
     (7, [2, 3, 5]),
     (8, [2, 3]),
@@ -67,10 +78,10 @@ def test_importance_filter_packs(rendering_items, threshold, expected_indizes):
 
 
 @pytest.mark.parametrize('threshold,expected_indizes', [
-    (0, [0, 1, 2, 3, 4, 5, 6, 7]),
-    (1, [0, 1, 2, 3, 4, 5, 6, 7]),
-    (2, [1, 2, 3, 4, 5, 6, 7]),
-    (3, [3, 5, 6, 7]),
+    (0, [0, 1, 2, 3, 4, 5, 6, 7, 8]),
+    (1, [0, 1, 2, 3, 4, 5, 6, 7, 8]),
+    (2, [1, 2, 3, 4, 5, 6, 7, 8]),
+    (3, [3, 5, 6, 7, 8]),
     (4, [5, 7]),
     (5, [7]),
     (6, []),
