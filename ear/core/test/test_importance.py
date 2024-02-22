@@ -1,14 +1,20 @@
 from ..metadata_input import (
     ObjectRenderingItem,
+    ObjectTypeMetadata,
     DirectSpeakersRenderingItem,
+    DirectSpeakersTypeMetadata,
     HOARenderingItem,
+    DirectTrackSpec,
     ImportanceData,
     MetadataSourceIter,
     MetadataSource,
 )
-from ..metadata_input import ObjectTypeMetadata
-from ..metadata_input import DirectTrackSpec
-from ...fileio.adm.elements import AudioBlockFormatObjects
+from ...fileio.adm.elements import (
+    AudioBlockFormatObjects,
+    AudioBlockFormatDirectSpeakers,
+    DirectSpeakerPolarPosition,
+    BoundCoordinate,
+)
 from ..importance import (
     filter_by_importance,
     filter_audioObject_by_importance,
@@ -139,10 +145,23 @@ def make_objects_type_metadata(**kwargs):
     )
 
 
+def make_direct_speakers_type_metadata(**kwargs):
+    return DirectSpeakersTypeMetadata(
+        block_format=AudioBlockFormatDirectSpeakers(
+            position=DirectSpeakerPolarPosition(
+                bounded_azimuth=BoundCoordinate(0.0),
+                bounded_elevation=BoundCoordinate(0.0),
+            ),
+            **kwargs,
+        )
+    )
+
+
 @pytest.mark.parametrize(
     "make_type_metadata,make_rendering_item",
     [
         (make_objects_type_metadata, ObjectRenderingItem),
+        (make_direct_speakers_type_metadata, DirectSpeakersRenderingItem),
     ],
 )
 def test_importance_filter_blocks_single_channel(make_type_metadata, make_rendering_item):
