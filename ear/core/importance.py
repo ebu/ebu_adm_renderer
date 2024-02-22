@@ -1,4 +1,5 @@
 from .metadata_input import MetadataSource, HOARenderingItem
+from attr import evolve
 
 
 def filter_by_importance(rendering_items,
@@ -67,34 +68,27 @@ def filter_audioPackFormat_by_importance(rendering_items, threshold):
                 yield item
 
 
-class MetadataSourceImportanceFilter(MetadataSource):
-    """A Metadata source adapter to change block formats if their importance is below a given threshold.
+class MetadataSourceMap(MetadataSource):
+    """A metadata source which yields the blocks from input_source after
+    applying callback to them."""
 
-    The intended result of "muting" the rendering item during this block format
-    is emulated by setting its gain to zero and disabling any interpolation by
-    activating the jumpPosition flag.
-
-    Note: This MetadataSource can only be used for MetadataSources that
-    generate `ObjectTypeMetadata`.
-    """
-    def __init__(self, adapted_source, threshold):
-        super(MetadataSourceImportanceFilter, self).__init__()
-        self._adapted = adapted_source
-        self._threshold = threshold
+    def __init__(self, input_source, callback):
+        super(MetadataSourceMap, self).__init__()
+        self._input_source = input_source
+        self._callback = callback
 
     def get_next_block(self):
-        block = self._adapted.get_next_block()
+        block = self._input_source.get_next_block()
         if block is None:
             return None
-        if block.block_format.importance < self._threshold:
-            block.block_format.gain = 0
-        return block
+        return self._callback(block)
 
 
 def mute_audioBlockFormat_by_importance(rendering_items, threshold):
     """Adapt non-HOA rendering items to emulate block format importance handling
 
-    This installs an `MetadataSourceImportanceFilter` with the given threshold
+    This installs an `MetadataSourceMap` which sets gains to 0 if the block
+    importance is less than the given threshold.
 
     Parameters:
         rendering_items (iterable of RenderingItems): RenderingItems to adapt
@@ -102,7 +96,22 @@ def mute_audioBlockFormat_by_importance(rendering_items, threshold):
 
     Yields: RenderingItem
     """
+
+    def mute_unimportant_block(type_metadata):
+        if type_metadata.block_format.importance < threshold:
+            return evolve(
+                type_metadata, block_format=evolve(type_metadata.block_format, gain=0.0)
+            )
+        else:
+            return type_metadata
+
     for item in rendering_items:
-        if not isinstance(item, HOARenderingItem):
-            item.metadata_source = MetadataSourceImportanceFilter(adapted_source=item.metadata_source, threshold=threshold)
-        yield item
+        if isinstance(item, HOARenderingItem):
+            yield item
+        else:
+            yield evolve(
+                item,
+                metadata_source=MetadataSourceMap(
+                    item.metadata_source, mute_unimportant_block
+                ),
+            )
