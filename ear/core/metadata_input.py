@@ -322,13 +322,17 @@ class HOARenderingItem(RenderingItem):
     track_specs = attrib(validator=list_of(TrackSpec))
     metadata_source = attrib(validator=instance_of(MetadataSource))
 
-    importances = attrib(validator=optional(list_of(ImportanceData)), default=None)
+    importances = attrib(validator=optional(list_of(ImportanceData)))
     adm_paths = attrib(validator=optional(list_of(ADMPath)), repr=False, default=None)
 
     @importances.validator
     def importances_valid(self, attribute, value):
         if value is not None and len(value) != len(self.track_specs):
             raise ValueError("wrong number of ImportanceDatas provided")
+
+    @importances.default
+    def _(self):
+        return [ImportanceData() for i in range(len(self.track_specs))]
 
     @adm_paths.validator
     def adm_paths_valid(self, attribute, value):
