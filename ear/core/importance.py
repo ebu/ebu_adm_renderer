@@ -18,6 +18,7 @@ def filter_by_importance(rendering_items,
     Yields: RenderingItem
     """
     f = mute_audioBlockFormat_by_importance(rendering_items, threshold)
+    f = mute_hoa_channels_by_importance(f, threshold)
     f = filter_audioObject_by_importance(f, threshold)
     f = filter_audioPackFormat_by_importance(f, threshold)
     return f
@@ -115,3 +116,42 @@ def mute_audioBlockFormat_by_importance(rendering_items, threshold):
                     item.metadata_source, mute_unimportant_block
                 ),
             )
+
+
+def mute_hoa_channels_by_importance(rendering_items, threshold):
+    """Adapt HOA rendering items to emulate block format importance handling
+
+    This installs a `MetadataSourceMap` which sets the gain to zero if the
+    block importance is less than the given threshold. This operates
+    independently for each channel, so can reduce the HOA order (or make a mess
+    if the importances are not structured so that higher orders are discarded
+    first).
+
+    Parameters:
+        rendering_items (iterable of RenderingItems): RenderingItems to adapt
+        threshold (int): importance threshold
+
+    Yields: RenderingItem
+    """
+    def mute_unimportant_channels(type_metadata):
+        if min(type_metadata.importances) < threshold:
+            new_gains = [
+                0.0 if importance < threshold else gain
+                for (gain, importance) in zip(
+                    type_metadata.gains, type_metadata.importances
+                )
+            ]
+            return evolve(type_metadata, gains=new_gains)
+        else:
+            return type_metadata
+
+    for item in rendering_items:
+        if isinstance(item, HOARenderingItem):
+            yield evolve(
+                item,
+                metadata_source=MetadataSourceMap(
+                    item.metadata_source, mute_unimportant_channels
+                ),
+            )
+        else:
+            yield item

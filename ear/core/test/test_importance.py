@@ -4,6 +4,7 @@ from ..metadata_input import (
     DirectSpeakersRenderingItem,
     DirectSpeakersTypeMetadata,
     HOARenderingItem,
+    HOATypeMetadata,
     DirectTrackSpec,
     ImportanceData,
     MetadataSourceIter,
@@ -20,6 +21,7 @@ from ..importance import (
     filter_audioObject_by_importance,
     filter_audioPackFormat_by_importance,
 )
+from attrs import evolve
 from fractions import Fraction
 import pytest
 
@@ -180,6 +182,52 @@ def test_importance_filter_blocks_single_channel(make_type_metadata, make_render
     source = MetadataSourceIter(type_metadatas)
     rendering_items = [
         make_rendering_item(track_spec=DirectTrackSpec(1), metadata_source=source),
+    ]
+
+    rendering_items_out = filter_by_importance(rendering_items, 6)
+    [rendering_item_out] = rendering_items_out
+    assert get_blocks(rendering_item_out.metadata_source) == expected
+
+
+@pytest.mark.parametrize(
+    "gains",
+    [
+        [1.0, 1.0, 1.0, 1.0],
+        [0.5, 0.25, 0.25, 0.25],
+    ],
+)
+def test_importance_filter_hoa(gains):
+    type_metadatas = [
+        HOATypeMetadata(  # all but first channel muted
+            orders=[0, 1, 1, 1],
+            degrees=[0, -1, 0, 1],
+            importances=[6, 5, 5, 5],
+            normalization="SN3D",
+            gains=gains,
+        ),
+        HOATypeMetadata(  # not modified
+            orders=[0, 1, 1, 1],
+            degrees=[0, -1, 0, 1],
+            importances=[6, 6, 6, 6],
+            normalization="SN3D",
+            gains=gains,
+        ),
+    ]
+    expected = [
+        evolve(
+            type_metadatas[0],
+            gains=[gains[0], 0.0, 0.0, 0.0],
+        ),
+        evolve(
+            type_metadatas[1],
+            gains=gains,
+        ),
+    ]
+    rendering_items = [
+        HOARenderingItem(
+            track_specs=[DirectTrackSpec(i) for i in range(4)],
+            metadata_source=MetadataSourceIter(type_metadatas),
+        ),
     ]
 
     rendering_items_out = filter_by_importance(rendering_items, 6)
