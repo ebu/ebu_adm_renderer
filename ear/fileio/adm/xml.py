@@ -538,6 +538,7 @@ def parse_gain(gain_str, gainUnit):
     if gainUnit == "linear":
         return gain_num
     elif gainUnit == "dB":
+        warnings.warn("use of gainUnit may not be compatible with older software")
         return math.pow(10, gain_num / 20.0)
     else:
         raise ValueError(f"gainUnit must be linear or dB, not {gainUnit!r}")
