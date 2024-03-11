@@ -28,6 +28,9 @@ from ..builder import ADMBuilder
 from ..generate_ids import generate_ids
 
 
+pytestmark = pytest.mark.filterwarnings("ignore:use of gainUnit .*")
+
+
 ns = "urn:ebu:metadata-schema:ebuCore_2015"
 nsmap = dict(adm=ns)
 E = ElementMaker(namespace=ns, nsmap=nsmap)
@@ -223,10 +226,11 @@ def test_gain(base):
     )
 
     # db
-    assert (
-        base.bf_after_mods(set_version(2), add_children(bf_path, E.gain("20", gainUnit="dB"))).gain
-        == 10.0
-    )
+    with pytest.warns(UserWarning, match="gainUnit"):
+        assert (
+            base.bf_after_mods(set_version(2), add_children(bf_path, E.gain("20", gainUnit="dB"))).gain
+            == 10.0
+        )
     expected = "gainUnit must be linear or dB, not 'DB'"
     with pytest.raises(ParseError, match=expected):
         base.bf_after_mods(set_version(2), add_children(bf_path, E.gain("20", gainUnit="DB")))
