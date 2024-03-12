@@ -37,7 +37,7 @@ the result in ``output_surround.wav``.
    :nodescription:
 
    -l, --layout
-       See speakers_file_.
+       See :ref:`speakers_file`.
 
 .. _ear-utils:
 
@@ -53,7 +53,7 @@ ADM files as sub-commands.
    :prog: ear-utils
 
    --screen
-       See speakers_file_.
+       See :ref:`speakers_file`.
 
 .. _speakers_file:
 
