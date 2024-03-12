@@ -211,3 +211,29 @@ def test_openBw64Adm():
         assert infile.adm is not None
         assert len(infile.adm.audioProgrammes) == 1  # loaded axml
         assert infile.adm.audioTrackUIDs[0].trackIndex == 1  # loaded chna
+
+
+def test_openBw64Adm_plain_wav(tmpdir):
+    """check that reading a plain wav results in .adm being None"""
+    fname = tmpdir / "plain_wav.wav"
+
+    with openBw64(fname, "w"):
+        pass
+
+    with openBw64Adm(fname) as f:
+        assert f.adm is None
+
+
+def test_openBw64Adm_no_chna(tmpdir):
+    """check that parsing a BW64 with AXML but no CHNA raises an error"""
+    fname = tmpdir / "no_chna.wav"
+
+    with openBw64(fname, "w", axml=b"axml"):
+        pass
+
+    with pytest.raises(
+        ValueError,
+        match="if 'axml' chunk is present, 'chna' must be too",
+    ):
+        with openBw64Adm(fname):
+            pass
