@@ -141,6 +141,17 @@ def test_render_v2(tmpdir):
     npt.assert_allclose(samples, expected, atol=1e-6)
 
 
+def test_plain_wav(tmpdir):
+    rendered_file = str(tmpdir / "test_plain_wav_out.wav")
+    args = ["ear-render", "-s", "0+5+0", wav_file, rendered_file]
+    proc = subprocess.run(args, capture_output=True)
+
+    assert proc.returncode != 0
+
+    [err_no_adm] = [line for line in proc.stderr.split(b"\n") if line.strip()]
+    assert b"does not have ADM metadata" in err_no_adm
+
+
 @pytest.mark.parametrize("order", [1, 2])
 @pytest.mark.parametrize("chna_only", [False, True])
 def test_hoa(tmpdir, order, chna_only):
