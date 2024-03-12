@@ -197,6 +197,11 @@ class OfflineRenderDriver(object):
         output_monitor = PeakMonitor(n_channels)
 
         with openBw64Adm(input_file) as infile:
+            if infile.adm is None:
+                raise Exception(
+                    f"error: {input_file!r} does not have ADM metadata (missing 'chna' chunk)"
+                )
+
             if version_at_least(infile.adm.version, 2):
                 warnings.warn(
                     f"rendering of files with version {infile.adm.version} is not standardised"
