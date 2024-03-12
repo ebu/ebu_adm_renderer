@@ -28,7 +28,8 @@ To render an ADM file, the following three parameters must be given:
 
 For example, ``ear-render -s 0+5+0 input.wav output_surround.wav`` will render
 the BW64/ADM file ``input.wav`` to a ``0+5+0`` target speaker layout and store
-the result in ``output_surround.wav``.
+the result in ``output_surround.wav``. See :ref:`output_format` for details of
+the output file format.
 
 .. argparse::
    :module: ear.cmdline.render_file
@@ -54,6 +55,30 @@ ADM files as sub-commands.
 
    --screen
        See :ref:`speakers_file`.
+
+.. _output_format:
+
+Output Format
+-------------
+
+The output of ``ear-render`` is a BW64 file containing one channel for each
+loudspeaker in the specified layout.
+
+The channel order is the same as in the "Loudspeaker configuration" tables in
+BS.2051-2 (e.g. table 4 for 0+5+0).
+
+The output may need further processing before being played back on loudspeakers.
+
+In particular, the renderer does not do any bass management -- LFE channels in
+the output must be treated according to section 3 or 4 of attachment 1 to annex
+7 of BS.775-4. This includes the addition of a 10dB gain, and routing to
+loudspeakers or a subwoofer.
+
+The renderer also does not apply any kind of loudspeaker distance compensation
+(beyond the gain which may be specified in the speakers file), or EQ.
+
+To illustrate this, if the input to the renderer exactly matches the output
+loudspeaker layout, then the output will be identical to the input.
 
 .. _speakers_file:
 
@@ -100,7 +125,8 @@ The possible keys are as follows:
     A mapping containing the real loudspeaker position, with keys ``az``,
     ``el`` and ``r`` specifying the azimuth, elevation and distance of the
     loudspeaker in ADM angle format (anticlockwise azimuth, degrees) and
-    metres.
+    metres. Note that the radius specified is not used to apply distance
+    compensation.
 
 ``gain_linear`` (optional)
     A linear gain to apply to this output channel; this is useful for LFE
