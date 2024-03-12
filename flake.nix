@@ -52,6 +52,11 @@
               python3.pkgs.pip
               packages.darker
               python3.pkgs.venvShellHook
+
+              # for building docs
+              python3.pkgs.sphinx
+              python3.pkgs.sphinx-rtd-theme
+              pkgs.graphviz
             ];
             venvDir = "./venv";
             postShellHook = ''
