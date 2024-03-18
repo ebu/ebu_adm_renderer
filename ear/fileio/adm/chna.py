@@ -131,7 +131,7 @@ def populate_chna_chunk(chna, adm):
     generated before calling this.
 
     Parameters:
-        adm (ADM): adm structure to get information to
+        adm (ADM): adm structure to get information from
         chna (ChnaChunk): chna chunk to populate
     """
     chna.audioIDs = list(_get_chna_entries(adm))
