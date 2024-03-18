@@ -1,7 +1,7 @@
 import pytest
 from ...bw64.chunks import AudioID, ChnaChunk
 from ..adm import ADM
-from ..chna import load_chna_chunk, populate_chna_chunk
+from ..chna import load_chna_chunk, populate_chna_chunk, validate_trackIndex
 from ..common_definitions import load_common_definitions
 from ..elements import AudioTrackUID
 
@@ -245,3 +245,22 @@ class TestPopulate:
         expected = "Track UID ATU_00000001 has both track and channel formats."
         with pytest.raises(Exception, match=expected):
             populate_chna_chunk(chna, adm)
+
+
+def test_validate_trackIndex(adm):
+    atu = AudioTrackUID(id="ATU_00000001", trackIndex=1)
+    adm.addAudioTrackUID(atu)
+
+    # no error
+    validate_trackIndex(adm, 1)
+
+    # plural
+    expected = r"audioTrackUID ATU_00000001 has track index 1 \(1-based\) in a file with 0 tracks"
+    with pytest.raises(Exception, match=expected):
+        validate_trackIndex(adm, 0)
+
+    # singular
+    atu.trackIndex = 2
+    expected = r"audioTrackUID ATU_00000001 has track index 2 \(1-based\) in a file with 1 track"
+    with pytest.raises(Exception, match=expected):
+        validate_trackIndex(adm, 1)
