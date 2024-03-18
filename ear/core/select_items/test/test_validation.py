@@ -456,7 +456,7 @@ def test_hoa_pack_format_mismatch():
 
     builder.first_pack.absoluteDistance = 2.0
 
-    for i, track in enumerate(builder.first_tracks + builder.second_tracks):
+    for i, track in enumerate(builder.first_tracks + builder.second_tracks, 1):
         builder.create_track_uid(
             audioPackFormat=builder.second_pack, audioTrackFormat=track, trackIndex=i
         )
