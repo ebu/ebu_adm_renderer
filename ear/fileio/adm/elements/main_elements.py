@@ -1,5 +1,5 @@
 from attr import attrs, attrib, Factory, validate
-from attr.validators import instance_of, optional
+from attr.validators import and_, gt, instance_of, optional
 from enum import Enum
 from fractions import Fraction
 from six import string_types
@@ -511,7 +511,7 @@ class AudioTrackUID(ADMElement):
         audioPackFormat (Optional[AudioPackFormat])
     """
 
-    trackIndex = attrib(default=None)
+    trackIndex = attrib(default=None, validator=optional(and_(instance_of(int), gt(0))))
     sampleRate = attrib(default=None)
     bitDepth = attrib(default=None)
     audioTrackFormat = attrib(default=None, repr=False,
