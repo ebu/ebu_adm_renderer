@@ -3,7 +3,7 @@ from .bw64 import Bw64Reader, Bw64Writer
 from .adm.adm import ADM
 from .adm.xml import load_axml_string
 from .adm.common_definitions import load_common_definitions
-from .adm.chna import load_chna_chunk
+from .adm.chna import load_chna_chunk, validate_trackIndex
 
 
 def openBw64(filename, mode='r', **kwargs):
@@ -147,5 +147,6 @@ class Bw64AdmReader(object):
             self.logger.info("Parsing done!")
 
         load_chna_chunk(adm, chna)
+        validate_trackIndex(adm, self.channels)
 
         return adm

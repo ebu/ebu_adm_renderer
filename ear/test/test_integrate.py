@@ -152,6 +152,41 @@ def test_plain_wav(tmpdir):
     assert b"does not have ADM metadata" in err_no_adm
 
 
+def test_bad_track_index(tmpdir):
+    from ..fileio import openBw64
+    from ..fileio.bw64.chunks import AudioID, ChnaChunk, FormatInfoChunk
+
+    bad_track_index = str(tmpdir / "bad_track_index.wav")
+    rendered_file = str(tmpdir / "bad_track_index_out.wav")
+
+    chna = ChnaChunk()
+    chna.audioIDs.append(
+        AudioID(
+            trackIndex=2,
+            audioTrackUID="ATU_00000001",
+            audioTrackFormatIDRef="AT_00010003_01",
+            audioPackFormatIDRef="AP_00010001",
+        )
+    )
+
+    samples = generate_samples()[:, :1]
+    fmtInfo = FormatInfoChunk(
+        formatTag=1, channelCount=samples.shape[1], sampleRate=sr, bitsPerSample=24
+    )
+
+    with openBw64(bad_track_index, "w", chna=chna, formatInfo=fmtInfo) as outfile:
+        outfile.write(samples)
+
+    args = ["ear-render", "-s", "0+5+0", bad_track_index, rendered_file]
+    proc = subprocess.run(args, capture_output=True)
+
+    assert proc.returncode != 0
+
+    [err_bad_track] = [line for line in proc.stderr.split(b"\n") if line.strip()]
+    assert b"ATU_00000001 has track index 2" in err_bad_track
+    assert b"in a file with 1 track" in err_bad_track
+
+
 @pytest.mark.parametrize("order", [1, 2])
 @pytest.mark.parametrize("chna_only", [False, True])
 def test_hoa(tmpdir, order, chna_only):
