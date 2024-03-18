@@ -157,3 +157,20 @@ def guess_track_indices(adm):
             raise Exception("Invalid track UID {}.".format(track_uid.id))
 
         track_uid.trackIndex = int(match.group(1), 16)
+
+
+def validate_trackIndex(adm, num_channels):
+    """Check that all audioTrackUIDs in adm have a trackIndex that is valid in
+    a file with num_channels.
+
+    Parameters:
+        adm (ADM): adm structure containing audioTrackUIDs to check
+        num_channels (int): number of channels in the BW64 file
+    """
+    for track_uid in adm.audioTrackUIDs:
+        if track_uid.trackIndex is not None and track_uid.trackIndex > num_channels:
+            tracks = "track" if num_channels == 1 else "tracks"
+            raise Exception(
+                f"audioTrackUID {track_uid.id} has track index {track_uid.trackIndex} "
+                f"(1-based) in a file with {num_channels} {tracks}"
+            )
