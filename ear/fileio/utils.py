@@ -3,7 +3,7 @@ from .bw64 import Bw64Reader, Bw64Writer
 from .adm.adm import ADM
 from .adm.xml import load_axml_string
 from .adm.common_definitions import load_common_definitions
-from .adm.chna import load_chna_chunk
+from .adm.chna import load_chna_chunk, validate_trackIndex
 
 
 def openBw64(filename, mode='r', **kwargs):
@@ -63,7 +63,11 @@ class Bw64AdmReader(object):
     to create these.
 
     Attributes:
-        adm (ADM): ADM data
+        adm (Optional[ADM]): ADM data, or None if CHNA is not present
+
+    Note:
+        This throws if 'axml' is present but 'chna' is not, as this is not
+        valid according to BS.2088-1.
     """
 
     def __init__(self, bw64FileHandle, fix_block_format_durations=False):
@@ -124,11 +128,25 @@ class Bw64AdmReader(object):
         return self._bw64.iter_sample_blocks(blockSize)
 
     def _parse_adm(self):
+        axml = self._bw64.axml
+        chna = self._bw64.chna
+
+        if axml is not None and chna is None:
+            raise ValueError("if 'axml' chunk is present, 'chna' must be too")
+
+        if chna is None:
+            return None
+
         adm = ADM()
         load_common_definitions(adm)
-        if self._bw64.axml is not None:
+        if axml is not None:
             self.logger.info("Parsing")
-            load_axml_string(adm, self._bw64.axml, fix_block_format_durations=self._fix_block_format_durations)
+            load_axml_string(
+                adm, axml, fix_block_format_durations=self._fix_block_format_durations
+            )
             self.logger.info("Parsing done!")
-        load_chna_chunk(adm, self._bw64.chna)
+
+        load_chna_chunk(adm, chna)
+        validate_trackIndex(adm, self.channels)
+
         return adm
