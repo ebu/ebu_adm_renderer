@@ -6,6 +6,13 @@ def in_by_id(element, collection):
     return any(element is item for item in collection)
 
 
+def index_by_id(element_to_find, collection):
+    """get the index of element in collection, comparing by id, or None"""
+    for i, element in enumerate(collection):
+        if element is element_to_find:
+            return i
+
+
 def _paths_from(start_node, get_children):
     """All paths through a tree structure starting at start_node."""
     yield [start_node]

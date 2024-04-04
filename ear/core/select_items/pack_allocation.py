@@ -1,5 +1,5 @@
 from attr import attrs, attrib, evolve
-from .utils import in_by_id
+from .utils import in_by_id, index_by_id
 
 
 @attrs
@@ -213,30 +213,40 @@ def _allocate_packs_impl(packs,
     # filter out packs which couldn't possibly be allocated now or in any sub-calls.
     packs = [pack for pack in packs if could_possibly_allocate(pack)]
 
+    # try to allocate a pack/channel for the first track
+    track, remaining_tracks = tracks[0], tracks[1:]
+
     def candidate_new_packs():
         """Possible new packs (to be added to the partial solution) which could
         be allocated.
 
         Yields:
-            tuples of (pack_ref, remaining_pack_refs)
+            tuples of (pack_ref, remaining_packs, remaining_pack_refs)
 
-            pack_ref is the pack to try to allocate; remaining_pack_refs is the
-            value of pack_refs for the next round
+            pack_ref is the pack to try to allocate
+
+            remaining_packs is the list of possible packs that could be
+            allocated in subsequent steps. when allocating a new pack for a
+            silent track, packs are allocated in order to avoid duplicate solutions
+
+            remaining_pack_refs is the value of pack_refs for the next round
         """
         if pack_refs is not None:
-            # try any pack which references a pack in pack_refs
-            for pack in packs:
-                for i, pack_ref in enumerate(pack_refs):
-                    if pack_ref is pack.root_pack:
-                        yield pack, pack_refs[:i] + pack_refs[i + 1:]
-                        break
+            # try any pack which is referenced by pack_refs
+            if not pack_refs:
+                return
+
+            for pack_i, pack in enumerate(packs):
+                ref_i = index_by_id(pack.root_pack, pack_refs)
+                if ref_i is not None:
+                    remaining_pack_refs = pack_refs[:ref_i] + pack_refs[ref_i + 1:]
+                    remaining_packs = packs[pack_i:] if track is None else packs
+                    yield pack, remaining_packs, remaining_pack_refs
         else:
             # try any known pack
-            for pack in packs:
-                yield pack, None
-
-    # try to allocate a pack/channel for the first track
-    track, remaining_tracks = tracks[0], tracks[1:]
+            for pack_i, pack in enumerate(packs):
+                remaining_packs = packs[pack_i:] if track is None else packs
+                yield pack, remaining_packs, None
 
     def try_allocate(allocation):
         """Assign the current track to an appropriate channel in an allocation
@@ -262,7 +272,7 @@ def _allocate_packs_impl(packs,
         for i, existing_allocation in enumerate(partial_solution):
             new_allocation = try_allocate(existing_allocation)
             if new_allocation is not None:
-                yield partial_solution[:i] + [new_allocation] + partial_solution[i + 1:], pack_refs
+                yield partial_solution[:i] + [new_allocation] + partial_solution[i + 1:], packs, pack_refs
                 # if track is silent, allocating it to any channel is
                 # equivalent, and if it can be allocated to an existing channel
                 # then it must be -- this prevents multiple equivalent
@@ -272,15 +282,15 @@ def _allocate_packs_impl(packs,
                     return
 
         # try allocating a new pack
-        for pack, remaining_pack_refs in candidate_new_packs():
+        for pack, remaining_packs, remaining_pack_refs in candidate_new_packs():
             empty_allocation = AllocatedPack(pack=pack,
                                              allocation=[(channel, _EMPTY) for channel in pack.channels])
             new_allocation = try_allocate(empty_allocation)
             if new_allocation is not None:
-                yield partial_solution + [new_allocation], remaining_pack_refs
+                yield partial_solution + [new_allocation], remaining_packs, remaining_pack_refs
 
-    for new_partial, remaining_pack_refs in candidate_partial_solutions():
-        for soln in _allocate_packs_impl_obvious(packs, remaining_tracks, remaining_pack_refs, new_partial):
+    for new_partial, remaining_packs, remaining_pack_refs in candidate_partial_solutions():
+        for soln in _allocate_packs_impl_obvious(remaining_packs, remaining_tracks, remaining_pack_refs, new_partial):
             yield soln
 
 
