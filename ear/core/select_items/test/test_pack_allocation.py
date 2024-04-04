@@ -5,17 +5,36 @@ p1, p2 = "p1", "p2"
 c1, c2, c3, c4, c5 = "c1", "c2", "c3", "c4", "c5"
 
 
-def allocation_eq(a, b):
-    if type(a) is not type(b):
-        return False
-    if isinstance(a, list):
-        return len(a) == len(b) and all(allocation_eq(ai, bi) for ai, bi in zip(a, b))
-    if isinstance(a, AllocatedPack):
-        return (a.pack is b.pack and
-                len(a.allocation) == len(b.allocation) and
-                all(channel_a is channel_b and track_a is track_b
-                    for (channel_a, track_a), (channel_b, track_b) in zip(a.allocation, b.allocation)))
-    assert False
+def pack_allocation_to_ids(pack: AllocatedPack):
+    """turn an AllocatedPack into a structure of object IDs that can be
+    compared/sorted normally"""
+    return id(pack.pack), [
+        (id(channel), id(track)) for channel, track in pack.allocation
+    ]
+
+
+def normalise_allocation(allocation):
+    """normalise an allocation by sorting the packs, so that equal allocations
+    are equal"""
+    return sorted(allocation, key=pack_allocation_to_ids)
+
+
+def normalise_allocations(allocations):
+    """normalise a list of allocations, so that equal lists of allocations are
+    equal"""
+    normalised_allocations = [
+        normalise_allocation(allocation) for allocation in allocations
+    ]
+
+    return sorted(
+        normalised_allocations,
+        key=lambda allocation: [pack_allocation_to_ids(pack) for pack in allocation],
+    )
+
+
+def allocations_eq(a, b):
+    """are two allocations equal?"""
+    return normalise_allocations(a) == normalise_allocations(b)
 
 
 @pytest.mark.parametrize("packs",
@@ -36,23 +55,23 @@ def allocation_eq(a, b):
                               ])
 def test_simple_one_track(packs, tracks, num_silent_tracks, expected_track):
     # one pack reference specified; one solution
-    assert allocation_eq(
+    assert allocations_eq(
         list(allocate_packs(packs, tracks, [p1], num_silent_tracks)),
         [[AllocatedPack(packs[0], [(packs[0].channels[0], expected_track(tracks))])]])
 
     # two pack references specified, no solutions
-    assert allocation_eq(
+    assert allocations_eq(
         list(allocate_packs(packs, tracks, [p1, p1], num_silent_tracks)),
         [])
 
     # zero pack references; no solution
-    assert allocation_eq(
+    assert allocations_eq(
         list(allocate_packs(packs, tracks, [], num_silent_tracks)),
         [])
 
     # no pack references; one solution as long as there are no silent tracks
     if num_silent_tracks == 0:
-        assert allocation_eq(
+        assert allocations_eq(
             list(allocate_packs(packs, tracks, None, num_silent_tracks)),
             [[AllocatedPack(packs[0], [(packs[0].channels[0], expected_track(tracks))])]])
 
@@ -96,24 +115,24 @@ def test_nested(tracks, num_silent_tracks):
     expected = [AllocatedPack(packs[1], expected_allocation)]
 
     # one correct pack reference; one solution
-    assert allocation_eq(
+    assert allocations_eq(
         list(allocate_packs(packs, tracks, [p2], num_silent_tracks)),
         [expected])
 
     # no pack references; one solution. Note that cases there num_silent_tracks
     # > 0 never happen in real use, as the CHNA chunk doesn't specify silent
     # tracks.
-    assert allocation_eq(
+    assert allocations_eq(
         list(allocate_packs(packs, tracks, None, num_silent_tracks)),
         [expected])
 
     # zero pack references; no solution
-    assert allocation_eq(
+    assert allocations_eq(
         list(allocate_packs(packs, tracks, [], num_silent_tracks)),
         [])
 
     # reference to sub-pack; no solution
-    assert allocation_eq(
+    assert allocations_eq(
         list(allocate_packs(packs, tracks, [p1], num_silent_tracks)),
         [])
 
@@ -132,32 +151,32 @@ def test_multiple_identical_mono():
     ]
 
     # two identical mono tracks
-    expected = [AllocatedPack(packs[1], [(packs[1].channels[0], tracks[0])]),
-                AllocatedPack(packs[1], [(packs[1].channels[0], tracks[1])])]
-    assert allocation_eq(
-        list(allocate_packs(packs, tracks, [p2, p2], 0)),
-        [expected])
+    expected = [
+        AllocatedPack(packs[1], [(packs[1].channels[0], tracks[0])]),
+        AllocatedPack(packs[1], [(packs[1].channels[0], tracks[1])]),
+    ]
+    assert allocations_eq(list(allocate_packs(packs, tracks, [p2, p2], 0)), [expected])
 
     # two identical silent mono tracks
-    expected = [AllocatedPack(packs[1], [(packs[1].channels[0], None)]),
-                AllocatedPack(packs[1], [(packs[1].channels[0], None)])]
-    assert allocation_eq(
-        list(allocate_packs(packs, [], [p2, p2], 2)),
-        [expected])
+    expected = [
+        AllocatedPack(packs[1], [(packs[1].channels[0], None)]),
+        AllocatedPack(packs[1], [(packs[1].channels[0], None)]),
+    ]
+    assert allocations_eq(list(allocate_packs(packs, [], [p2, p2], 2)), [expected])
 
     # one real, one silent
     expected = [AllocatedPack(packs[1], [(packs[1].channels[0], tracks[0])]),
                 AllocatedPack(packs[1], [(packs[1].channels[0], None)])]
-    assert allocation_eq(
+    assert allocations_eq(
         list(allocate_packs(packs, tracks[:1], [p2, p2], 1)),
         [expected])
 
     # chna-only case
-    expected = [AllocatedPack(packs[1], [(packs[1].channels[0], tracks[0])]),
-                AllocatedPack(packs[1], [(packs[1].channels[0], tracks[1])])]
-    assert allocation_eq(
-        list(allocate_packs(packs, tracks, None, 0)),
-        [expected])
+    expected = [
+        AllocatedPack(packs[1], [(packs[1].channels[0], tracks[0])]),
+        AllocatedPack(packs[1], [(packs[1].channels[0], tracks[1])]),
+    ]
+    assert allocations_eq(list(allocate_packs(packs, tracks, None, 0)), [expected])
 
     # duplicate stereo is still ambiguous
     tracks = [
