@@ -1,7 +1,8 @@
 from ..pack_allocation import allocate_packs, AllocationPack, AllocationChannel, AllocationTrack, AllocatedPack
 import pytest
 
-p1, p2 = "p1", "p2"
+
+p1, p2, p3 = "p1", "p2", "p3"
 c1, c2, c3, c4, c5 = "c1", "c2", "c3", "c4", "c5"
 
 
@@ -247,3 +248,146 @@ def test_lots_of_channels(chna_only):
 
     assert res1 is not None
     assert res2 is None
+
+
+def test_silent_stereo_51():
+    """stereo and 5.1 pack structure, with all silent channels"""
+    packs = [
+        AllocationPack(p1, [AllocationChannel(c1, [p1]), AllocationChannel(c2, [p1])]),
+        AllocationPack(
+            p2,
+            [
+                AllocationChannel(c1, [p2, p1]),
+                AllocationChannel(c2, [p2, p1]),
+                AllocationChannel(c3, [p2]),
+                AllocationChannel(c4, [p2]),
+                AllocationChannel(c5, [p2]),
+            ],
+        ),
+    ]
+
+    assert len(list(allocate_packs(packs, [], [p1, p2], 7))) == 1
+
+
+def test_onlysilent_simple():
+    """simplified version of test_silent_stereo_51"""
+    packs = [
+        AllocationPack(p1, [AllocationChannel(c1, [p1])]),
+        AllocationPack(p2, [AllocationChannel(c1, [p2])]),
+    ]
+
+    assert len(list(allocate_packs(packs, [], [p1, p2], 2))) == 1
+
+
+def test_duplicate_packs_different_channels():
+    """test duplicate pack IDs with different channels"""
+    packs = [
+        AllocationPack(p1, [AllocationChannel(c1, [p1])]),
+        AllocationPack(p1, [AllocationChannel(c2, [p1])]),
+    ]
+
+    tracks = [AllocationTrack(c1, p1), AllocationTrack(c2, p1)]
+    pack_refs = [p1, p1]
+
+    assert len(list(allocate_packs(packs, tracks, pack_refs, 0))) == 1
+
+
+def test_duplicate_packs():
+    """duplicate pack IDs and channels"""
+    packs = [
+        AllocationPack(p1, [AllocationChannel(c1, [p1])]),
+        AllocationPack(p1, [AllocationChannel(c1, [p1])]),
+    ]
+
+    tracks = [AllocationTrack(c1, p1), AllocationTrack(c1, p1)]
+
+    assert len(list(allocate_packs(packs, tracks, [p1, p1], 0))) == 4
+
+
+# tests below represent interesting cases from randomised testing on buggy
+# implementations during development
+
+
+def test_complex_pack_order():
+    """randomised test with three packs and ambiguity"""
+    packs = [
+        AllocationPack(
+            p1,
+            [
+                AllocationChannel(channel_format=c4, pack_formats=[p1, p2]),
+                AllocationChannel(channel_format=c3, pack_formats=[p2]),
+            ],
+        ),
+        AllocationPack(
+            p3,
+            [
+                AllocationChannel(channel_format=c5, pack_formats=[p2]),
+                AllocationChannel(channel_format=c2, pack_formats=[p1, p2]),
+                AllocationChannel(channel_format=c4, pack_formats=[p1, p3]),
+            ],
+        ),
+        AllocationPack(
+            p2,
+            [
+                AllocationChannel(channel_format=c1, pack_formats=[p1, p3]),
+                AllocationChannel(channel_format=c2, pack_formats=[p1, p3]),
+            ],
+        ),
+    ]
+    tracks = [
+        AllocationTrack(channel_format=c1, pack_format=p1),
+        AllocationTrack(channel_format=c2, pack_format=p3),
+        AllocationTrack(channel_format=c2, pack_format=p1),
+        AllocationTrack(channel_format=c4, pack_format=p2),
+    ]
+    pack_refs = [p1, p2, p2]
+    num_silent = 2
+
+    assert len(list(allocate_packs(packs, tracks, pack_refs, num_silent))) == 2
+
+
+def test_ambiguous_pack_silent():
+    """randomised test with ambiguity between two identically-named packs"""
+    packs = [
+        AllocationPack(
+            p1,
+            [
+                AllocationChannel(channel_format=c1, pack_formats=[p1]),
+            ],
+        ),
+        AllocationPack(
+            p1,
+            [
+                AllocationChannel(channel_format=c2, pack_formats=[p1]),
+            ],
+        ),
+    ]
+    tracks = [
+        AllocationTrack(channel_format=c1, pack_format=p1),
+    ]
+    pack_refs = [p1, p1]
+    num_silent = 1
+
+    assert len(list(allocate_packs(packs, tracks, pack_refs, num_silent))) == 2
+
+
+def test_one_silent_in_two_identical_pack_refs():
+    """randomised test with duplicate packs, one silent channel each (but not
+    the first channel), but not actually ambiguous"""
+    packs = [
+        AllocationPack(
+            p1,
+            [
+                AllocationChannel(channel_format=c1, pack_formats=[p1]),
+                AllocationChannel(channel_format=c2, pack_formats=[p1]),
+            ],
+        ),
+    ]
+    tracks = [
+        AllocationTrack(channel_format=c2, pack_format=p1),
+        AllocationTrack(channel_format=c2, pack_format=p1),
+    ]
+    pack_refs = [p1, p1]
+    num_silent = 2
+
+    assert len(list(allocate_packs(packs, tracks, pack_refs, num_silent))) == 1
