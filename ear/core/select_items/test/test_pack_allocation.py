@@ -509,3 +509,50 @@ def test_one_silent_in_two_identical_pack_refs():
     num_silent = 2
 
     check_allocation((packs, tracks, pack_refs, num_silent), count=1)
+
+
+def test_random_packs():
+    """test randomly generated allocation problems
+
+    this is not guided in any way, so most cases have no solutions, but this is
+    useful to find new situations that we wouldn't otherwise consider
+    """
+    from random import seed, randrange, sample, choice
+
+    available_packs = [p1, p2, p3]
+    available_channels = [c1, c2, c3, c4, c5]
+
+    def make_pack():
+        return AllocationPack(
+            choice(available_packs),
+            [
+                AllocationChannel(channel, sample(available_packs, randrange(1, 3)))
+                for channel in sample(available_channels, randrange(1, 4))
+            ],
+        )
+
+    counts = {}
+    # this is not really enough to find anything interesting, but keeping it
+    # enabled to make sure it works if needed
+    for i in range(5000):
+        seed(i)
+        packs = [make_pack() for i in range(randrange(1, 4))]
+        tracks = [
+            AllocationTrack(choice(available_channels), choice(available_packs))
+            for i in range(randrange(0, 5))
+        ]
+
+        chna_only = choice([False, True])
+        if chna_only:
+            pack_refs = None
+            num_silent = 0
+        else:
+            pack_refs = [choice(available_packs) for i in range(randrange(0, 4))]
+            num_silent = randrange(0, 3)
+
+        results = check_allocation((packs, tracks, pack_refs, num_silent))
+
+        counts.setdefault(len(results), 0)
+        counts[len(results)] += 1
+
+    print("result counts", counts)
