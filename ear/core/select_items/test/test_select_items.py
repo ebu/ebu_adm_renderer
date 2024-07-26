@@ -615,14 +615,6 @@ def test_alternativeValueSet():
 
     check_avs_used(extra_data)
 
-    # referenced from both
-    programme.alternativeValueSets = [avs]
-    content.alternativeValueSets = [avs]
-    [item] = select_rendering_items(builder.adm)
-    extra_data = item.metadata_source.get_next_block().extra_data
-
-    check_avs_used(extra_data)
-
 
 def test_trackUID_channelFormat_reference():
     builder = ADMBuilder.for_version(2)

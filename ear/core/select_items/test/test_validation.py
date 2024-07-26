@@ -814,3 +814,13 @@ def test_duplicate_avs():
         avs=avs,
         content=content,
     )
+
+    programme.alternativeValueSets = [avs]
+    content.alternativeValueSets = [avs]
+    check_select_items_raises(
+        builder,
+        "alternativeValueSet {avs.id} is referenced by both {programme.id} and {content.id}",
+        avs=avs,
+        programme=programme,
+        content=content,
+    )

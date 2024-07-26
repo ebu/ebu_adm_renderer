@@ -10,8 +10,6 @@ from .utils import (
     pack_format_packs,
     pack_format_paths_from,
 )
-from attr import attrs, attrib
-from itertools import chain
 
 
 def _validate_loops(type_name, nodes, get_children):
@@ -457,66 +455,86 @@ def _validate_track_uid_track_or_channel_ref(adm):
             )
 
 
-@attrs(slots=True)
-class _AVSRefState:
-    """reference to an audioObject, the selected alternativeValueSet in it, and
-    the object that refers to that alternativeValueSet, for use in _validate_avs_references
+def _find_object_for_avs(avs, objects):
+    """given an AlternativeValueSet and a list of AudioObject, return the
+    AudioObject that contains the AlternativeValueSet, or None
     """
+    for obj in objects:
+        if in_by_id(avs, obj.alternativeValueSets):
+            return obj
 
-    audioObject = attrib()
-    active_avs = attrib(default=None)
-    referring_object = attrib(default=None)
+
+def _validate_avs_references_contained(referring_object, objects):
+    """check that all alternativeValueSets in referring_object (AudioProgramme
+    or AudioContent) are contained in one of the objects (list of AudioObject)
+    """
+    for avs in referring_object.alternativeValueSets:
+        obj = _find_object_for_avs(avs, objects)
+        if obj is None:
+            raise AdmError(
+                f"{referring_object.id} references {avs.id}, "
+                "which is not in one of its constituent audioObjects"
+            )
+
+
+def _validate_avs_references_conflict(referring_objects, objects):
+    """check that the objects in referring_objects (list containing an
+    AudioProgramme and its AudioObjects) refer to zero or one
+    alternativeValueSets in each AudioObject in objects
+    """
+    references_by_object_id = {}  # id(object) -> (referring object, AVS)
+
+    for referring_object in referring_objects:
+        for avs in referring_object.alternativeValueSets:
+            obj = _find_object_for_avs(avs, objects)
+            assert obj is not None  # already checked
+
+            if id(obj) in references_by_object_id:
+                (prev_referring_object, prev_avs) = references_by_object_id[id(obj)]
+
+                if prev_avs is avs and prev_referring_object is referring_object:
+                    raise AdmError(
+                        f"duplicate references to {avs.id} in {referring_object.id}"
+                    )
+                elif prev_avs is avs:
+                    raise AdmError(
+                        f"alternativeValueSet {avs.id} is referenced by both "
+                        f"{prev_referring_object.id} and {referring_object.id}"
+                    )
+                else:
+                    raise AdmError(
+                        f"multiple alternativeValueSets referenced in {obj.id}: "
+                        f"{prev_avs.id} referenced from {prev_referring_object.id}, and "
+                        f"{avs.id} referenced from {referring_object.id}"
+                    )
+            else:
+                references_by_object_id[id(obj)] = (referring_object, avs)
 
 
 def _validate_avs_references(adm):
     """check that references to alternativeValueSets are to constituent
-    audioObjects, and do not conflict
-
-    this allows multiple references to the same AVS from the programme and/or
-    the content; multiple references from one programme or content are checked
-    in _validate_duplicate_avs, and a reference from both the programme and
-    content is currently allowed
+    audioObjects, are not duplicated, and do not conflict
     """
     for audioProgramme in adm.audioProgrammes:
+        programme_objects = [
+            object_path[-1]
+            for audioContent in audioProgramme.audioContents
+            for root_object in audioContent.audioObjects
+            for object_path in object_paths_from(root_object)
+        ]
+        _validate_avs_references_contained(audioProgramme, programme_objects)
+
         for audioContent in audioProgramme.audioContents:
-            objects = [
-                _AVSRefState(object_path[-1])
+            content_objects = [
+                object_path[-1]
                 for root_object in audioContent.audioObjects
                 for object_path in object_paths_from(root_object)
             ]
+            _validate_avs_references_contained(audioContent, content_objects)
 
-            for referring_object in audioProgramme, audioContent:
-                for avs_ref in referring_object.alternativeValueSets:
-                    for obj in objects:
-                        if in_by_id(avs_ref, obj.audioObject.alternativeValueSets):
-                            break
-                    else:
-                        raise AdmError(
-                            f"{referring_object.id} references {avs_ref.id}, "
-                            "which is not in one of its constituent audioObjects"
-                        )
-
-                    if obj.active_avs is None:
-                        obj.active_avs = avs_ref
-                        obj.referring_object = referring_object
-                    elif obj.active_avs is not avs_ref:
-                        raise AdmError(
-                            f"multiple alternativeValueSets referenced in {obj.audioObject.id}: "
-                            f"{obj.active_avs.id} referenced from {obj.referring_object.id}, and "
-                            f"{avs_ref.id} referenced from {referring_object.id}"
-                        )
-
-
-def _validate_duplicate_avs(adm):
-    """check that references to alternativeValueSets are not duplicated"""
-    for referring_object in chain(adm.audioProgrammes, adm.audioContents):
-        avs_refs = set()
-        for avs_ref in referring_object.alternativeValueSets:
-            if id(avs_ref) in avs_refs:
-                raise AdmError(
-                    f"duplicate references to {avs_ref.id} in {referring_object.id}"
-                )
-            avs_refs.add(id(avs_ref))
+        _validate_avs_references_conflict(
+            [audioProgramme] + audioProgramme.audioContents, programme_objects
+        )
 
 
 def validate_structure(adm):
@@ -534,7 +552,6 @@ def validate_structure(adm):
     _validate_track_channel_ref_only_in_v2(adm)
     _validate_track_uid_track_or_channel_ref(adm)
     _validate_avs_references(adm)
-    _validate_duplicate_avs(adm)
 
 
 def validate_selected_audioTrackUID(audioTrackUID):
