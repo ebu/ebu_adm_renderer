@@ -1637,3 +1637,13 @@ def test_defaults(version):
         with open(defaults_file, "w") as f:
             f.write(xml_str)
         pytest.skip("generated defaults file")
+
+
+def test_ignore_outside_audioFormatExtended(base):
+    """check that ADM-defined objects are only found in audioFormatExtended"""
+    [apr] = base.xml.xpath("//adm:audioProgramme", namespaces=nsmap)
+    adm = base.adm_after_mods(
+        add_children("//adm:format", E.notAudioFormatExtended(deepcopy(apr)))
+    )
+
+    assert len(adm.audioProgrammes) == 1

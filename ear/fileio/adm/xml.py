@@ -1988,7 +1988,7 @@ class MainElementHandler:
         for element_t in self.main_elements:
             parse_func = element_t.handler.parse
 
-            for sub_element in xpath(element, "//{ns}" + element_t.name):
+            for sub_element in xpath(element, ".//{ns}" + element_t.name):
                 adm_element = parse_func(sub_element)
 
                 if common_definitions:
@@ -2025,7 +2025,7 @@ def default_get_main_elements_handler(version: Version) -> MainElementHandler:
 
 def find_audioFormatExtended(element: lxml.etree._Element):
     """find the audioFormatExtended tag"""
-    afe_elements = list(xpath(element, "//{ns}audioFormatExtended"))
+    afe_elements = list(xpath(element, ".//{ns}audioFormatExtended"))
     if len(afe_elements) == 0:
         raise ValueError("no audioFormatExtended elements found")
     elif len(afe_elements) > 1:
