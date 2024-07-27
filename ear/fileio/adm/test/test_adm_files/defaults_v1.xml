@@ -21,15 +21,15 @@
         <audioPackFormat audioPackFormatID="AP_00031001" audioPackFormatName="MyObject 1" typeLabel="0003" typeDefinition="Objects">
           <audioChannelFormatIDRef>AC_00031001</audioChannelFormatIDRef>
         </audioPackFormat>
-        <audioStreamFormat audioStreamFormatID="AS_00011001" audioStreamFormatName="MyObject 1" formatLabel="0001" formatDefinition="PCM">
-          <audioTrackFormatIDRef>AT_00011001_01</audioTrackFormatIDRef>
+        <audioStreamFormat audioStreamFormatID="AS_00031001" audioStreamFormatName="MyObject 1" formatLabel="0001" formatDefinition="PCM">
+          <audioTrackFormatIDRef>AT_00031001_01</audioTrackFormatIDRef>
           <audioChannelFormatIDRef>AC_00031001</audioChannelFormatIDRef>
         </audioStreamFormat>
-        <audioTrackFormat audioTrackFormatID="AT_00011001_01" audioTrackFormatName="MyObject 1" formatLabel="0001" formatDefinition="PCM">
-          <audioStreamFormatIDRef>AS_00011001</audioStreamFormatIDRef>
+        <audioTrackFormat audioTrackFormatID="AT_00031001_01" audioTrackFormatName="MyObject 1" formatLabel="0001" formatDefinition="PCM">
+          <audioStreamFormatIDRef>AS_00031001</audioStreamFormatIDRef>
         </audioTrackFormat>
         <audioTrackUID UID="ATU_00000001">
-          <audioTrackFormatIDRef>AT_00011001_01</audioTrackFormatIDRef>
+          <audioTrackFormatIDRef>AT_00031001_01</audioTrackFormatIDRef>
           <audioPackFormatIDRef>AP_00031001</audioPackFormatIDRef>
         </audioTrackUID>
       </audioFormatExtended>

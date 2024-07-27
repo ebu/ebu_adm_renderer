@@ -10,6 +10,19 @@ def _stream_track_formats(adm, stream_format):
             yield track_format
 
 
+def _stream_type_definition(stream_format):
+    """get the TypeDefinition from the channel or pack format linked to a stream format"""
+    if stream_format.audioChannelFormat is not None:
+        return stream_format.audioChannelFormat.type
+    elif stream_format.audioPackFormat is not None:
+        return stream_format.audioPackFormat.type
+    else:
+        assert False, (
+            "can not generate IDs for an audioStreamFormat not linked"
+            "to an audioChannelFormat or an audioPackFormat; run validation first"
+        )
+
+
 def generate_ids(adm):
     """regenerate ids for all elements in adm
 
@@ -42,10 +55,14 @@ def generate_ids(adm):
             block.id = "AB_{type.value:04X}{id:04X}_{block_id:08X}".format(id=id, type=element.type, block_id=block_id)
 
     for id, element in enumerate(non_common(adm.audioStreamFormats), 0x1001):
-        element.id = "AS_{format.value:04X}{id:04X}".format(id=id, format=element.format)
+        type_id = _stream_type_definition(element).value
+
+        element.id = "AS_{type_id:04X}{id:04X}".format(id=id, type_id=type_id)
 
         for track_id, element in enumerate(_stream_track_formats(adm, element), 0x1):
-            element.id = "AT_{format.value:04X}{id:04X}_{track_id:02X}".format(id=id, format=element.format, track_id=track_id)
+            element.id = "AT_{type_id:04X}{id:04X}_{track_id:02X}".format(
+                id=id, type_id=type_id, track_id=track_id
+            )
 
     for id, element in enumerate(adm.audioTrackUIDs, 0x1):
         element.id = "ATU_{id:08X}".format(id=id)

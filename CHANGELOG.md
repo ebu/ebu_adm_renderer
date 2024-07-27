@@ -6,6 +6,7 @@
 - Padding after data chunks in bw64 files was not written, and this error was silently ignored in the reader. This can be fixed with the new `ear-utils rewrite` command.
 - Mutable default parameters in ADMBuilder could cause unexpected extra blocks to be added when this was used from other programs.
 - ADM elements outside the `audioFormatExtended` were parsed, causing errors for some files containing non-standard ADM data.
+- Generated IDs for audioStreamFormat and audioTrackFormat included the format (i.e. always PCM, or 0001), but should include the type of the linked channel/pack format. See [#78].
 
 ### Changed
 - Added a warning for audioBlockFormats which have a duration but no rtime; previously these were fixed silently. See [#54].
@@ -163,6 +164,7 @@ Initial release.
 [#62]: https://github.com/ebu/ebu_adm_renderer/pull/62
 [#59]: https://github.com/ebu/ebu_adm_renderer/pull/59
 [#58]: https://github.com/ebu/ebu_adm_renderer/issues/58
+[#78]: https://github.com/ebu/ebu_adm_renderer/pull/78
 [34b738a]: https://github.com/ebu/ebu_adm_renderer/commit/34b738a
 [04533fc]: https://github.com/ebu/ebu_adm_renderer/commit/04533fc
 [222374a]: https://github.com/ebu/ebu_adm_renderer/commit/222374a

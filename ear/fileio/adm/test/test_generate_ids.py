@@ -36,8 +36,8 @@ def test_generate_ids():
     assert acf.id == "AC_00031001"
     assert acf.audioBlockFormats[0].id == "AB_00031001_00000001"
 
-    assert builder.adm.audioStreamFormats[0].id == "AS_00011001"
+    assert builder.adm.audioStreamFormats[0].id == "AS_00031001"
 
-    assert builder.adm.audioTrackFormats[0].id == "AT_00011001_01"
+    assert builder.adm.audioTrackFormats[0].id == "AT_00031001_01"
 
     assert builder.adm.audioTrackUIDs[0].id == "ATU_00000001"
