@@ -10,10 +10,10 @@ jobs:
         python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
 
@@ -27,7 +27,7 @@ jobs:
         run: tox -e py
 
       - name: Upload Coverage
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-${{ matrix.python }}
           # use a wildcard so that the archives have a folder in the root
