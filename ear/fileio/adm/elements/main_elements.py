@@ -14,6 +14,8 @@ from ....common import (
     list_of,
 )
 
+import warnings
+
 
 def _lookup_elements(adm, idRefs):
     """Lookup multiple ID references"""
@@ -461,8 +463,8 @@ class AudioStreamFormat(ADMElement):
     def validate(self, adm=None):
         super(AudioStreamFormat, self).validate(adm=adm)
         if self.audioPackFormat is not None and self.audioChannelFormat is not None:
-            raise AdmError("audioStreamFormat {self.id} has a reference to both an "
-                           "audioPackFormat and an audioChannelFormat".format(self=self))
+            warnings.warn("audioStreamFormat {self.id} has a reference to both an "
+                          "audioPackFormat and an audioChannelFormat".format(self=self))
 
         if self.audioPackFormat is None and self.audioChannelFormat is None:
             raise AdmError("audioStreamFormat {self.id} has no reference to an "
